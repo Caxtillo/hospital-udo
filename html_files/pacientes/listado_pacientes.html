@@ -1,0 +1,266 @@
+<!-- html_files/listado_pacientes.html -->
+<!-- Este es el CONTENIDO que se inyectará en #content-area -->
+<div class="p-6 md:p-8 h-full flex flex-col"> 
+
+    
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200 flex-shrink-0">
+        <h2 class="text-2xl font-semibold text-teal-700">Registro General de Pacientes</h2>
+        <div class="flex items-center space-x-3 mt-3 md:mt-0">
+            <div class="relative">
+                <input type="text" id="search-input" placeholder="Buscar Nombre / Cédula / Historia"
+                       class="w-64 pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition duration-150">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+            </div>
+            <button id="search-button" class="px-5 py-2 bg-gradient-to-b from-cyan-500 to-teal-600 text-white rounded-md shadow hover:from-cyan-600 hover:to-teal-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-teal-500 transition duration-150 text-sm font-medium uppercase tracking-wider">
+                Buscar
+            </button>
+        </div>
+    </div>
+
+    
+    <div id="table-container" class="flex-grow overflow-auto rounded-lg border border-gray-200 shadow-md bg-white relative">
+        
+        <div id="table-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500 italic bg-gray-50 z-10">
+            Cargando pacientes...
+        </div>
+        
+        <table class="min-w-full divide-y divide-gray-200 hidden"> 
+            <thead class="bg-gray-100 sticky top-0 z-5"> 
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">N° Historia</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Nombres y Apellidos</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Cédula</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Edad</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Sexo</th>
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="patient-table-body" class="bg-white divide-y divide-gray-200">
+                
+            </tbody>
+        </table>
+    </div>
+
+    
+    <div id="pagination-controls" class="flex justify-between items-center pt-4 flex-shrink-0">
+        <span id="pagination-info" class="text-sm text-gray-600">Mostrando 0-0 de 0</span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
+            <button id="next-page" class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente</button>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+// Script COMPLETO y CORREGIDO para listado_pacientes.html
+(function() {
+    const SCRIPT_VIEW_NAME = 'pacientes__listado_pacientes';
+    console.log(`Ejecutando script de ${SCRIPT_VIEW_NAME}.html`);
+
+    // --- Elementos del DOM ---
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const tableContainer = document.getElementById('table-container');
+    const table = tableContainer ? tableContainer.querySelector('table') : null;
+    const tableBody = document.getElementById('patient-table-body');
+    const placeholder = document.getElementById('table-placeholder');
+    const paginationInfo = document.getElementById('pagination-info');
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+    const paginationControls = document.getElementById('pagination-controls'); // Contenedor paginación
+
+    // --- Estado Local ---
+    let allPatients = []; // Almacena TODOS los pacientes recibidos
+    let filteredPatients = []; // Lista después de aplicar filtro JS
+    let currentPage = 1;
+    const itemsPerPage = 15; // O el número que prefieras
+
+    // Verificar elementos esenciales
+    if (!tableContainer || !table || !tableBody || !placeholder || !paginationInfo || !prevButton || !nextButton || !searchInput || !searchButton || !paginationControls) {
+        console.error(`Error crítico en ${SCRIPT_VIEW_NAME}: Faltan elementos de UI.`);
+        if(placeholder) placeholder.textContent = "Error al cargar interfaz.";
+        return;
+    }
+
+    // --- Función para Filtrar Pacientes (en JavaScript) ---
+    function filterPatients() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        console.log(`${SCRIPT_VIEW_NAME}: Filtrando con término "${searchTerm}"`);
+        if (!searchTerm) {
+            filteredPatients = [...allPatients]; // Copia completa si no hay filtro
+        } else {
+            filteredPatients = allPatients.filter(p =>
+                (p.nombre_completo && p.nombre_completo.toLowerCase().includes(searchTerm)) ||
+                (p.cedula && p.cedula.toLowerCase().includes(searchTerm)) ||
+                (p.numero_historia && p.numero_historia.toLowerCase().includes(searchTerm))
+            );
+        }
+        currentPage = 1; // Siempre volver a la página 1 después de filtrar
+        displayCurrentPage(); // Mostrar resultados
+    }
+
+    // --- Función para Mostrar la Página Actual de la lista filtrada ---
+    function displayCurrentPage() {
+        if (!tableBody || !placeholder || !table || !paginationInfo || !prevButton || !nextButton || !paginationControls) return;
+
+        tableBody.innerHTML = ''; // Limpiar tabla
+        const totalFilteredItems = filteredPatients.length;
+        const totalPages = Math.ceil(totalFilteredItems / itemsPerPage);
+
+        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageItems = filteredPatients.slice(startIndex, endIndex);
+
+        console.log(`${SCRIPT_VIEW_NAME}: Mostrando pág ${currentPage}/${totalPages} (${pageItems.length} de ${totalFilteredItems} filtrados)`);
+
+        if (totalFilteredItems === 0) {
+            placeholder.textContent = allPatients.length === 0 ? 'No hay pacientes registrados.' : 'No se encontraron pacientes con ese filtro.';
+            placeholder.classList.remove('hidden');
+            table.classList.add('hidden');
+            paginationControls.style.display = 'none';
+        } else {
+            placeholder.classList.add('hidden');
+            table.classList.remove('hidden');
+            pageItems.forEach(patient => {
+                const row = tableBody.insertRow();
+                row.className = 'hover:bg-gray-50 transition duration-150 ease-in-out';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-teal-700">${patient.numero_historia || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${patient.nombre_completo || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${patient.cedula || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${patient.edad !== null ? patient.edad : '--'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${patient.sexo || 'N/D'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-medium space-x-2">
+                        
+                        <!-- BOTÓN MODIFICADO -->
+                        <button onclick="viewPatientModules(${patient.id})" 
+                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition" 
+                                title="Ver Historia / Ingresar Datos">
+                            <i class="fas fa-eye fa-fw mr-1"></i> <!-- Icono para Ver -->
+                            <i class="fas fa-sign-in-alt fa-fw mr-1"></i> <!-- Icono para Ingresar (alternativa: fa-keyboard, fa-file-import) -->
+                             <!-- Separador opcional -->
+                             Ver o Ingresar  
+                            
+                        </button>
+                        <!-- FIN BOTÓN MODIFICADO -->
+                        <!-- He quitado el botón "Agregar" que tenías antes, ya que "Ingresar" parece cubrir esa función. -->
+                        <!-- Si necesitas un botón separado para "Agregar", puedes volver a ponerlo. -->
+                        <!-- <button onclick="addPatientData(${patient.id})" class="inline-flex items-center px-3 py-1.5 border border-teal-200 text-xs font-semibold rounded-md shadow-sm text-teal-700 bg-teal-50 hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition" title="Agregar"><i class="fas fa-plus fa-fw mr-1"></i> Agregar</button> -->
+                    </td>
+                `;
+            });
+            updatePaginationControls(totalFilteredItems, totalPages); // Actualizar info paginación
+        }
+    }
+
+    // --- Función para actualizar controles de paginación ---
+    function updatePaginationControls(totalItems, totalPg) {
+        const startItemNum = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+        const endItemNum = Math.min(currentPage * itemsPerPage, totalItems);
+        if(paginationInfo) paginationInfo.textContent = `Mostrando ${startItemNum}-${endItemNum} de ${totalItems}`;
+        if(prevButton) prevButton.disabled = (currentPage <= 1);
+        if(nextButton) nextButton.disabled = (currentPage >= totalPg);
+        if (paginationControls) paginationControls.style.display = totalPg > 1 ? 'flex' : 'none';
+    }
+
+    // --- Función para Solicitar la Lista Completa Inicial ---
+    function fetchInitialPatientList() {
+        console.log(`${SCRIPT_VIEW_NAME}: Solicitando lista COMPLETA de pacientes...`);
+        if(placeholder) { placeholder.textContent = 'Cargando pacientes...'; placeholder.classList.remove('hidden'); }
+        if(table) table.classList.add('hidden');
+        if(paginationControls) paginationControls.style.display = 'none'; // Ocultar paginación al cargar
+
+        if (typeof backend !== 'undefined' && backend.request_patient_list) {
+             try { backend.request_patient_list(''); } // Llama sin término de búsqueda
+             catch(e) { console.error("Error llamando request_patient_list:", e); if(placeholder) placeholder.textContent = 'Error de comunicación.'; }
+        } else { console.error("Backend o request_patient_list no disponible."); if(placeholder) placeholder.textContent = 'Error: No se puede conectar.'; }
+    }
+
+    // --- Manejadores de Eventos UI ---
+    searchButton.addEventListener('click', filterPatients); // Filtra localmente
+    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') filterPatients(); });
+    // Filtro dinámico al escribir (opcional, puedes quitarlo si prefieres solo con botón/Enter)
+    let filterTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(filterTimeout); // Evita filtrar en cada tecla si se escribe rápido
+        filterTimeout = setTimeout(() => {
+            filterPatients();
+        }, 300); // Espera 300ms después de la última tecla
+    });
+
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayCurrentPage(); // Mostrar página anterior local
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayCurrentPage(); // Mostrar página siguiente local
+        }
+    });
+
+    // --- Funciones de Acción (adjuntas a window) ---
+    window.viewPatientModules = function(patientId) {
+         console.log(`Listado Pacientes: Ver módulos para ID: ${patientId}`);
+         if (typeof backend !== 'undefined' && backend.set_selected_patient && typeof loadContent === 'function') {
+             try {
+                 // 1. Informar al backend qué paciente se seleccionó
+                 backend.set_selected_patient(patientId);
+                 // 2. Cargar la vista de detalles
+                 loadContent('pacientes__paciente_detalle'); // Carga el fragmento paciente_detalle.html
+             } catch (e) {
+                  console.error("Error al intentar cargar detalles del paciente:", e);
+                  alert("Error al abrir detalles del paciente.");
+             }
+         } else {
+              console.error("Backend (set_selected_patient) o loadContent no disponibles.");
+              alert("Error de aplicación al intentar ver detalles.");
+         }
+    }
+    window.editPatient = function(patientId) {
+        console.log(`${SCRIPT_VIEW_NAME}: Editar paciente ID: ${patientId}`);
+         if (typeof loadContent === 'function') {
+             // loadContent(`editar_paciente/${patientId}`);
+             alert(`Navegar a editar paciente ${patientId} (No implementado)`);
+         }
+    }
+    window.addPatientData = function(patientId) {
+         console.log(`${SCRIPT_VIEW_NAME}: Agregar datos paciente ID: ${patientId}`);
+         if (typeof loadContent === 'function') {
+             // loadContent(`detalle_paciente/${patientId}?accion=agregar`);
+             alert(`Navegar a agregar datos paciente ${patientId} (No implementado)`);
+         }
+     }
+
+    // --- Función para Manejar la Respuesta del Backend (adjunta a window) ---
+    window.handlePatientListResult_pacientes__listado_pacientes = function(patientList, totalItems) {
+        console.log(`${SCRIPT_VIEW_NAME}: Recibida lista COMPLETA de ${totalItems} pacientes.`);
+        if (patientList === null || !Array.isArray(patientList)) {
+             console.error(`${SCRIPT_VIEW_NAME}: Error en datos recibidos.`);
+             if(placeholder) placeholder.textContent = 'Error al cargar la lista.';
+             if(placeholder) placeholder.classList.remove('hidden');
+             if(table) table.classList.add('hidden');
+             allPatients = [];
+             filteredPatients = [];
+             updatePaginationControls(0, 0);
+        } else {
+            allPatients = patientList;
+            // Aplicar filtro inicial (puede que el input ya tenga algo si se recarga rápido)
+            filterPatients();
+        }
+    }
+
+    // --- Carga inicial ---
+    fetchInitialPatientList(); // Solicitar la lista completa
+
+})();
+</script>

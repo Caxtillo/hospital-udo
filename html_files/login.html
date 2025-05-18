@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Gastro</title>
+    <script src="js/tailwind.js"></script>
+    <link rel="stylesheet" href="fa/css/all.min.css">
+    <script src="js/qwebchannel.js"></script>
+    <style>
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center min-h-screen px-4 font-sans">
+
+    <div class="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-md transform transition-all hover:scale-[1.01]">
+        <div class="flex justify-center mb-6">
+             <img src="assets/logo-unidad.png" alt="Logo Unidad" class="h-24 w-24 object-cover rounded-full border-4 border-teal-500 shadow-lg">
+        </div>
+
+        <h2 class="text-3xl font-bold text-center text-teal-700 mb-8">Iniciar Sesión</h2>
+
+        <form id="login-form" class="space-y-6">
+            <div class="relative">
+                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <i class="fas fa-user"></i>
+                </span>
+                <input type="text" id="username" name="username" placeholder="Nombre de Usuario" required autocomplete="username"
+                       autofocus 
+                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 transition duration-150 ease-in-out">
+            </div>
+        
+            <div class="relative">
+                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                     <i class="fas fa-lock"></i>
+                 </span>
+                <input type="password" id="password" name="password" placeholder="Contraseña" required autocomplete="current-password"
+                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent placeholder-gray-400 transition duration-150 ease-in-out">
+            </div>
+        
+            <div id="error-message" class="hidden text-sm text-center text-red-600 bg-red-100 border border-red-300 rounded-md py-2 px-3">
+            </div>
+        
+            <button type="submit" id="login-button"
+                    class="w-full flex justify-center items-center bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white py-3 px-4 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-200 ease-in-out font-semibold text-base disabled:opacity-70 disabled:cursor-not-allowed">
+                 <span id="button-text">Ingresar</span>
+                 <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <a href="#" onclick="handleForgotPassword(); return false;" class="text-sm text-teal-600 hover:text-teal-700 hover:underline">
+                ¿Olvidó su contraseña?
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let backend;
+
+        function initializeQWebChannel() {
+            if (typeof qt === 'undefined' || typeof qt.webChannelTransport === 'undefined') {
+                console.error("qt.webChannelTransport no está definido.");
+                document.getElementById('error-message').textContent = 'Error de inicialización interno.';
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
+            try {
+                new QWebChannel(qt.webChannelTransport, function (channel) {
+                    backend = channel.objects.backend;
+                    if (!backend) {
+                        console.error("Objeto 'backend' no encontrado.");
+                        document.getElementById('error-message').textContent = 'Error de comunicación con la aplicación.';
+                        document.getElementById('error-message').classList.remove('hidden');
+                        return;
+                    }
+                    console.log("QWebChannel conectado.");
+                });
+            } catch (e) {
+                 console.error("Error inicializando QWebChannel:", e);
+                 document.getElementById('error-message').textContent = 'Error de configuración del canal.';
+                 document.getElementById('error-message').classList.remove('hidden');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('error-message');
+            const loginButton = document.getElementById('login-button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('loading-spinner');
+
+            errorDiv.textContent = message || "Error desconocido.";
+            errorDiv.classList.remove('hidden');
+
+            loginButton.disabled = false;
+            spinner.classList.add('hidden');
+            buttonText.textContent = 'Ingresar';
+        }
+
+         function handleForgotPassword() {
+             alert("Funcionalidad 'Olvidó Contraseña' no implementada aún.");
+         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeQWebChannel();
+
+            const loginForm = document.getElementById('login-form');
+            const loginButton = document.getElementById('login-button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('loading-spinner');
+            const errorDiv = document.getElementById('error-message');
+
+            if (!loginForm || !loginButton || !buttonText || !spinner || !errorDiv) {
+                console.error("Error: No se encontraron todos los elementos del formulario de login.");
+                alert("Error: La interfaz de login no cargó correctamente.");
+                return;
+            }
+
+
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                errorDiv.classList.add('hidden');
+                loginButton.disabled = true;
+                buttonText.textContent = 'Verificando...';
+                spinner.classList.remove('hidden');
+
+                const usernameInput = document.getElementById('username');
+                const passwordInput = document.getElementById('password');
+
+                if (!usernameInput || !passwordInput) {
+                     showLoginError("Error interno: Campos no encontrados.");
+                     return;
+                }
+
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+
+                if (!username || !password) {
+                    showLoginError("Por favor, ingrese usuario y contraseña.");
+                    return; // Evita llamar al backend si faltan datos básicos
+                }
+
+
+                if (!backend) {
+                    showLoginError("Error: No se pudo comunicar con la aplicación.");
+                    return;
+                }
+
+                try {
+                    backend.attempt_login(username, password);
+                } catch (e) {
+                     console.error("Error al llamar backend.attempt_login:", e);
+                     showLoginError("Error de comunicación al intentar ingresar.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<div class="p-6 md:p-8">
+    <h2 class="text-2xl font-semibold text-teal-700 mb-6 pb-4 border-b border-gray-200">Añadir Nuevo Usuario / Médico</h2>
+
+    <form id="add-medico-form" class="space-y-8">
+
+        <!-- Sección Datos Personales -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Datos Personales</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <div>
+                    <label for="medico_nombre_completo" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo <span class="text-red-500">*</span></label>
+                    <input type="text" id="medico_nombre_completo" name="nombre_completo" required
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="medico_cedula" class="block text-sm font-medium text-gray-700 mb-1">Cédula <span class="text-red-500">*</span></label>
+                    <input type="text" id="medico_cedula" name="cedula" required
+                           placeholder="V-12345678"
+                           pattern="[VEve]-\d{6,9}"
+                           title="Formato: V-####### o E-#######"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Sección Detalles Profesionales (Médico) -->
+         <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Detalles Profesionales</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <div>
+                    <label for="medico_mpps" class="block text-sm font-medium text-gray-700 mb-1">MPPS</label>
+                    <input type="text" id="medico_mpps" name="mpps" placeholder="123456"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                 <div>
+                    <label for="medico_especialidad" class="block text-sm font-medium text-gray-700 mb-1">Especialidad</label>
+                    <input type="text" id="medico_especialidad" name="especialidad" placeholder="Gastroenterología"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="medico_foto_perfil" class="block text-sm font-medium text-gray-700 mb-1">Foto de Perfil (Opcional)</label>
+                    
+                    <!-- Contenedor para la imagen y el input -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Contenedor de la previsualización de la imagen -->
+                        <div class="shrink-0">
+                            <img id="medico_foto_preview" 
+                                 class="h-20 w-20 object-cover rounded-full border border-gray-300 hidden" 
+                                 src="#" 
+                                 alt="Foto de perfil">
+                            <!-- La clase 'hidden' se quita cuando hay imagen -->
+                        </div>
+                        <div class="flex-grow">
+                            <input type="file" id="medico_foto_perfil" name="foto_perfil_input" accept="image/png, image/jpeg"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+                            <input type="hidden" id="medico_ruta_foto_perfil" name="ruta_foto_perfil">
+                            <p class="mt-1 text-xs text-gray-500">Selecciona un archivo JPG o PNG (máx 2MB).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Sección Credenciales y Rol -->
+         <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Credenciales y Rol</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <div>
+                    <label for="medico_nombre_usuario" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario <span class="text-red-500">*</span></label>
+                    <input type="text" id="medico_nombre_usuario" name="nombre_usuario" required autocomplete="username"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    <p class="mt-1 text-xs text-gray-500">Sugerencia: Primera palabra del nombre + últimos 3 dígitos de la cédula (ej. Luis011).</p>
+                </div>
+                <div>
+                    <label for="medico_contrasena" class="block text-sm font-medium text-gray-700 mb-1">Contraseña Inicial <span class="text-red-500">*</span></label>
+                    <input type="password" id="medico_contrasena" name="contrasena" required autocomplete="new-password"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    <p class="mt-1 text-xs text-gray-500">Sugerencia: Usar los números de la cédula (ej. 22711011).</p>
+                </div>
+                 <div>
+                    <label for="medico_rol" class="block text-sm font-medium text-gray-700 mb-1">Rol <span class="text-red-500">*</span></label>
+                    <select id="medico_rol" name="rol" required
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                        <option value="">Seleccionar Rol...</option>
+                        <option value="medico">Médico</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex items-center pt-5">
+                     <input id="medico_activo" name="activo" type="checkbox" checked
+                            class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                     <label for="medico_activo" class="ml-2 block text-sm font-medium text-gray-700">Usuario Activo</label>
+                 </div>
+            </div>
+        </fieldset>
+
+        <!-- Feedback y Botones -->
+        <div id="add-medico-feedback" class="my-6 text-center text-sm h-5"></div> <!-- Placeholder para feedback -->
+
+        <div class="flex justify-end space-x-3 pt-5 border-t border-gray-200">
+             <button type="button" id="cancel-add-medico"
+                     class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                 Cancelar
+             </button>
+            <button type="submit" id="submit-add-medico"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="add-medico-btn-text">Añadir Usuario</span>
+                <svg id="add-medico-spinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function() {
+    const SCRIPT_VIEW_NAME = 'medicos__medico_registro';
+    const INIT_FUNCTION_NAME = `initialize_${SCRIPT_VIEW_NAME.replace(/__/g, '_')}`;
+    console.log(`Script para ${SCRIPT_VIEW_NAME}.html cargado, registrando ${INIT_FUNCTION_NAME}`);
+
+    // ... (tus constantes de elementos DOM siguen igual) ...
+    const form = document.getElementById('add-medico-form');
+    const submitButton = document.getElementById('submit-add-medico');
+    const buttonText = document.getElementById('add-medico-btn-text');
+    const spinner = document.getElementById('add-medico-spinner');
+    const feedbackDiv = document.getElementById('add-medico-feedback');
+    const cancelButton = document.getElementById('cancel-add-medico');
+    const cedulaInput = document.getElementById('medico_cedula');
+    const usernameInput = document.getElementById('medico_nombre_usuario');
+    const passwordInput = document.getElementById('medico_contrasena');
+    const activoCheckbox = document.getElementById('medico_activo');
+    const fotoInput = document.getElementById('medico_foto_perfil');
+    const rutaFotoHiddenInput = document.getElementById('medico_ruta_foto_perfil');
+    const pageTitleH2 = document.querySelector('.p-6.md\\:p-8 h2');
+    const nombreCompletoInput = document.getElementById('medico_nombre_completo'); // Ya lo tenías
+    const mppsInput = document.getElementById('medico_mpps');
+    const especialidadInput = document.getElementById('medico_especialidad');
+    const rolSelect = document.getElementById('medico_rol');
+    const fotoPreviewImg = document.getElementById('medico_foto_preview');
+
+
+    let editMode = false;
+    let medicoIdToEdit = null;
+    let isSubmitting = false;
+    let fotoBase64Data = null;
+    let listenersAttached = false;
+
+    // ... (Verificación de elementos UI sigue igual) ...
+    if (!form || !submitButton || !buttonText || !spinner || !feedbackDiv || !cancelButton || !cedulaInput || !usernameInput || !passwordInput || !activoCheckbox || !fotoInput || !rutaFotoHiddenInput || !pageTitleH2 || !nombreCompletoInput || !mppsInput || !especialidadInput || !rolSelect || !fotoPreviewImg) {
+        console.error(`Error crítico en ${SCRIPT_VIEW_NAME}: Faltan elementos UI.`);
+        if(document.getElementById('add-medico-feedback')) {
+            document.getElementById('add-medico-feedback').textContent = "Error fatal al cargar interfaz.";
+            document.getElementById('add-medico-feedback').className = 'my-6 text-center text-sm h-5 text-red-600';
+        }
+        return;
+    }
+
+    // ... (clearPhotoPreview, populateForm, handleResult, setupUIBasedOnMode, handleNewPhotoSelected siguen igual) ...
+
+    function clearPhotoPreview() { // Asegúrate que esta función oculte la imagen si no hay base64
+        if (fotoPreviewImg) {
+            if (fotoBase64Data) {
+                fotoPreviewImg.src = fotoBase64Data;
+                fotoPreviewImg.classList.remove('hidden');
+            } else {
+                fotoPreviewImg.src = '#'; // O una imagen placeholder transparente
+                fotoPreviewImg.classList.add('hidden');
+            }
+        }
+    }
+    
+    function populateForm(medicoDetails) {
+        console.log("populateForm: Rellenando formulario con:", medicoDetails);
+        fotoBase64Data = null; // Limpiar base64 previo al popular
+        clearPhotoPreview();
+        if (!medicoDetails || medicoDetails.error) {
+            console.error("populateForm: No se pudieron cargar detalles:", medicoDetails?.error);
+            feedbackDiv.textContent = `Error: ${medicoDetails?.error || 'No se pudieron cargar los datos.'}`;
+            feedbackDiv.className = 'my-6 text-center text-sm h-5 text-red-600';
+            submitButton.disabled = true;
+            return;
+        }
+        try {
+            nombreCompletoInput.value = medicoDetails.nombre_completo_dec || medicoDetails.nombre_completo || '';
+            cedulaInput.value = medicoDetails.cedula_dec || medicoDetails.cedula || '';
+            mppsInput.value = medicoDetails.mpps || '';
+            especialidadInput.value = medicoDetails.especialidad || '';
+            usernameInput.value = medicoDetails.nombre_usuario || '';
+            rolSelect.value = medicoDetails.rol || '';
+            passwordInput.value = '';
+            passwordInput.placeholder = '(Dejar vacío para no cambiar)';
+            passwordInput.required = false;
+            activoCheckbox.checked = medicoDetails.activo === 1;
+            rutaFotoHiddenInput.value = medicoDetails.ruta_foto_perfil || '';
+            if (medicoDetails.ruta_foto_perfil && fotoPreviewImg) {
+                const imagePath = '../' + medicoDetails.ruta_foto_perfil + '?t=' + new Date().getTime(); // Cache buster
+                console.log("populateForm: Intentando cargar imagen desde:", imagePath);
+                fotoPreviewImg.src = imagePath;
+                fotoPreviewImg.classList.remove('hidden');
+
+                fotoPreviewImg.onerror = () => {
+                    console.warn("populateForm: Error al cargar la imagen de perfil desde:", imagePath);
+                    fotoPreviewImg.classList.add('hidden');
+                };
+            } else {
+                 clearPhotoPreview(); // Asegurar que se oculte si no hay ruta_foto_perfil
+            }
+        } catch (e) {
+             console.error("Error DENTRO de populateForm:", e);
+             feedbackDiv.textContent = "Error al rellenar formulario.";
+        }
+    }
+
+    function handleResult(success, message) {
+        console.log(`${SCRIPT_VIEW_NAME}: Resultado ${editMode ? 'actualización' : 'añadir'}: ${success}, msg=${message}`);
+        isSubmitting = false;
+        submitButton.disabled = false; // Siempre re-habilitar después del submit
+        spinner.classList.add('hidden');
+        buttonText.textContent = editMode ? (success ? '¡Actualizado!' : 'Actualizar Datos') : (success ? '¡Añadido!' : 'Añadir Usuario');
+
+        feedbackDiv.textContent = message;
+        feedbackDiv.className = success
+            ? 'my-6 text-center text-sm h-5 text-green-600 font-medium'
+            : 'my-6 text-center text-sm h-5 text-red-600 font-medium';
+
+        if (success) {
+            if (!editMode) {
+                form.reset();
+                fotoBase64Data = null;
+                clearPhotoPreview();
+            }
+            setTimeout(() => {
+                if (typeof loadContent === 'function') {
+                    loadContent('medicos__medicos');
+                } else { console.error("loadContent no disponible para redirección.") }
+            }, 1500);
+        } else {
+            // Si falla, el botón ya se re-habilitó arriba.
+        }
+    }
+
+    function setupUIBasedOnMode() {
+        console.log(`Configurando UI para modo: ${editMode ? 'Editar (ID: ' + medicoIdToEdit + ')' : 'Añadir'}`);
+        
+        form.reset(); 
+        fotoBase64Data = null; 
+        rutaFotoHiddenInput.value = ''; 
+        clearPhotoPreview();
+
+        pageTitleH2.textContent = editMode ? `Editar Usuario / Médico (ID: ${medicoIdToEdit})` : 'Añadir Nuevo Usuario / Médico';
+        buttonText.textContent = editMode ? 'Actualizar Datos' : 'Añadir Usuario';
+        passwordInput.required = !editMode;
+        passwordInput.placeholder = editMode ? '(Dejar vacío para no cambiar)' : 'Contraseña inicial sugerida';
+        
+        // Actualizar títulos y placeholders para cédula según el modo
+        if (editMode) {
+            cedulaInput.title = "La cédula generalmente no debe cambiarse.";
+            cedulaInput.placeholder = "Cédula (ej. V-12345678)"; // O el valor actual
+            usernameInput.title = "El nombre de usuario generalmente no debe cambiarse.";
+        } else {
+            cedulaInput.title = "Formato: V-####### o E-####### (sin guion)";
+            cedulaInput.placeholder = "V-12345678"; // Placeholder para el nuevo formato
+            usernameInput.title = "Sugerencia: Primera palabra del nombre + últimos 3 dígitos de la cédula (ej. Luis011).";
+            // Las sugerencias de texto debajo de los inputs ya están en el HTML.
+        }
+        // cedulaInput.disabled = editMode; 
+        // usernameInput.disabled = editMode;
+
+        if (editMode && medicoIdToEdit) {
+            if (typeof backend !== 'undefined' && backend.request_medico_details) {
+                console.log(`${SCRIPT_VIEW_NAME}: Solicitando detalles del médico ID ${medicoIdToEdit}...`);
+                backend.request_medico_details(); 
+            } else {
+                 feedbackDiv.textContent = "Error: No se pueden solicitar datos del médico.";
+                 console.error("setupUIBasedOnMode: Backend o request_medico_details no disponible.");
+            }
+        } else { 
+             feedbackDiv.textContent = ''; 
+             // Para modo añadir, asegurar que los campos de sugerencia estén vacíos al inicio
+             usernameInput.value = '';
+             passwordInput.value = '';
+        }
+    }
+
+    function handleNewPhotoSelected() {
+        // ... (sin cambios, esta función ya está bien)
+        fotoBase64Data = null;
+        // clearPhotoPreview(); // No es necesario aquí, el reader.onload lo hará
+
+        if (fotoInput.files && fotoInput.files.length > 0) {
+            const file = fotoInput.files[0];
+            console.log(`${SCRIPT_VIEW_NAME}: Archivo seleccionado: ${file.name}, Tipo: ${file.type}, Tamaño: ${file.size}`);
+            if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type.toLowerCase())) {
+                alert("Por favor, selecciona un archivo JPG o PNG.");
+                fotoInput.value = ''; fotoBase64Data = null; clearPhotoPreview(); return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                fotoBase64Data = event.target.result;
+                console.log(`${SCRIPT_VIEW_NAME}: Foto cargada a Base64.`);
+                if (fotoPreviewImg) {
+                    fotoPreviewImg.src = fotoBase64Data;
+                    fotoPreviewImg.classList.remove('hidden');
+                }
+            };
+            reader.onerror = function(event) {
+                console.error(`${SCRIPT_VIEW_NAME}: FileReader error:`, event.target.error);
+                alert("Error al leer el archivo de imagen.");
+                fotoInput.value = ''; fotoBase64Data = null; clearPhotoPreview();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            console.log(`${SCRIPT_VIEW_NAME}: Selección de archivo cancelada o ningún archivo elegido.`);
+            fotoBase64Data = null; // Asegurar que esté nulo
+            // Si estábamos en modo edición y había una foto previa, y se cancela la selección de una nueva:
+            if (editMode && rutaFotoHiddenInput.value && fotoPreviewImg) {
+                const previousImagePath = '../' + rutaFotoHiddenInput.value + '?t=' + new Date().getTime();
+                fotoPreviewImg.src = previousImagePath;
+                fotoPreviewImg.classList.remove('hidden');
+                 fotoPreviewImg.onerror = () => {
+                    fotoPreviewImg.classList.add('hidden');
+                };
+            } else { // Si no hay foto previa o no es modo edición, o se borró la selección
+                clearPhotoPreview();
+            }
+        }
+    }
+
+
+    function attachListeners() {
+        if (listenersAttached) return;
+        console.log(`Adjuntando listeners para ${SCRIPT_VIEW_NAME}`);
+        form.addEventListener('submit', handleFormSubmit);
+        cancelButton.addEventListener('click', handleCancelClick);
+        
+        // Listener para Cédula y Nombre Completo para actualizar sugerencias
+        cedulaInput.addEventListener('input', updateCredentialSuggestions);
+        nombreCompletoInput.addEventListener('input', updateCredentialSuggestions);
+
+        fotoInput.addEventListener('change', handleNewPhotoSelected);
+        listenersAttached = true;
+    }
+    
+    function updateCredentialSuggestions() {
+        if (editMode) return; // Solo aplicar sugerencias en modo AÑADIR
+
+        const nombreCompletoVal = nombreCompletoInput.value.trim();
+        // Normalizar la entrada de cédula a mayúsculas para la validación del patrón
+        const cedulaVal = cedulaInput.value.trim().toUpperCase();
+
+        let cedulaNumeros = "";
+        // Validar formato V-12345678 (CON guion)
+        if (/^[VE]-\d{6,9}$/.test(cedulaVal)) {
+            // cedulaVal sería algo como "V-12345678" o "E-8765432"
+            // Necesitamos quitar "V-" o "E-" para obtener solo los números
+            cedulaNumeros = cedulaVal.substring(2); // Quitar los dos primeros caracteres (V- o E-)
+        } else {
+            // Si el formato no coincide, cedulaNumeros permanecerá vacío
+            // y las sugerencias dependientes no se generarán o se limpiarán.
+        }
+
+
+        // Sugerencia para Contraseña
+        // Usar cedulaNumeros que ahora solo contiene los dígitos.
+        if (cedulaNumeros.length >= 6) { // Verificar que tengamos suficientes números
+            if (!passwordInput.value || passwordInput.getAttribute('data-suggested') === 'true') {
+                 passwordInput.value = cedulaNumeros;
+                 passwordInput.setAttribute('data-suggested', 'true');
+            }
+        } else {
+            // Si cedulaNumeros no es válido (ej. el usuario borró parte de la cédula)
+            // y la contraseña fue previamente sugerida, limpiarla.
+            if (passwordInput.getAttribute('data-suggested') === 'true') {
+                passwordInput.value = '';
+            }
+        }
+        // Permitir al usuario borrar la sugerencia y evitar que se vuelva a llenar
+        // Se añade un listener una sola vez por si el usuario edita el campo
+        if (!passwordInput.hasAttribute('data-user-edited')) {
+            passwordInput.addEventListener('input', () => {
+                passwordInput.removeAttribute('data-suggested');
+                passwordInput.setAttribute('data-user-edited', 'true'); // Marcar como editado por usuario
+            }, { once: true });
+        }
+
+
+        // Sugerencia para Nombre de Usuario
+        if (nombreCompletoVal && cedulaNumeros.length >= 3) {
+            const primeraPalabraNombre = nombreCompletoVal.split(' ')[0].toLowerCase();
+            // Asegurarse que tomamos los últimos 3 de los números de la cédula (cedulaNumeros)
+            const ultimosTresCedula = cedulaNumeros.slice(-3);
+            const suggestedUsername = `${primeraPalabraNombre}${ultimosTresCedula}`;
+            
+            if (!usernameInput.value || usernameInput.getAttribute('data-suggested') === 'true') {
+                usernameInput.value = suggestedUsername;
+                usernameInput.setAttribute('data-suggested', 'true');
+            }
+        } else {
+             if (usernameInput.getAttribute('data-suggested') === 'true') {
+                usernameInput.value = '';
+            }
+        }
+        // Similar para el nombre de usuario
+        if (!usernameInput.hasAttribute('data-user-edited')) {
+            usernameInput.addEventListener('input', () => {
+                usernameInput.removeAttribute('data-suggested');
+                usernameInput.setAttribute('data-user-edited', 'true');
+            }, { once: true });
+        }
+    }
+
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        if (isSubmitting) return;
+        isSubmitting = true;
+        submitButton.disabled = true;
+        spinner.classList.remove('hidden');
+        buttonText.textContent = editMode ? 'Actualizando...' : 'Añadiendo...';
+        feedbackDiv.textContent = ''; feedbackDiv.className = 'my-6 text-center text-sm h-5';
+
+        const medicoData = {};
+        new FormData(form).forEach((value, key) => {
+            if (key !== 'foto_perfil_input') {
+                medicoData[key] = value.trim() === '' ? null : value.trim();
+            }
+        });
+        medicoData['activo'] = activoCheckbox.checked ? 1 : 0;
+
+        // --- NUEVA VALIDACIÓN DE CÉDULA ---
+        if (!medicoData.cedula || !/^[VEve]-\d{6,9}$/.test(medicoData.cedula)) {
+            // Normalizar el mensaje de error de cédula
+            return handleResult(false, "Formato de cédula inválido. Debe ser V-####### o E-#######.");
+        }
+        // --- FIN NUEVA VALIDACIÓN DE CÉDULA ---
+
+        if (!medicoData.nombre_completo) return handleResult(false, "Nombre completo es requerido.");
+        // La validación de cédula ya se hizo arriba.
+        if (!medicoData.nombre_usuario) return handleResult(false, "Nombre de usuario es requerido.");
+        if (!medicoData.rol) return handleResult(false, "Rol es requerido.");
+        
+        if (editMode) {
+            if (medicoData.contrasena && medicoData.contrasena.length > 0 && medicoData.contrasena.length < 4) {
+                return handleResult(false, "Nueva contraseña: mín 4 caracteres (o dejar vacío).");
+            }
+            if (medicoData.contrasena === null || medicoData.contrasena === '') {
+                delete medicoData.contrasena;
+            }
+        } else { // Modo Añadir
+            if (!medicoData.contrasena || medicoData.contrasena.length < 4) {
+                return handleResult(false, "Contraseña inicial: mín 4 caracteres.");
+            }
+        }
+
+        if (fotoBase64Data) {
+            medicoData['foto_base64'] = fotoBase64Data;
+        }
+        
+        // Asegurar que el valor de cedula se envíe en mayúsculas si no es null
+        if (medicoData.cedula) {
+            medicoData.cedula = medicoData.cedula.toUpperCase();
+        }
+
+        console.log(`${SCRIPT_VIEW_NAME}: Enviando datos (${editMode ? 'UPDATE' : 'ADD'}):`, JSON.parse(JSON.stringify(medicoData)));
+
+        if (typeof backend === 'undefined') return handleResult(false, "Error: Backend no disponible.");
+
+        try {
+            if (editMode && medicoIdToEdit) {
+                backend.update_medico(medicoIdToEdit, medicoData);
+            } else {
+                backend.add_new_medico(medicoData);
+            }
+        } catch(error) {
+            console.error(`Error llamando a backend (${editMode ? 'update' : 'add'}):`, error);
+            handleResult(false, "Error de comunicación con el servidor.");
+        }
+    }
+
+    function handleCancelClick() {
+        if(typeof loadContent === 'function') loadContent('medicos__medicos');
+    }
+
+    // La función `handleCedulaInput` se reemplaza por `updateCredentialSuggestions`
+    // y se llama desde los listeners de `cedulaInput` y `nombreCompletoInput`.
+
+    // ... (Callbacks de backend: handleMedicoDetailsResult, handleMedicoAddResult, handleMedicoUpdateResult siguen igual) ...
+    window[`handleMedicoDetailsResult_${SCRIPT_VIEW_NAME}`] = function(detailsJsonString) {
+        console.log(`${SCRIPT_VIEW_NAME}: Recibidos detalles (JSON):`, detailsJsonString);
+        let detailsDict = null;
+        try {
+            detailsDict = JSON.parse(detailsJsonString);
+        } catch (e) {
+            console.error(`Error parseando JSON de detalles en ${SCRIPT_VIEW_NAME}:`, e);
+            feedbackDiv.textContent = "Error al procesar datos del médico.";
+            if (editMode) submitButton.disabled = true;
+            return;
+        }
+        if (editMode) populateForm(detailsDict);
+    }
+    window[`handleMedicoAddResult_${SCRIPT_VIEW_NAME}`] = handleResult;
+    window[`handleMedicoUpdateResult_${SCRIPT_VIEW_NAME}`] = handleResult;
+
+
+    async function initializeView() {
+        console.log(`${INIT_FUNCTION_NAME} ejecutada.`);
+        listenersAttached = false; 
+        medicoIdToEdit = null;
+        editMode = false;
+        isSubmitting = false; 
+        fotoBase64Data = null; 
+        
+        if (!form) { console.error("Error fatal: Formulario no encontrado en initializeView."); return; }
+
+        // Limpiar atributos 'data-suggested' al inicializar para evitar comportamientos inesperados en recargas
+        if (usernameInput) usernameInput.removeAttribute('data-suggested');
+        if (passwordInput) passwordInput.removeAttribute('data-suggested');
+
+        if (typeof backend !== 'undefined' && backend.get_selected_medico_id) {
+            try {
+                const idFromBackend = await backend.get_selected_medico_id();
+                if (idFromBackend !== null && typeof idFromBackend === 'number' && idFromBackend > 0) {
+                    medicoIdToEdit = idFromBackend;
+                    editMode = true;
+                } else {
+                    medicoIdToEdit = null; 
+                    editMode = false;
+                }
+            } catch (e) {
+                console.error("Error en await backend.get_selected_medico_id():", e);
+                medicoIdToEdit = null; editMode = false;
+            }
+        } else {
+            console.warn(`${INIT_FUNCTION_NAME}: Backend o get_selected_medico_id no disponible. Asumiendo modo AÑADIR.`);
+            medicoIdToEdit = null; editMode = false;
+        }
+        
+        console.log(`${INIT_FUNCTION_NAME}: Modo final: ${editMode ? 'Editar (ID: ' + medicoIdToEdit + ')' : 'Añadir'}`);
+        setupUIBasedOnMode(); 
+        attachListeners();    
+        submitButton.disabled = false; 
+    }
+
+    if (window.viewInitializationFunctions) {
+        window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+    } else {
+         console.error(`${SCRIPT_VIEW_NAME}: viewInitializationFunctions no existe.`);
+    }
+})();
+</script>

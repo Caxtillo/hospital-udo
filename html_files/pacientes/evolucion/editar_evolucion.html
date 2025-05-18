@@ -1,0 +1,426 @@
+<!-- Nombre vista: paciente/evolucion/editar_evolucion.html -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera con Título y Botones Superiores -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Editar Evolución Médica
+            <span id="edit-evolucion-subheader" class="block text-sm font-normal text-gray-500 mt-1">Cargando datos...</span>
+        </h2>
+        <div id="edit-evolucion-actions-top" class="flex space-x-3 mt-3 md:mt-0 hidden">
+            <button type="button" id="cancel-edit-evolucion-top"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    Cancelar/Volver
+            </button>
+            <button type="submit" id="submit-edit-evolucion-top" form="edit-evolucion-form"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="edit-evolucion-btn-text-top">Guardar Cambios</span>
+                <svg id="edit-evolucion-spinner-top" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="edit-evolucion-loading" class="text-center text-gray-500 italic py-10">Cargando datos de la evolución...</div>
+    <div id="edit-evolucion-feedback" class="my-6 text-center text-sm h-5"></div>
+
+    <form id="edit-evolucion-form" class="space-y-6 hidden">
+        <input type="hidden" id="evolucion_id" name="evolucion_id">
+        <input type="hidden" id="patient_id" name="patient_id">
+        <input type="hidden" id="consulta_id" name="consulta_id">
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Información General</legend>
+            <div>
+                <label for="fecha_hora_evolucion_display" class="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora Registrada</label>
+                <input type="text" id="fecha_hora_evolucion_display" name="fecha_hora_evolucion_display" readonly
+                       class="block w-full rounded-md border-gray-200 bg-gray-100 shadow-sm sm:text-sm px-3 py-2 h-[42px] cursor-not-allowed">
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Signos Vitales</legend>
+            <div class="flex flex-wrap gap-x-6 gap-y-4 items-end">
+                <div class="flex-1 min-w-[120px]">
+                    <label for="ev_ta" class="block text-sm font-medium text-gray-700 mb-1">T/A</label>
+                    <input type="text" id="ev_ta" name="ev_ta" placeholder="ej. 120/80" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_fc" class="block text-sm font-medium text-gray-700 mb-1">FC</label>
+                    <input type="number" id="ev_fc" name="ev_fc" placeholder="lpm" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_fr" class="block text-sm font-medium text-gray-700 mb-1">FR</label>
+                    <input type="number" id="ev_fr" name="ev_fr" placeholder="rpm" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_sato2" class="block text-sm font-medium text-gray-700 mb-1">SatO₂</label>
+                    <input type="number" id="ev_sato2" name="ev_sato2" placeholder="%" min="0" max="100" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_temp" class="block text-sm font-medium text-gray-700 mb-1">Temp</label>
+                    <input type="text" id="ev_temp" name="ev_temp" placeholder="°C" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- CAMBIO DE ORDEN: OBJETIVO (ASPECTO GENERAL) SEPARADO -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Objetiva</legend>
+            <div>
+                <label for="ev_objetivo" class="block text-sm font-medium text-gray-700 mb-1">Objetivo<span class="text-red-500">*</span></label>
+                <textarea id="ev_objetivo" name="ev_objetivo" rows="4" required
+                          class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+            </div>
+        </fieldset>
+
+        <!-- CAMBIO DE ORDEN: SUBJETIVO PRIMERO -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Subjetiva</legend>
+            <div> <!-- Quitado space-y-1, mb-1 en label es suficiente -->
+                <label for="ev_subjetivo" class="block text-sm font-medium text-gray-700 mb-1">Subjetivo<span class="text-red-500">*</span></label>
+                <textarea id="ev_subjetivo" name="ev_subjetivo" rows="4" required
+                          class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+            </div>
+        </fieldset>
+
+        <!-- NUEVA SECCIÓN PARA EXAMEN FÍSICO DETALLADO POR SISTEMAS (EN COLUMNAS) -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Examen Físico</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <div>
+                    <label for="ev_piel" class="block text-sm font-medium text-gray-700 mb-1">Piel</label>
+                    <textarea id="ev_piel" name="ev_piel" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_respiratorio" class="block text-sm font-medium text-gray-700 mb-1">Respiratorio</label>
+                    <textarea id="ev_respiratorio" name="ev_respiratorio" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_cardiovascular" class="block text-sm font-medium text-gray-700 mb-1">Cardiovascular</label>
+                    <textarea id="ev_cardiovascular" name="ev_cardiovascular" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_abdomen" class="block text-sm font-medium text-gray-700 mb-1">Abdomen</label>
+                    <textarea id="ev_abdomen" name="ev_abdomen" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_extremidades" class="block text-sm font-medium text-gray-700 mb-1">Extremidades</label>
+                    <textarea id="ev_extremidades" name="ev_extremidades" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_neurologico" class="block text-sm font-medium text-gray-700 mb-1">Neurológico</label>
+                    <textarea id="ev_neurologico" name="ev_neurologico" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div class="md:col-span-2"> <!-- Ocupa ambas columnas si es el último -->
+                    <label for="ev_otros" class="block text-sm font-medium text-gray-700 mb-1">Otros Hallazgos E.F.</label>
+                    <textarea id="ev_otros" name="ev_otros" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Diagnóstico(s) y Plan</legend>
+            <div class="space-y-5">
+                <div>
+                    <label for="ev_diagnosticos" class="block text-sm font-medium text-gray-700 mb-1">Diagnóstico(s) <span class="text-red-500">*</span></label>
+                    <textarea id="ev_diagnosticos" name="ev_diagnosticos" rows="4" required class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_tratamiento_plan" class="block text-sm font-medium text-gray-700 mb-1">Tratamiento y Plan <span class="text-red-500">*</span></label>
+                    <textarea id="ev_tratamiento_plan" name="ev_tratamiento_plan" rows="6" required class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[140px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Comentario Adicional</legend>
+            <div>
+                <label for="ev_comentario" class="block text-sm font-medium text-gray-700 mb-1">Comentario (Opcional)</label>
+                <textarea id="ev_comentario" name="ev_comentario" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[80px]"></textarea>
+            </div>
+        </fieldset>
+
+        <!-- Botones Inferiores -->
+        <div class="flex justify-end space-x-3 pt-5 border-t border-gray-200 mt-8">
+            <button type="button" id="cancel-edit-evolucion-bottom" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium h-[42px]">Cancelar</button>
+            <button type="submit" id="submit-edit-evolucion-bottom" class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium disabled:opacity-60 h-[42px]">
+                <span id="edit-evolucion-btn-text-bottom">Guardar</span>
+                <svg id="edit-evolucion-spinner-bottom" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function() {
+        const VIEW_ID_FOR_SHELL_INIT = 'pacientes_evolucion_editar_evolucion';
+        const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__evolucion__editar_evolucion';
+        const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+        const HANDLER_DETAILS_RESULT = `handleEvolucionDetailsResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+        const HANDLER_UPDATE_RESULT = `handleEvolucionUpdateResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+    
+        console.log(`Script para vista (ID para handler): ${VIEW_ID_FOR_SHELL_HANDLER}, (ID para init): ${VIEW_ID_FOR_SHELL_INIT}`);
+        console.log(` - Registrando inicializador como: ${INIT_FUNCTION_NAME}`);
+        console.log(` - Registrando handler de detalles como: ${HANDLER_DETAILS_RESULT}`);
+        console.log(` - Registrando handler de actualización como: ${HANDLER_UPDATE_RESULT}`);
+    
+        let form, loadingDiv, feedbackDiv, subheaderElement;
+        let evolucionIdInput, patientIdInput, consultaIdInput;
+        let fechaHoraDisplay;
+        // Signos Vitales
+        let evTaInput, evFcInput, evFrInput, evSato2Input, evTempInput;
+        // SOAP
+        let evSubjetivoTextarea, evObjetivoTextarea; // ev_objetivo es "Aspecto General"
+        // Examen Físico Detallado
+        let evPielTextarea, evRespiratorioTextarea, evCardiovascularTextarea, evAbdomenTextarea,
+            evExtremidadesTextarea, evNeurologicoTextarea, evOtrosTextarea;
+        // Diagnóstico, Plan, Comentario
+        let evDiagnosticosTextarea, evTratamientoPlanTextarea, evComentarioTextarea;
+        // Botones
+        let cancelButtons = [], submitButtons = [], submitButtonTexts = [], submitSpinners = [];
+    
+        let currentEvolucionData = null;
+        let isSubmitting = false;
+    
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return 'N/D';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                return date.toLocaleString('es-VE', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                });
+            } catch (e) { return dateString; }
+        }
+    
+        function getDOMElements() {
+            console.log("EDIT_EVOLUCION_JS: getDOMElements - Obteniendo elementos...");
+            form = document.getElementById('edit-evolucion-form');
+            loadingDiv = document.getElementById('edit-evolucion-loading');
+            feedbackDiv = document.getElementById('edit-evolucion-feedback');
+            subheaderElement = document.getElementById('edit-evolucion-subheader');
+    
+            evolucionIdInput = document.getElementById('evolucion_id');
+            patientIdInput = document.getElementById('patient_id');
+            consultaIdInput = document.getElementById('consulta_id');
+            fechaHoraDisplay = document.getElementById('fecha_hora_evolucion_display');
+    
+            evTaInput = document.getElementById('ev_ta');
+            evFcInput = document.getElementById('ev_fc');
+            evFrInput = document.getElementById('ev_fr');
+            evSato2Input = document.getElementById('ev_sato2');
+            evTempInput = document.getElementById('ev_temp');
+    
+            evSubjetivoTextarea = document.getElementById('ev_subjetivo');
+            evObjetivoTextarea = document.getElementById('ev_objetivo');
+            
+            evPielTextarea = document.getElementById('ev_piel');
+            evRespiratorioTextarea = document.getElementById('ev_respiratorio');
+            evCardiovascularTextarea = document.getElementById('ev_cardiovascular');
+            evAbdomenTextarea = document.getElementById('ev_abdomen');
+            evExtremidadesTextarea = document.getElementById('ev_extremidades');
+            evNeurologicoTextarea = document.getElementById('ev_neurologico');
+            evOtrosTextarea = document.getElementById('ev_otros');
+    
+            evDiagnosticosTextarea = document.getElementById('ev_diagnosticos');
+            evTratamientoPlanTextarea = document.getElementById('ev_tratamiento_plan');
+            evComentarioTextarea = document.getElementById('ev_comentario');
+    
+            cancelButtons = []; // Resetear arrays
+            submitButtons = [];
+            submitButtonTexts = [];
+            submitSpinners = [];
+    
+            const btnTopCancel = document.getElementById('cancel-edit-evolucion-top');
+            const btnBottomCancel = document.getElementById('cancel-edit-evolucion-bottom');
+            if(btnTopCancel) cancelButtons.push(btnTopCancel);
+            if(btnBottomCancel) cancelButtons.push(btnBottomCancel);
+            
+            const btnTopSubmit = document.getElementById('submit-edit-evolucion-top');
+            const btnBottomSubmit = document.getElementById('submit-edit-evolucion-bottom');
+            if(btnTopSubmit) submitButtons.push(btnTopSubmit);
+            if(btnBottomSubmit) submitButtons.push(btnBottomSubmit);
+    
+            const txtTopSubmit = document.getElementById('edit-evolucion-btn-text-top');
+            const txtBottomSubmit = document.getElementById('edit-evolucion-btn-text-bottom');
+            if(txtTopSubmit) submitButtonTexts.push(txtTopSubmit);
+            if(txtBottomSubmit) submitButtonTexts.push(txtBottomSubmit);
+            
+            const spnTopSubmit = document.getElementById('edit-evolucion-spinner-top');
+            const spnBottomSubmit = document.getElementById('edit-evolucion-spinner-bottom');
+            if(spnTopSubmit) submitSpinners.push(spnTopSubmit);
+            if(spnBottomSubmit) submitSpinners.push(spnBottomSubmit);
+    
+            console.log("EDIT_EVOLUCION_JS: getDOMElements - ¿Formulario encontrado?", !!form);
+            if (!form) console.error("¡FORMULARIO 'edit-evolucion-form' NO ENCONTRADO!");
+        }
+    
+        function populateForm(data) {
+            console.log(`EDIT_EVOLUCION_JS: Populando formulario. Data keys:`, data ? Object.keys(data) : "null/undefined");
+            if (!form) { console.error("PopulateForm: FORMULARIO es nulo. No se puede poblar."); return; }
+            currentEvolucionData = data;
+    
+            const safeSet = (el, value, elNameForLog = 'Elemento Desconocido (sin ID provisto)') => {
+                const targetEl = (typeof el === 'string') ? document.getElementById(el) : el;
+                if (targetEl) {
+                    targetEl.value = value || '';
+                } else {
+                    console.warn(`populateForm: Elemento para '${elNameForLog}' NO FUE ENCONTRADO en el DOM.`);
+                }
+            };
+            
+            safeSet(evolucionIdInput, data.id, 'evolucion_id (hidden)');
+            safeSet(patientIdInput, data.paciente_id_real || data.paciente_id, 'patient_id (hidden)');
+            safeSet(consultaIdInput, data.consulta_id, 'consulta_id (hidden)');
+            safeSet(fechaHoraDisplay, formatDateForDisplay(data.fecha_hora), 'fecha_hora_evolucion_display');
+    
+            safeSet(evTaInput, data.ev_ta_dec || data.ev_ta, 'ev_ta');
+            safeSet(evFcInput, data.ev_fc, 'ev_fc');
+            safeSet(evFrInput, data.ev_fr, 'ev_fr');
+            safeSet(evSato2Input, data.ev_sato2, 'ev_sato2');
+            safeSet(evTempInput, data.ev_temp_dec || data.ev_temp, 'ev_temp');
+    
+            safeSet(evSubjetivoTextarea, data.ev_subjetivo_dec || data.ev_subjetivo, 'ev_subjetivo');
+            safeSet(evObjetivoTextarea, data.ev_objetivo_dec || data.ev_objetivo, 'ev_objetivo (Aspecto General)');
+            
+            safeSet(evPielTextarea, data.ev_piel_dec || data.ev_piel, 'ev_piel');
+            safeSet(evRespiratorioTextarea, data.ev_respiratorio_dec || data.ev_respiratorio, 'ev_respiratorio');
+            safeSet(evCardiovascularTextarea, data.ev_cardiovascular_dec || data.ev_cardiovascular, 'ev_cardiovascular');
+            safeSet(evAbdomenTextarea, data.ev_abdomen_dec || data.ev_abdomen, 'ev_abdomen');
+            safeSet(evExtremidadesTextarea, data.ev_extremidades_dec || data.ev_extremidades, 'ev_extremidades');
+            safeSet(evNeurologicoTextarea, data.ev_neurologico_dec || data.ev_neurologico, 'ev_neurologico');
+            safeSet(evOtrosTextarea, data.ev_otros_dec || data.ev_otros, 'ev_otros (Hallazgos EF)');
+    
+            safeSet(evDiagnosticosTextarea, data.ev_diagnosticos_dec || data.ev_diagnosticos, 'ev_diagnosticos');
+            safeSet(evTratamientoPlanTextarea, data.ev_tratamiento_plan_dec || data.ev_tratamiento_plan, 'ev_tratamiento_plan');
+            safeSet(evComentarioTextarea, data.ev_comentario_dec || data.ev_comentario, 'ev_comentario');
+    
+            if (subheaderElement) {
+                subheaderElement.textContent = `Editando Evolución del ${formatDateForDisplay(data.fecha_hora)} - Paciente: ${data.paciente_nombres_dec || ''} ${data.paciente_apellidos_dec || ''}`;
+            }
+    
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            if (form) form.classList.remove('hidden');
+            const actionsTop = document.getElementById('edit-evolucion-actions-top');
+            if(actionsTop) actionsTop.classList.remove('hidden');
+            console.log("EDIT_EVOLUCION_JS: populateForm - Formulario poblado y visible.");
+        }
+    
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            if (isSubmitting) return;
+            isSubmitting = true;
+            submitButtons.forEach(btn => { if(btn) btn.disabled = true; });
+            submitButtonTexts.forEach(txt => { if(txt) txt.textContent = 'Guardando...'; });
+            submitSpinners.forEach(spn => { if(spn) spn.classList.remove('hidden'); });
+            if (feedbackDiv) feedbackDiv.textContent = '';
+    
+            const formData = new FormData(form);
+            const dataToSubmit = {};
+            for (const [key, value] of formData.entries()) {
+                 if (!['evolucion_id', 'patient_id', 'consulta_id', 'fecha_hora_evolucion_display'].includes(key)) {
+                    dataToSubmit[key] = value; // No usar trim() aquí, que lo haga el backend si es necesario.
+                }
+            }
+            
+            console.log(`EDIT_EVOLUCION_JS: Datos a enviar para actualizar:`, dataToSubmit);
+            if (window.backend && typeof window.backend.update_evolucion_data === 'function') {
+                window.backend.update_evolucion_data(dataToSubmit);
+            } else {
+                console.error("EDIT_EVOLUCION_JS: Backend o update_evolucion_data no disponible.");
+                handleUpdateResult(false, "Error de comunicación (update_evolucion_data).");
+            }
+        }
+    
+        function handleUpdateResult(success, message) {
+            console.log(`EDIT_EVOLUCION_JS: Resultado de actualización: ${success}, Msg: ${message}`);
+            isSubmitting = false;
+            submitButtons.forEach(btn => { if(btn) btn.disabled = false; });
+            submitButtonTexts.forEach(txt => { if(txt) txt.textContent = 'Guardar Cambios'; });
+            submitSpinners.forEach(spn => { if(spn) spn.classList.add('hidden'); });
+    
+            if (feedbackDiv) {
+                feedbackDiv.textContent = message;
+                feedbackDiv.className = `my-6 text-center text-sm h-5 font-medium ${success ? 'text-green-600' : 'text-red-600'}`;
+            }
+            if (success) {
+                setTimeout(() => {
+                    if (currentEvolucionData && currentEvolucionData.id && patientIdInput && patientIdInput.value) {
+                        window.navigateToViewEvolucion(currentEvolucionData.id, parseInt(patientIdInput.value));
+                    } else if (patientIdInput && patientIdInput.value && typeof loadContent === 'function') {
+                         if (window.backend && window.backend.set_selected_patient) {
+                             window.backend.set_selected_patient(parseInt(patientIdInput.value));
+                         }
+                        loadContent('pacientes__paciente_detalle');
+                    } else {
+                        if (typeof loadContent === 'function') loadContent('dashboard'); // Fallback más genérico
+                    }
+                }, 1200);
+            }
+        }
+    
+        function handleCancel() {
+            console.log("EDIT_EVOLUCION_JS: Edición cancelada.");
+            if (currentEvolucionData && currentEvolucionData.id && patientIdInput && patientIdInput.value) {
+                window.navigateToViewEvolucion(currentEvolucionData.id, parseInt(patientIdInput.value));
+            } else if (patientIdInput && patientIdInput.value && typeof loadContent === 'function') {
+                 if (window.backend && window.backend.set_selected_patient) {
+                    window.backend.set_selected_patient(parseInt(patientIdInput.value));
+                }
+                loadContent('pacientes__paciente_detalle');
+            } else {
+                if (typeof loadContent === 'function') loadContent('dashboard');
+            }
+        }
+    
+        window[HANDLER_DETAILS_RESULT] = function(jsonString) {
+            console.log(`>>> HANDLER (Editar): ${HANDLER_DETAILS_RESULT} EJECUTADO <<<`);
+            let data;
+            try { data = JSON.parse(jsonString); }
+            catch (e) { 
+                console.error(`EDIT_EVOLUCION_JS: Error parseando JSON en ${HANDLER_DETAILS_RESULT}:`, e);
+                populateForm({ error: "Error procesando datos del servidor (JSON)." }); return; 
+            }
+            populateForm(data);
+        };
+        console.log(`Handler ${HANDLER_DETAILS_RESULT} registrado.`);
+    
+        window[HANDLER_UPDATE_RESULT] = function(success, message) {
+            console.log(`>>> HANDLER (Editar): ${HANDLER_UPDATE_RESULT} EJECUTADO <<<`);
+            handleUpdateResult(success, message);
+        };
+        console.log(`Handler ${HANDLER_UPDATE_RESULT} registrado.`);
+    
+        function initializeView() {
+            console.log(`*** INICIALIZADOR (Editar): ${INIT_FUNCTION_NAME} EJECUTADO ***`);
+            console.log(`(ID base para init: ${VIEW_ID_FOR_SHELL_INIT})`);
+            
+            getDOMElements();
+            
+            if (!form) {
+                console.error("EDIT_EVOLUCION_JS: Error Crítico - Formulario 'edit-evolucion-form' no encontrado en initializeView.");
+                if(loadingDiv) loadingDiv.textContent = "Error: Interfaz no cargada correctamente.";
+                return;
+            }
+            form.addEventListener('submit', handleFormSubmit);
+            cancelButtons.forEach(btn => { if(btn) btn.addEventListener('click', handleCancel); });
+    
+            if (loadingDiv) { loadingDiv.style.display = 'block'; loadingDiv.textContent = "Cargando datos..."; }
+            if (form) form.classList.add('hidden');
+            const actionsTop = document.getElementById('edit-evolucion-actions-top');
+            if(actionsTop) actionsTop.classList.add('hidden');
+    
+            if (window.backend && typeof window.backend.request_evolucion_details === 'function') {
+                console.log("EDIT_EVOLUCION_JS: Solicitando detalles de evolución al backend...");
+                window.backend.request_evolucion_details();
+            } else {
+                console.error("EDIT_EVOLUCION_JS: Backend o request_evolucion_details no disponible.");
+                handleUpdateResult(false, "Error de comunicación al cargar datos.");
+            }
+        }
+    
+        if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+        window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+        console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado.`);
+    })();
+    </script>

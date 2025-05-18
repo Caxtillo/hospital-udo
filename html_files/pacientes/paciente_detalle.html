@@ -1,0 +1,1953 @@
+<!-- html_files/paciente_detalle.html -->
+<div class="p-6 md:p-8 flex flex-col h-full">
+
+    <!-- Placeholder de carga inicial -->
+    <div id="detalle-loading" class="text-center text-gray-500 italic">Cargando detalles del paciente...</div>
+
+    <!-- Contenedor principal de detalles (oculto hasta cargar) -->
+    <div id="detalle-content" class="hidden space-y-6 flex flex-col flex-grow">
+
+        <!-- ============================================= -->
+        <!-- Sección Cabecera Paciente (Fija arriba)       -->
+        <!-- ============================================= -->
+        <div class="flex flex-wrap justify-between items-center pb-4 border-b border-gray-200 flex-shrink-0">
+            <div>
+                <h2 id="detalle-nombre" class="text-2xl md:text-3xl font-semibold text-teal-700">Nombre Paciente...</h2>
+                <p class="text-sm text-gray-600">
+                    Cédula: <span id="detalle-cedula" class="font-medium">...</span> |
+                    N° Historia: <span id="detalle-historia" class="font-medium">...</span> |
+                    Edad: <span id="detalle-edad" class="font-medium">...</span> años |
+                    Sexo: <span id="detalle-sexo" class="font-medium">...</span>
+                </p>
+            </div>
+            <!-- ***** NUEVO BOTÓN DE IMPRIMIR ***** -->
+            <div class="mt-3 md:mt-0">
+                <button type="button" id="open-print-modal-btn"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class="fas fa-print fa-fw mr-2"></i>Imprimir Selección
+                </button>
+            </div>
+            <!-- ***** FIN NUEVO BOTÓN DE IMPRIMIR ***** -->
+        </div>
+        <div id="print-selection-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden z-50">
+            <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <div class="flex justify-between items-center pb-3 border-b">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Seleccionar Secciones para Imprimir</h3>
+                        <button type="button" id="close-print-modal-btn" class="text-gray-400 hover:text-gray-600">
+                            <span class="text-2xl">×</span>
+                        </button>
+                    </div>
+                    
+                    <div id="print-options-form" class="mt-4 mb-6 text-left space-y-3 px-4 max-h-80 overflow-y-auto">
+                        <!-- Las opciones se generarán aquí por JS, o puedes ponerlas directamente -->
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="datos_paciente" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Datos del Paciente</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="resumen_ingreso" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Resumen de Ingreso</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="evolucion_medica" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Evolución Médica (Todas)</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="ordenes_medicas" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Órdenes Médicas</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="estudios_comp" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Complementarios</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="interconsultas" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Interconsultas</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="informes_medicos" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Informes Médicos</span>
+                        </label>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" name="print_selections" value="recipes" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                            <span class="text-gray-700">Récipes</span>
+                        </label>
+                        <hr class="my-3">
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" id="print-select-all" class="form-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                            <span class="text-gray-800 font-medium">Seleccionar Todo / Deseleccionar Todo</span>
+                        </label>
+                    </div>
+    
+                    <div class="items-center px-4 py-3 border-t">
+                        <button id="cancel-print-selection-btn"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 mr-2">
+                            Cancelar
+                        </button>
+                        <button id="confirm-print-selection-btn"
+                                class="px-6 py-2 bg-teal-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                            Imprimir Seleccionado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ===== FIN MODAL ===== -->
+        <!-- ============================================= -->
+        <!-- Contenedor de Pestañas y Paneles            -->
+        <!-- ============================================= -->
+        <div class="flex-grow flex flex-col md:flex-row gap-6">
+
+            <!-- Lista de Pestañas (Barra Lateral o Superior) -->
+            <div class="flex-shrink-0 md:w-64">
+                <nav aria-label="Historial Médico" class="flex flex-col space-y-1" role="tablist">
+                    <!-- PESTAÑA DATOS PACIENTE (AHORA PRIMERA Y ACTIVA POR DEFECTO) -->
+                    <button id="tab-datospaciente" role="tab" aria-selected="true" aria-controls="panel-datospaciente" data-target="panel-datospaciente"
+                            class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left bg-teal-100 text-teal-700 hover:bg-teal-200 transition duration-150">
+                        <i class="fas fa-user-circle w-5 mr-3"></i> Datos del Paciente
+                    </button>
+                    <!-- Botón Resumen Ingreso -->
+                    <button id="tab-resumen" role="tab" aria-selected="false" aria-controls="panel-resumen" data-target="panel-resumen"
+                            class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                        <i class="fas fa-notes-medical w-5 mr-3"></i> Resumen de Ingreso
+                    </button>
+                    <!-- Botón Evoluciones -->
+                    <button id="tab-evoluciones" role="tab" aria-selected="false" aria-controls="panel-evoluciones" data-target="panel-evoluciones"
+                            class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                        <i class="fas fa-stethoscope w-5 mr-3"></i> Evolución Médica
+                    </button>
+                    <!-- Botón Órdenes -->
+                    <button id="tab-ordenes" role="tab" aria-selected="false" aria-controls="panel-ordenes" data-target="panel-ordenes"
+                            class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                        <i class="fas fa-clipboard-list w-5 mr-3"></i> Órdenes Médicas
+                    </button>
+                    <!-- Botón Estudios -->
+                     <button id="tab-estudios" role="tab" aria-selected="false" aria-controls="panel-estudios" data-target="panel-estudios"
+                             class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                         <i class="fas fa-x-ray w-5 mr-3"></i> Complementarios
+                     </button>
+                    <!-- Botón Interconsultas -->
+                    <button id="tab-interconsultas" role="tab" aria-selected="false" aria-controls="panel-interconsultas" data-target="panel-interconsultas"
+                             class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                         <i class="fas fa-users w-5 mr-3"></i> Interconsultas
+                     </button>
+                    <!-- Botón Informes -->
+                    <button id="tab-informes" role="tab" aria-selected="false" aria-controls="panel-informes" data-target="panel-informes"
+                             class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                         <i class="fas fa-file-medical w-5 mr-3"></i> Informes Médicos
+                     </button>
+                    <!-- Botón Recipes -->
+                    <button id="tab-recipes" role="tab" aria-selected="false" aria-controls="panel-recipes" data-target="panel-recipes"
+                             class="tab-button flex items-center px-4 py-2 text-sm font-medium rounded-md text-left text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition duration-150">
+                         <i class="fas fa-prescription-bottle-alt w-5 mr-3"></i> Récipes
+                     </button>
+                </nav>
+            </div>
+
+            <!-- Paneles de Contenido de Pestañas -->
+            <div class="flex-grow bg-white border border-gray-200 rounded-lg shadow-sm overflow-auto">
+
+                 <!-- Panel Datos Paciente Completo (AHORA OCULTO INICIALMENTE) -->
+                 <div id="panel-datospaciente" role="tabpanel" aria-labelledby="tab-datospaciente" class="tab-panel p-5 hidden space-y-6">
+                     <!-- Contenido movido a renderDatosPacientePanel en JS -->
+                     <div id="datospaciente-content">Cargando datos del paciente...</div>
+                 </div>
+
+                <!-- Panel Resumen Ingreso (OCULTO INICIALMENTE) -->
+                <div id="panel-resumen" role="tabpanel" aria-labelledby="tab-resumen" class="tab-panel p-5 hidden space-y-5">
+                    
+                    <!-- NUEVA CABECERA DEL PANEL CON FLEXBOX -->
+                    <div class="flex justify-between items-center mb-4 border-b pb-3"> 
+                        <h3 class="text-xl font-semibold text-teal-700"> <!-- Tamaño de fuente ajustado a xl para consistencia con el otro panel -->
+                            Resumen de Ingreso
+                        </h3>
+                        <!-- El botón se insertará aquí por JavaScript si es necesario, o puedes poner un placeholder si no hay datos -->
+                        <div id="resumen-ingreso-edit-button-container">
+                            <!-- Ejemplo de botón deshabilitado si no hay datos para editar -->
+                            <!-- <button type="button" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-semibold rounded-md text-gray-400 bg-gray-100 cursor-not-allowed" disabled><i class="fas fa-file-medical-alt fa-fw mr-1"></i> Editar Info. Ingreso</button> -->
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedores para el contenido (estos ya los tenías) -->
+                    <section id="resumen-motivo-hea" class="space-y-3 text-sm border-b pb-4">
+                        <!-- El título de esta sub-sección se puede mantener o quitar si el título general del panel es suficiente -->
+                        <h4 class="text-md font-semibold text-gray-800">Motivo y Enfermedad Actual</h4>
+                        <div><strong>Motivo Consulta:</strong> <span id="resumen-motivo">Cargando...</span></div>
+                        <div><strong>Enfermedad Actual:</strong> <p id="resumen-hea" class="text-gray-700 mt-1 whitespace-pre-wrap">Cargando...</p></div>
+                    </section>
+                    <section id="resumen-antecedentes-todos" class="space-y-4 text-sm border-b pb-4">
+                        <h4 class="text-md font-semibold text-gray-800">Antecedentes</h4>
+                        <div id="resumen-ap-content">Cargando AP...</div>
+                        <div id="resumen-af-content" class="mt-2">Cargando AF...</div>
+                        <div id="resumen-ah-content" class="mt-2">Cargando Hábitos...</div>
+                    </section>
+                    <section id="resumen-examen-fisico" class="space-y-3 text-sm border-b pb-4">
+                        <h4 class="text-md font-semibold text-gray-800">Examen Físico</h4>
+                        <div id="resumen-ef-content">Cargando EF...</div>
+                    </section>
+                    <section id="resumen-diagnostico" class="text-sm">
+                        <h4 class="text-md font-semibold text-gray-800">Impresión Diagnóstica</h4>
+                        <p id="resumen-dx" class="text-gray-700 mt-1 whitespace-pre-wrap">Cargando...</p>
+                    </section>
+                </div>
+
+                <!-- Panel Evoluciones (Oculto) -->
+                <div id="panel-evoluciones" role="tabpanel" aria-labelledby="tab-evoluciones" class="tab-panel p-5 hidden">
+                    <div id="evoluciones-content" class="space-y-4">Contenido de evoluciones...</div>
+                </div>
+
+                <!-- Otros paneles (Órdenes, Estudios, etc. - Ocultos) -->
+                <div id="panel-ordenes" role="tabpanel" aria-labelledby="tab-ordenes" class="tab-panel p-5 hidden">
+                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Órdenes Médicas</h3>
+                     <div id="ordenes-content" class="space-y-4">Contenido de órdenes médicas...</div>
+                </div>
+                <div id="panel-estudios" role="tabpanel" aria-labelledby="tab-estudios" class="tab-panel p-5 hidden">
+                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Estudios Complementarios</h3>
+                     <div id="estudios-content" class="space-y-4">Contenido de estudios...</div>
+                </div>
+                 <div id="panel-interconsultas" role="tabpanel" aria-labelledby="tab-interconsultas" class="tab-panel p-5 hidden">
+                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Interconsultas</h3>
+                     <div id="interconsultas-content" class="space-y-4">Contenido de interconsultas...</div>
+                 </div>
+                <div id="panel-informes" role="tabpanel" aria-labelledby="tab-informes" class="tab-panel p-5 hidden">
+                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Informes Médicos</h3>
+                     <div id="informes-content" class="space-y-4">Contenido de informes...</div>
+                </div>
+                 <div id="panel-recipes" role="tabpanel" aria-labelledby="tab-recipes" class="tab-panel p-5 hidden">
+                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Récipes</h3>
+                     <div id="recipes-content" class="space-y-4">Contenido de récipes...</div>
+                 </div>
+
+            </div> <!-- Fin Paneles de Contenido -->
+        </div> <!-- Fin Contenedor Pestañas/Paneles -->
+    </div> <!-- Fin de detalle-content -->
+</div>
+
+<script>
+    console.log("--- pacientes__paciente_detalle_tabs SCRIPT PARSING STARTED ---");
+    (function() {
+        // Usar nombre fijo para el script y el inicializador que el shell busca
+        const SCRIPT_VIEW_NAME = 'pacientes__paciente_detalle'; 
+        const INIT_FUNCTION_NAME = `initialize_${SCRIPT_VIEW_NAME.replace(/__/g, '_')}`;
+        console.log(`Ejecutando script ${SCRIPT_VIEW_NAME}. Registrando inicializador: ${INIT_FUNCTION_NAME}`);
+    
+        // --- Elementos DOM (Obtenerlos dentro de initializeView) ---
+        let loadingDiv, contentDiv, tabButtons, tabPanels;
+    
+        // --- Estado (Reiniciar en initializeView) ---
+        let currentPatientData = null;
+        let renderedTabs = new Set();
+        let isInitialized = false;
+        let printModal;
+        let openPrintModalBtn;
+        let closePrintModalBtn;
+        let cancelPrintSelectionBtn;
+        let confirmPrintSelectionBtn;
+        let printOptionsForm;
+        let printSelectAllCheckbox;
+
+        function initializePrintModal() {
+    printModal = document.getElementById('print-selection-modal');
+    openPrintModalBtn = document.getElementById('open-print-modal-btn');
+    closePrintModalBtn = document.getElementById('close-print-modal-btn');
+    cancelPrintSelectionBtn = document.getElementById('cancel-print-selection-btn');
+    confirmPrintSelectionBtn = document.getElementById('confirm-print-selection-btn');
+    printOptionsForm = document.getElementById('print-options-form'); // Contenedor de checkboxes
+    printSelectAllCheckbox = document.getElementById('print-select-all');
+
+    if (!printModal || !openPrintModalBtn || !closePrintModalBtn || !cancelPrintSelectionBtn || !confirmPrintSelectionBtn || !printOptionsForm || !printSelectAllCheckbox) {
+        console.warn("Algunos elementos del modal de impresión no fueron encontrados. La funcionalidad de impresión podría no estar disponible.");
+        return;
+    }
+
+    openPrintModalBtn.addEventListener('click', () => {
+        if (printModal) printModal.classList.remove('hidden');
+    });
+
+    closePrintModalBtn.addEventListener('click', () => {
+        if (printModal) printModal.classList.add('hidden');
+    });
+
+    cancelPrintSelectionBtn.addEventListener('click', () => {
+        if (printModal) printModal.classList.add('hidden');
+    });
+
+    printSelectAllCheckbox.addEventListener('change', (event) => {
+        const checkboxes = printOptionsForm.querySelectorAll('input[name="print_selections"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = event.target.checked;
+        });
+    });
+
+    confirmPrintSelectionBtn.addEventListener('click', () => {
+        if (!currentPatientData || !currentPatientData.info) {
+            alert("No hay datos del paciente cargados para imprimir.");
+            return;
+        }
+
+        const selectedSections = [];
+        const checkboxes = printOptionsForm.querySelectorAll('input[name="print_selections"]:checked');
+        checkboxes.forEach(checkbox => {
+            selectedSections.push(checkbox.value);
+        });
+
+        if (selectedSections.length === 0) {
+            alert("Por favor, seleccione al menos una sección para imprimir.");
+            return;
+        }
+
+        console.log("Secciones seleccionadas para imprimir:", selectedSections);
+        console.log("Datos del paciente para impresión:", currentPatientData);
+        
+        // Aquí llamarías a la función que genera el contenido para imprimir
+        generatePrintContent(selectedSections, currentPatientData);
+
+        if (printModal) printModal.classList.add('hidden'); // Ocultar modal después de confirmar
+    });
+}
+
+function generatePrintContent(sections, patientData) {
+    let printHtml = `
+        <html>
+        <head>
+            <title>Impresión - ${patientData.info.nombres || ''} ${patientData.info.apellidos || ''}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; font-size: 10pt; }
+                h1, h2, h3, h4 { color: #333; }
+                h1 { font-size: 18pt; text-align: center; margin-bottom: 10px; border-bottom: 2px solid #00685e; padding-bottom: 5px;}
+                h2 { font-size: 14pt; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color: #00796b; }
+                h3 { font-size: 12pt; margin-top: 20px; margin-bottom: 8px; color: #00685e; font-weight: bold;}
+                h4 { font-size: 10pt; margin-top: 10px; margin-bottom: 5px; font-weight: bold; color: #444;}
+                p, li, div.data-item { margin-bottom: 6px; line-height: 1.4; }
+                .section-block { margin-bottom: 25px; page-break-inside: avoid; }
+                .section-block p { margin-left: 10px; }
+                .section-block h3 + p, .section-block h4 + p { margin-left: 0; } /* No indentar el primer p despues de h3/h4 */
+                .evolucion-card, .orden-card, .estudio-card, .interconsulta-card, .informe-card, .recipe-card {
+                    margin-bottom: 15px; padding-bottom:10px; border-bottom: 1px dashed #ddd; page-break-inside: avoid;
+                }
+                strong { font-weight: bold; color: #333; } /* Un poco más oscuro para mejor contraste */
+                .whitespace-pre-wrap { white-space: pre-wrap; font-family: inherit; }
+                .text-xs { font-size: 9pt; }
+                .italic { font-style: italic; color: #555 }
+                .text-gray-500 { color: #777; } /* Mantenido para consistencia si se usa */
+                .page-break { page-break-after: always; } /* Para forzar saltos de página si es necesario */
+
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom:15px; page-break-inside: avoid; }
+                th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 9pt;}
+                th { background-color: #f2f2f2; color: #333; font-weight: bold;}
+
+                @media print {
+                    body { margin: 10mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    button, .no-print { display: none !important; }
+                    h1, h2, h3, h4 { color: #000 !important; } /* asegurar color negro para impresión */
+                    .section-block { border: none; padding:0; background-color:transparent; }
+                    a { text-decoration: none; color: #000; } /* quitar subrayado y color de enlaces */
+                    a[href]:after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; } /* opcional: mostrar URL de enlaces */
+
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Historia Clínica</h1>
+    `;
+
+    const getText = (value, defaultValue = 'N/D') => (value !== null && value !== undefined && String(value).trim() !== '') ? String(value).replace(/</g, "<").replace(/>/g, ">") : `<span class="italic text-gray-500">${defaultValue}</span>`;
+    const getPreText = (value, defaultValue = 'N/D') => (value !== null && value !== undefined && String(value).trim() !== '') ? `<pre class="whitespace-pre-wrap" style="font-family: inherit; margin:0; padding:0;">${String(value).replace(/</g, "<").replace(/>/g, ">")}</pre>` : `<span class="italic text-gray-500">${defaultValue}</span>`;
+
+
+    if (sections.includes('datos_paciente')) {
+        printHtml += `<div class="section-block"><h2>Datos del Paciente</h2>`;
+        printHtml += `<p><strong>Nombre Completo:</strong> ${getText(patientData.info.nombres)} ${getText(patientData.info.apellidos)}</p>`;
+        printHtml += `<p><strong>Cédula:</strong> ${getText(patientData.info.cedula)}</p>`;
+        printHtml += `<p><strong>N° Historia:</strong> ${getText(patientData.info.numero_historia)}</p>`;
+        printHtml += `<p><strong>Edad:</strong> ${getText(patientData.info.edad_calculada)} años</p>`;
+        printHtml += `<p><strong>Sexo:</strong> ${getText(patientData.info.sexo)}</p>`;
+        printHtml += `<p><strong>Fecha de Nacimiento:</strong> ${getText(formatDate(patientData.info.fecha_nacimiento))}</p>`;
+        printHtml += `<p><strong>Lugar de Nacimiento:</strong> ${getText(patientData.info.lugar_nacimiento_dec || patientData.info.lugar_nacimiento)}</p>`;
+        printHtml += `<p><strong>Estado Civil:</strong> ${getText(patientData.info.estado_civil_dec || patientData.info.estado_civil)}</p>`;
+        printHtml += `<p><strong>Profesión/Oficio:</strong> ${getText(patientData.info.profesion_oficio_dec || patientData.info.profesion_oficio)}</p>`;
+        printHtml += `<h3>Contacto</h3>`;
+        printHtml += `<p><strong>Teléfono Habitación:</strong> ${getText(patientData.info.telefono_habitacion_dec || patientData.info.telefono_habitacion)}</p>`;
+        printHtml += `<p><strong>Teléfono Móvil:</strong> ${getText(patientData.info.telefono_movil_dec || patientData.info.telefono_movil)}</p>`;
+        printHtml += `<p><strong>Email:</strong> ${getText(patientData.info.email_dec || patientData.info.email)}</p>`;
+        printHtml += `<p><strong>Dirección:</strong> ${getText(patientData.info.direccion_dec || patientData.info.direccion)}</p>`;
+        printHtml += `<h3>Contacto de Emergencia</h3>`;
+        printHtml += `<p><strong>Nombre:</strong> ${getText(patientData.info.emerg_nombre_dec || patientData.info.emerg_nombre)}</p>`;
+        printHtml += `<p><strong>Parentesco:</strong> ${getText(patientData.info.emerg_parentesco_dec || patientData.info.emerg_parentesco)}</p>`;
+        printHtml += `<p><strong>Teléfono:</strong> ${getText(patientData.info.emerg_telefono_dec || patientData.info.emerg_telefono)}</p>`;
+        printHtml += `<p><strong>Dirección (Emergencia):</strong> ${getText(patientData.info.emerg_direccion_dec || patientData.info.emerg_direccion)}</p>`;
+        if (patientData.info.notas_adicionales_dec || patientData.info.notas_adicionales){
+             printHtml += `<h3>Notas Adicionales</h3><p>${getPreText(patientData.info.notas_adicionales_dec || patientData.info.notas_adicionales)}</p>`;
+        }
+        printHtml += `</div>`;
+    }
+
+    if (sections.includes('resumen_ingreso')) {
+        const initialConsultation = patientData.consultas_info?.[0];
+        const initialExam = patientData.examen_fisico_inicial;
+        printHtml += `<div class="section-block"><h2>Resumen de Ingreso</h2>`;
+        if (initialConsultation) {
+            printHtml += `<h3>Motivo y Enfermedad Actual</h3>`;
+            printHtml += `<p><strong>Fecha de Ingreso:</strong> ${getText(formatDate(initialConsultation.fecha_hora_ingreso, true))}</p>`;
+            printHtml += `<p><strong>Motivo Consulta:</strong> ${getText(initialConsultation.motivo_consulta_dec || initialConsultation.motivo_consulta)}</p>`;
+            printHtml += `<p><strong>Enfermedad Actual:</strong> ${getPreText(initialConsultation.historia_enfermedad_actual_dec || initialConsultation.historia_enfermedad_actual)}</p>`;
+            printHtml += `<h3>Impresión Diagnóstica de Ingreso</h3>`;
+            printHtml += `${getPreText(initialConsultation.diagnostico_ingreso_dec || initialConsultation.diagnostico_ingreso)}`;
+        }
+        printHtml += `<h3>Antecedentes</h3>`;
+        printHtml += `<h4>Personales Patológicos:</h4>`;
+        printHtml += `<p>Asma: ${patientData.info.ap_asma ? `Sí (${getText(patientData.info.ap_asma_detalle_dec || patientData.info.ap_asma_detalle, 'Refiere')})` : 'No'}</p>`;
+        printHtml += `<p>HTA: ${patientData.info.ap_hta ? `Sí (${getText(patientData.info.ap_hta_detalle_dec || patientData.info.ap_hta_detalle, 'Refiere')})` : 'No'}</p>`;
+        printHtml += `<p>DM: ${patientData.info.ap_dm ? `Sí (${getText(patientData.info.ap_dm_detalle_dec || patientData.info.ap_dm_detalle, 'Refiere')})` : 'No'}</p>`;
+        // Añadir Cardiopatía si existe en patientData.info
+        if(typeof patientData.info.ap_cardiopatia !== 'undefined'){
+             printHtml += `<p>Cardiopatía: ${patientData.info.ap_cardiopatia ? `Sí (${getText(patientData.info.ap_cardiopatia_detalle_dec || patientData.info.ap_cardiopatia_detalle, 'Refiere')})` : 'No'}</p>`;
+        }
+        printHtml += `<p>Otros AP: ${patientData.info.ap_otros ? `Sí (${getText(patientData.info.ap_otros_detalle_dec || patientData.info.ap_otros_detalle, 'Refiere')})` : 'No'}</p>`;
+        printHtml += `<p><strong>Alergias:</strong> ${getText(patientData.info.ap_alergias_dec || patientData.info.ap_alergias)}</p>`;
+        printHtml += `<p><strong>Quirúrgicos:</strong> ${getText(patientData.info.ap_quirurgicos_dec || patientData.info.ap_quirurgicos)}</p>`;
+        printHtml += `<h4>Familiares:</h4>`;
+        printHtml += `<p>Madre: ${getText(patientData.info.af_madre_dec || patientData.info.af_madre)}</p>`;
+        printHtml += `<p>Padre: ${getText(patientData.info.af_padre_dec || patientData.info.af_padre)}</p>`;
+        printHtml += `<p>Hermanos: ${getText(patientData.info.af_hermanos_dec || patientData.info.af_hermanos)}</p>`;
+        printHtml += `<p>Hijos: ${getText(patientData.info.af_hijos_dec || patientData.info.af_hijos)}</p>`;
+        printHtml += `<h4>Hábitos Psicobiológicos:</h4>`;
+        printHtml += `<p>Tabaco: ${getText(patientData.info.hab_tabaco_dec || patientData.info.hab_tabaco)}</p>`;
+        printHtml += `<p>Alcohol: ${getText(patientData.info.hab_alcohol_dec || patientData.info.hab_alcohol)}</p>`;
+        printHtml += `<p>Drogas: ${getText(patientData.info.hab_drogas_dec || patientData.info.hab_drogas)}</p>`;
+        printHtml += `<p>Café: ${getText(patientData.info.hab_cafe_dec || patientData.info.hab_cafe)}</p>`;
+
+        if (initialExam) {
+            printHtml += `<h3>Examen Físico de Ingreso</h3>`;
+            const svIngreso = [
+                { label: "T/A", value: initialExam.ef_ta_dec || initialExam.ef_ta }, { label: "FC", value: initialExam.ef_fc, unit: "lpm" },
+                { label: "FR", value: initialExam.ef_fr, unit: "rpm" }, { label: "SatO₂", value: initialExam.ef_sato2, unit: "%" },
+                { label: "Temp", value: initialExam.ef_temp_dec || initialExam.ef_temp, unit: "°C" }, { label: "Glicemia", value: initialExam.ef_glic, unit: "mg/dL" }
+            ].filter(item => typeof item.value !== 'undefined' && item.value !== null && String(item.value).trim() !== '');
+            if (svIngreso.length > 0) {
+                printHtml += `<p><strong>Signos Vitales:</strong> ${svIngreso.map(item => `${item.label}: ${item.value}${item.unit ? ' ' + item.unit : ''}`).join(' | ')}</p>`;
+            }
+            printHtml += `<p><strong>Piel:</strong> ${getPreText(initialExam.ef_piel_dec || initialExam.ef_piel)}</p>`;
+            printHtml += `<p><strong>Respiratorio:</strong> ${getPreText(initialExam.ef_respiratorio_dec || initialExam.ef_respiratorio)}</p>`;
+            printHtml += `<p><strong>Cardiovascular:</strong> ${getPreText(initialExam.ef_cardiovascular_dec || initialExam.ef_cardiovascular)}</p>`;
+            printHtml += `<p><strong>Abdomen:</strong> ${getPreText(initialExam.ef_abdomen_dec || initialExam.ef_abdomen)}</p>`;
+            printHtml += `<p><strong>Gastrointestinal:</strong> ${getPreText(initialExam.ef_gastrointestinal_dec || initialExam.ef_gastrointestinal)}</p>`;
+            printHtml += `<p><strong>Genitourinario:</strong> ${getPreText(initialExam.ef_genitourinario_dec || initialExam.ef_genitourinario)}</p>`;
+            printHtml += `<p><strong>Extremidades:</strong> ${getPreText(initialExam.ef_extremidades_dec || initialExam.ef_extremidades)}</p>`;
+            printHtml += `<p><strong>Neurológico:</strong> ${getPreText(initialExam.ef_neurologico_dec || initialExam.ef_neurologico)}</p>`;
+            printHtml += `<p><strong>Otros Hallazgos:</strong> ${getPreText(initialExam.ef_otros_hallazgos_dec || initialExam.ef_otros_hallazgos)}</p>`;
+        }
+        printHtml += `</div>`;
+    }
+
+    if (sections.includes('evolucion_medica')) {
+        printHtml += `<div class="section-block"><h2>Evoluciones Médicas</h2>`;
+        if (patientData.evoluciones_todas && patientData.evoluciones_todas.length > 0) {
+            const evolucionesOrdenadasPrint = [...patientData.evoluciones_todas].sort((a,b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
+            evolucionesOrdenadasPrint.forEach(evo => {
+                printHtml += `<div class="evolucion-card">`;
+                printHtml += `<h4>Evolución del ${getText(formatDate(evo.fecha_hora, true))} (Por: ${getText(evo.usuario_creador_nombre_completo)})</h4>`;
+                const svItems = [
+                    { label: "T/A", value: evo.ev_ta_dec || evo.ev_ta }, { label: "FC", value: evo.ev_fc, unit: "lpm" },
+                    { label: "FR", value: evo.ev_fr, unit: "rpm" }, { label: "SatO₂", value: evo.ev_sato2, unit: "%" },
+                    { label: "Temp", value: evo.ev_temp_dec || evo.ev_temp, unit: "°C" },
+                ].filter(item => typeof item.value !== 'undefined' && item.value !== null && String(item.value).trim() !== '');
+                if (svItems.length > 0) {
+                    printHtml += `<p class="text-xs"><strong>Signos Vitales:</strong> ${svItems.map(item => `${item.label}: ${item.value}${item.unit ? ' ' + item.unit : ''}`).join(' | ')}</p>`;
+                }
+                printHtml += `<p><strong>Subjetivo:</strong> ${getPreText(evo.ev_subjetivo_dec || evo.ev_subjetivo)}</p>`;
+                printHtml += `<p><strong>Objetivo (Ex. Físico):</strong> ${getPreText(evo.ev_objetivo_dec || evo.ev_objetivo)}</p>`;
+                if(evo.ev_piel_dec || evo.ev_piel) printHtml += `<p><strong>Piel:</strong> ${getPreText(evo.ev_piel_dec || evo.ev_piel)}</p>`;
+                if(evo.ev_respiratorio_dec || evo.ev_respiratorio) printHtml += `<p><strong>Respiratorio:</strong> ${getPreText(evo.ev_respiratorio_dec || evo.ev_respiratorio)}</p>`;
+                if(evo.ev_cardiovascular_dec || evo.ev_cardiovascular) printHtml += `<p><strong>Cardiovascular:</strong> ${getPreText(evo.ev_cardiovascular_dec || evo.ev_cardiovascular)}</p>`;
+                if(evo.ev_abdomen_dec || evo.ev_abdomen) printHtml += `<p><strong>Abdomen:</strong> ${getPreText(evo.ev_abdomen_dec || evo.ev_abdomen)}</p>`;
+                if(evo.ev_extremidades_dec || evo.ev_extremidades) printHtml += `<p><strong>Extremidades:</strong> ${getPreText(evo.ev_extremidades_dec || evo.ev_extremidades)}</p>`;
+                if(evo.ev_neurologico_dec || evo.ev_neurologico) printHtml += `<p><strong>Neurológico:</strong> ${getPreText(evo.ev_neurologico_dec || evo.ev_neurologico)}</p>`;
+                if(evo.ev_otros_dec || evo.ev_otros) printHtml += `<p><strong>Otros Hallazgos EF:</strong> ${getPreText(evo.ev_otros_dec || evo.ev_otros)}</p>`;
+                printHtml += `<p><strong>Diagnóstico(s):</strong> ${getPreText(evo.ev_diagnosticos_dec || evo.ev_diagnosticos)}</p>`;
+                printHtml += `<p><strong>Tratamiento y Plan:</strong> ${getPreText(evo.ev_tratamiento_plan_dec || evo.ev_tratamiento_plan)}</p>`;
+                 if (evo.ev_comentario_dec || evo.ev_comentario) {
+                    printHtml += `<p><strong>Comentario Adicional:</strong> ${getPreText(evo.ev_comentario_dec || evo.ev_comentario)}</p>`;
+                 }
+                printHtml += `</div>`;
+            });
+        } else {
+            printHtml += `<p>No hay evoluciones médicas registradas.</p>`;
+        }
+        printHtml += `</div>`;
+    }
+
+    if (sections.includes('ordenes_medicas')) {
+        printHtml += `<div class="section-block"><h2>Órdenes Médicas</h2>`;
+        if (patientData.ordenes_medicas_todas && patientData.ordenes_medicas_todas.length > 0) {
+            const ordenesOrdenadasPrint = [...patientData.ordenes_medicas_todas].sort((a,b) => new Date(b.fecha_hora) - new Date(a.fecha_hora)); // Más recientes primero en la impresión
+            
+            ordenesOrdenadasPrint.forEach(om => {
+                let ordenJsonPrint = null;
+                try {
+                    if (om.orden_json_blob && typeof om.orden_json_blob === 'string') {
+                        ordenJsonPrint = JSON.parse(om.orden_json_blob);
+                    } else if (om.orden_json_blob && typeof om.orden_json_blob === 'object') {
+                        ordenJsonPrint = om.orden_json_blob;
+                    }
+                } catch (e) { console.error("Error parseando JSON para impresión orden ID " + om.id, e); }
+
+                printHtml += `<div class="orden-card">
+                                <p><strong>Fecha y Hora:</strong> ${getText(formatDate(om.fecha_hora, true))} | <strong>Registró:</strong> ${getText(om.usuario_orden_nombre)}</p>`;
+                
+                if (ordenJsonPrint) {
+                    // Hospitalización
+                    if (ordenJsonPrint.hospitalizacion && ordenJsonPrint.hospitalizacion.indicada) {
+                        printHtml += `<p><strong>Hospitalizar en:</strong> ${getText(ordenJsonPrint.hospitalizacion.lugar)}</p>`;
+                    }
+
+                    // Dieta
+                    if (ordenJsonPrint.dieta && ordenJsonPrint.dieta.tipo_inicial) {
+                        let dietaPrintStr = `<strong>Dieta:</strong> ${getText(ordenJsonPrint.dieta.tipo_inicial)}`;
+                        if (ordenJsonPrint.dieta.tipo_inicial === 'Absoluta' && ordenJsonPrint.dieta.absoluta_duracion_valor) {
+                            dietaPrintStr += ` por ${getText(ordenJsonPrint.dieta.absoluta_duracion_valor)} ${getText(ordenJsonPrint.dieta.absoluta_duracion_unidad)}`;
+                        } else if (ordenJsonPrint.dieta.tipo_inicial === 'Específica' && ordenJsonPrint.dieta.especifica_desc) {
+                            dietaPrintStr += ` (${getPreText(ordenJsonPrint.dieta.especifica_desc)})`;
+                        }
+                        if (ordenJsonPrint.dieta.progresion && ordenJsonPrint.dieta.progresion.indicada && ordenJsonPrint.dieta.progresion.siguiente_tipo) {
+                            dietaPrintStr += `<br/>  ↳ Progresar a: ${getText(ordenJsonPrint.dieta.progresion.siguiente_tipo)} (Cond: ${getText(ordenJsonPrint.dieta.progresion.condicion)})`;
+                        }
+                        if (ordenJsonPrint.dieta.observaciones_generales) {
+                            dietaPrintStr += `<br/>  ↳ Obs: ${getPreText(ordenJsonPrint.dieta.observaciones_generales)}`;
+                        }
+                        printHtml += `<p>${dietaPrintStr}</p>`;
+                    }
+                    
+                    // HP
+                    if (ordenJsonPrint.hp && ordenJsonPrint.hp.indicada && ordenJsonPrint.hp.soluciones && ordenJsonPrint.hp.soluciones.length > 0) {
+                        printHtml += `<p><strong>Hidratación Parenteral:</strong></p><ul style="margin-left:20px; list-style-type:circle;">`;
+                        ordenJsonPrint.hp.soluciones.forEach(sol => {
+                            printHtml += `<li>${getText(sol.tipo)} ${getText(sol.volumen)}cc, vía ${getText(sol.via)}. Vel: ${getText(sol.velocidad_valor)} ${getText(sol.velocidad_unidad)}. ${sol.indicaciones ? 'Indic: ' + getPreText(sol.indicaciones) : ''}</li>`;
+                        });
+                        printHtml += `</ul>`;
+                        if(ordenJsonPrint.hp.observaciones_generales) printHtml += `<p>  ↳ Obs. HP: ${getPreText(ordenJsonPrint.hp.observaciones_generales)}</p>`;
+                    }
+
+                    // Medicamentos
+                    if (ordenJsonPrint.medicamentos && ordenJsonPrint.medicamentos.indicada && ordenJsonPrint.medicamentos.items && ordenJsonPrint.medicamentos.items.length > 0) {
+                        printHtml += `<p><strong>Medicamentos:</strong></p><ul style="margin-left:20px; list-style-type:circle;">`;
+                        ordenJsonPrint.medicamentos.items.forEach(med => {
+                             printHtml += `<li>${getText(med.nombre)} ${getText(med.dosis)} ${getText(med.unidad_otra || med.unidad)} ${getText(med.via_otra || med.via)} ${getText(med.frecuencia)}. ${getPreText(med.observaciones)}</li>`;
+                        });
+                        printHtml += `</ul>`;
+                    }
+                    
+                    // Laboratorio
+                    if (ordenJsonPrint.laboratorios && ordenJsonPrint.laboratorios.indicada) {
+                        let labPrintStr = `<strong>Laboratorio:</strong> `;
+                        if (ordenJsonPrint.laboratorios.solicitados && ordenJsonPrint.laboratorios.solicitados.length > 0) {
+                            labPrintStr += ordenJsonPrint.laboratorios.solicitados.map(l => getText(l.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))).join(', ');
+                        }
+                        if (ordenJsonPrint.laboratorios.otros) {
+                            labPrintStr += (ordenJsonPrint.laboratorios.solicitados.length > 0 ? ', ' : '') + getPreText(ordenJsonPrint.laboratorios.otros);
+                        }
+                        if (ordenJsonPrint.laboratorios.observaciones) {
+                             labPrintStr += `<br/>  ↳ Obs Lab: ${getPreText(ordenJsonPrint.laboratorios.observaciones)}`;
+                        }
+                        printHtml += `<p>${labPrintStr}</p>`;
+                    }
+
+                    // Imágenes
+                     if (ordenJsonPrint.imagenes && ordenJsonPrint.imagenes.indicada && ordenJsonPrint.imagenes.items && ordenJsonPrint.imagenes.items.length > 0) {
+                        printHtml += `<p><strong>Imágenes:</strong></p><ul style="margin-left:20px; list-style-type:circle;">`;
+                        ordenJsonPrint.imagenes.items.forEach(img => {
+                             printHtml += `<li>${getText(img.tipo_otra || img.tipo)}: ${getText(img.region)}</li>`;
+                        });
+                        printHtml += `</ul>`;
+                    }
+                    
+                    // Interconsultas/Proc
+                    if (ordenJsonPrint.otros_procedimientos_interconsultas && ordenJsonPrint.otros_procedimientos_interconsultas.indicada && ordenJsonPrint.otros_procedimientos_interconsultas.items && ordenJsonPrint.otros_procedimientos_interconsultas.items.length > 0) {
+                        printHtml += `<p><strong>Interconsultas/Procedimientos:</strong></p><ul style="margin-left:20px; list-style-type:circle;">`;
+                        ordenJsonPrint.otros_procedimientos_interconsultas.items.forEach(proc => {
+                             printHtml += `<li>${getText(proc.tipo_solicitud)}: ${getPreText(proc.detalle)}</li>`;
+                        });
+                        printHtml += `</ul>`;
+                    }
+
+                    // Monitoreo y Cuidados
+                    if (ordenJsonPrint.monitoreo_cuidados && ordenJsonPrint.monitoreo_cuidados.indicada) {
+                        let cuidadosPrintStr = `<strong>Monitoreo y Cuidados:</strong> `;
+                        if (ordenJsonPrint.monitoreo_cuidados.items && ordenJsonPrint.monitoreo_cuidados.items.length > 0) {
+                            cuidadosPrintStr += ordenJsonPrint.monitoreo_cuidados.items.map(c => {
+                                let CuidadoNombre = getText(c.cuidado.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()));
+                                return `${CuidadoNombre}${c.detalle ? ' ('+getText(c.detalle)+')' : ''}`;
+                            }).join(', ');
+                        }
+                        if (ordenJsonPrint.monitoreo_cuidados.otros_detalles) {
+                             cuidadosPrintStr += (ordenJsonPrint.monitoreo_cuidados.items.length > 0 ? '; ' : '') + `Otros: ${getPreText(ordenJsonPrint.monitoreo_cuidados.otros_detalles)}`;
+                        }
+                        printHtml += `<p>${cuidadosPrintStr}</p>`;
+                    }
+
+                    printHtml += `<p style="margin-top:10px; font-style:italic; font-size:9pt;"><strong>Informar Eventualidades.</strong></p>`;
+
+                } else {
+                    printHtml += `<p>Error al cargar detalles de la orden.</p>`;
+                }
+                printHtml += `</div>`; // Cierre orden-card
+            });
+        } else { printHtml += `<p>No hay órdenes médicas registradas.</p>`; }
+        printHtml += `</div>`; // Cierre section-block
+    }
+
+    if (sections.includes('estudios_comp')) {
+        printHtml += `<div class="section-block"><h2>Estudios Complementarios</h2>`;
+        if (patientData.complementarios_todos && patientData.complementarios_todos.length > 0) {
+            const estudiosOrdenados = [...patientData.complementarios_todos].sort((a,b) => new Date(a.fecha_registro) - new Date(b.fecha_registro));
+            estudiosOrdenados.forEach(comp => {
+                printHtml += `<div class="estudio-card">
+                                <h4>${getText(comp.nombre_estudio)} (${getText(comp.tipo_complementario)})</h4>
+                                <p class="text-xs"><strong>Fecha Registro:</strong> ${getText(formatDate(comp.fecha_registro, true))} | <strong>Fecha Realización:</strong> ${getText(formatDate(comp.fecha_realizacion))} | <strong>Registrado por:</strong> ${getText(comp.usuario_registrador_nombre)}</p>
+                                <p><strong>Resultado/Informe:</strong> ${getPreText(comp.resultado_informe)}</p>
+                                ${comp.archivo_adjunto_path ? `<p class="text-xs">Adjunto: ${getText(comp.archivo_adjunto_path)}</p>`:''}
+                              </div>`;
+            });
+        } else { printHtml += `<p>No hay estudios complementarios registrados.</p>`; }
+        printHtml += `</div>`;
+    }
+    
+    if (sections.includes('interconsultas')) {
+        printHtml += `<div class="section-block"><h2>Interconsultas</h2>`;
+        if (patientData.interconsultas_todas && patientData.interconsultas_todas.length > 0) {
+            const interconsultasOrdenadas = [...patientData.interconsultas_todas].sort((a,b) => new Date(a.fecha_solicitud) - new Date(b.fecha_solicitud));
+            interconsultasOrdenadas.forEach(ic => {
+                printHtml += `<div class="interconsulta-card">
+                                <h4>Servicio Consultado: ${getText(ic.servicio_consultado)}</h4>
+                                <p class="text-xs"><strong>Fecha Solicitud:</strong> ${getText(formatDate(ic.fecha_solicitud, true))} | <strong>Solicitante:</strong> ${getText(ic.usuario_solicitante_nombre)} | <strong>Estado:</strong> ${getText(ic.estado)}</p>
+                                <p><strong>Motivo:</strong> ${getPreText(ic.motivo_consulta)}</p>`;
+                if(ic.estado === 'Respondida'){
+                    printHtml += `<p class="text-xs"><strong>Fecha Respuesta:</strong> ${getText(formatDate(ic.fecha_respuesta, true))} | <strong>Respondida por:</strong> ${getText(ic.usuario_respuesta_nombre)}</p>
+                                  <p><strong>Respuesta:</strong> ${getPreText(ic.respuesta_texto)}</p>`;
+                }
+                printHtml += `</div>`;
+            });
+        } else { printHtml += `<p>No hay interconsultas registradas.</p>`; }
+        printHtml += `</div>`;
+    }
+
+    if (sections.includes('informes_medicos')) {
+        printHtml += `<div class="section-block"><h2>Informes Médicos</h2>`;
+        if (patientData.informes_medicos_todos && patientData.informes_medicos_todos.length > 0) {
+             const informesOrdenados = [...patientData.informes_medicos_todos].sort((a,b) => new Date(a.fecha_creacion) - new Date(b.fecha_creacion));
+            informesOrdenados.forEach(im => {
+                printHtml += `<div class="informe-card">
+                                <h4>Informe ${getText(im.tipo_informe)}</h4>
+                                <p class="text-xs"><strong>Fecha Creación:</strong> ${getText(formatDate(im.fecha_creacion, true))} | <strong>Creado por:</strong> ${getText(im.usuario_creador_nombre)}</p>
+                                <p><strong>Contenido:</strong> ${getPreText(im.contenido_texto)}</p>
+                                ${im.archivo_generado_path ? `<p class="text-xs">Archivo: ${getText(im.archivo_generado_path)}</p>` : ''}
+                              </div>`;
+            });
+        } else { printHtml += `<p>No hay informes médicos registrados.</p>`; }
+        printHtml += `</div>`;
+    }
+
+    if (sections.includes('recipes')) {
+        printHtml += `<div class="section-block"><h2>Récipes</h2>`;
+        if (patientData.recipes_todos && patientData.recipes_todos.length > 0) {
+            const recipesOrdenados = [...patientData.recipes_todos].sort((a,b) => new Date(a.fecha_emision) - new Date(b.fecha_emision));
+            recipesOrdenados.forEach(r => {
+                printHtml += `<div class="recipe-card">
+                                <h4>Récipes (${getText(r.tipo)})</h4>
+                                <p class="text-xs"><strong>Fecha Emisión:</strong> ${getText(formatDate(r.fecha_emision, true))} | <strong>Emitido por:</strong> ${getText(r.usuario_emisor_nombre)}</p>
+                                <p><strong>Indicaciones:</strong> ${getPreText(r.recipe_texto)}</p>
+                              </div>`;
+            });
+        } else { printHtml += `<p>No hay récipes registrados.</p>`; }
+        printHtml += `</div>`;
+    }
+
+
+    printHtml += `
+        </body>
+        </html>
+    `;
+    console.log("generatePrintContent: HTML generado para imprimir (primeros 500 chars):", printHtml.substring(0, 500));
+
+    if (window.backend && typeof window.backend.handle_print_request === 'function') {
+        console.log("generatePrintContent: Enviando HTML al backend para imprimir...");
+        window.backend.handle_print_request(printHtml); // Nueva función en Python
+    } else {
+        console.error("generatePrintContent: window.backend.handle_print_request no está disponible.");
+        alert("Error: La función de impresión no está conectada con la aplicación principal.");
+    }
+}
+
+    
+        // --- Funciones de Utilidad ---
+        function populateField(id, value, element = null) {
+            const targetElement = element || document.getElementById(id);
+            if (targetElement) {
+                const displayValue = (value !== null && value !== undefined && value !== '') ? value : 'N/D';
+                targetElement.textContent = displayValue;
+                targetElement.classList.toggle('text-gray-500', displayValue === 'N/D');
+                targetElement.classList.toggle('italic', displayValue === 'N/D');
+            } else {
+                // Comentado para reducir ruido, descomentar si se necesita debug
+                // console.warn(`${INIT_FUNCTION_NAME}: populateField: Elemento con ID '${id}' no encontrado.`);
+            }
+        }
+    
+         function formatDate(dateString, includeTime = false) {
+            if (!dateString) return 'N/D';
+            try {
+                // Intentar parsear asumiendo formato ISO o similar compatible
+                const date = new Date(dateString); 
+                if (isNaN(date.getTime())) {
+                    // Si falla, intentar parsear como 'YYYY-MM-DD HH:MM:SS' (común en SQLite a veces)
+                    const parts = dateString.split(/[- :]/);
+                    if (parts.length >= 6) {
+                        // Ajustar mes (0-indexado)
+                        const dateTry2 = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+                        if (!isNaN(dateTry2.getTime())) {
+                            date = dateTry2;
+                        } else {
+                             console.warn(`formatDate: No se pudo parsear la fecha '${dateString}'`);
+                             return dateString; // Devuelve original si no es válida
+                        }
+                    } else {
+                         console.warn(`formatDate: No se pudo parsear la fecha '${dateString}'`);
+                         return dateString; // Devuelve original si no es válida
+                    }
+                }
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                if (includeTime) {
+                    options.hour = '2-digit'; options.minute = '2-digit'; options.hour12 = true;
+                }
+                return date.toLocaleString('es-VE', options);
+            } catch (e) { 
+                console.warn(`formatDate: Error formateando fecha '${dateString}':`, e);
+                return dateString; // Devuelve original en caso de error
+            }
+        }
+    
+        function showError(message) {
+            console.error(`${INIT_FUNCTION_NAME}: Mostrando Error - ${message}`);
+            const errorContainer = document.getElementById('content-area') || document.body;
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            if (contentDiv) contentDiv.style.display = 'none';
+            if (errorContainer) {
+                 errorContainer.innerHTML = `<div class="p-6"><p class="text-red-600 font-semibold p-4 bg-red-100 border border-red-300 rounded">${message}</p></div>`;
+            } else {
+                console.error("Contenedor #content-area no encontrado para mostrar error.");
+            }
+        }
+    
+    
+        // --- Lógica de Pestañas ---
+        function switchTab(targetPanelId) {
+            if (!tabButtons || !tabPanels) {
+                console.error(`${INIT_FUNCTION_NAME}: switchTab abortado, elementos de pestañas no encontrados.`);
+                return;
+            }
+            console.log(`${INIT_FUNCTION_NAME}: switchTab: Cambiando a panel ${targetPanelId}`);
+            const targetPanel = document.getElementById(targetPanelId);
+            if (!targetPanel) {
+                console.warn(`switchTab: Panel con ID '${targetPanelId}' no encontrado.`);
+                return;
+            }
+            const targetButton = document.querySelector(`.tab-button[data-target="${targetPanelId}"]`);
+    
+            // Desactivar todos
+            tabButtons.forEach(button => {
+                button.setAttribute('aria-selected', 'false');
+                button.classList.remove('bg-teal-100', 'text-teal-700');
+                button.classList.add('text-gray-600', 'hover:bg-gray-100', 'hover:text-gray-900');
+            });
+            tabPanels.forEach(panel => {
+                panel.classList.add('hidden');
+                panel.style.display = 'none';
+            });
+    
+            // Activar el objetivo
+            if (targetButton) {
+                targetButton.setAttribute('aria-selected', 'true');
+                targetButton.classList.add('bg-teal-100', 'text-teal-700');
+                targetButton.classList.remove('text-gray-600', 'hover:bg-gray-100', 'hover:text-gray-900');
+            }
+            targetPanel.classList.remove('hidden');
+            targetPanel.style.display = 'block';
+    
+            // Lazy Loading (Renderizar si no se ha hecho antes)
+            if (!renderedTabs.has(targetPanelId) && currentPatientData) {
+                 console.log(`${INIT_FUNCTION_NAME}: switchTab: Lazy loading para ${targetPanelId}`);
+                 renderPanelContent(targetPanelId, currentPatientData);
+                 renderedTabs.add(targetPanelId);
+            } else {
+                 console.log(`${INIT_FUNCTION_NAME}: switchTab: Contenido para ${targetPanelId} ya renderizado o sin datos.`);
+            }
+        }
+    
+        // --- Renderizado de Paneles (Dispatcher) ---
+        function renderPanelContent(panelId, data) {
+             console.log(`${INIT_FUNCTION_NAME}: Renderizando panel ${panelId}`);
+             const panelElement = document.getElementById(panelId);
+             if (!panelElement) {
+                 console.error(`Error en renderPanelContent: Panel ${panelId} no encontrado.`);
+                 return;
+             }
+             // Limpiar contenido previo (importante para lazy loading)
+             // La excepción es si el panel ya tiene una estructura base compleja que no quieres borrar.
+             // Por ahora, limpiamos el contenedor específico de contenido dentro de cada panel.
+             
+             switch (panelId) {
+                 case 'panel-datospaciente':
+                     renderDatosPacientePanel(data.info, 'datospaciente-content');
+                     break;
+                 case 'panel-resumen':
+                     renderResumenIngresoPanel(data.info, data.consultas_info?.[0], data.examen_fisico_inicial);
+                     break;
+                 case 'panel-evoluciones':
+                 renderEvolucionesPanel(data.evoluciones_todas || [], 'evoluciones-content', data.info.id, data.info.fecha_ingreso_consulta_actual); 
+                     break;
+                 case 'panel-ordenes':
+                     renderOrdenesMedicasPanel(data.ordenes_medicas_todas || [], 'ordenes-content', data.info.id);
+                     break;
+                 case 'panel-estudios':
+                      renderComplementariosPanel(data.complementarios_todos || [], 'estudios-content');
+                      break;
+                 case 'panel-interconsultas':
+                      renderInterconsultasPanel(data.interconsultas_todas || [], 'interconsultas-content');
+                      break;
+                 case 'panel-informes':
+                      renderInformesPanel(data.informes_medicos_todos || [], 'informes-content');
+                      break;
+                 case 'panel-recipes':
+                      renderRecipesPanel(data.recipes_todos || [], 'recipes-content');
+                      break;
+                 default:
+                     console.warn(`No hay función de renderizado definida para el panel: ${panelId}`);
+                     const defaultPanel = document.getElementById(panelId);
+                     if(defaultPanel) {
+                         const defaultContentContainer = defaultPanel.querySelector('div[id$="-content"]'); // Busca un div que termine en -content
+                         if (defaultContentContainer) {
+                             defaultContentContainer.innerHTML = `<p class="italic text-gray-500">Contenido no implementado para esta sección.</p>`;
+                         } else {
+                             defaultPanel.innerHTML = `<p class="italic text-gray-500">Contenido no implementado.</p>`;
+                         }
+                     }
+             }
+        }
+    
+        function renderResumenIngresoPanel(patientInfo, initialConsultation, initialExam) {
+    console.log(`${INIT_FUNCTION_NAME}: Renderizando Resumen Ingreso con estilo de tarjetas`); // Asumo INIT_FUNCTION_NAME está definido
+
+    // Contenedores para las secciones de datos (que se convertirán en tarjetas)
+    const motivoHeaContainer = document.getElementById('resumen-motivo-hea');
+    const antecedentesContainer = document.getElementById('resumen-antecedentes-todos');
+    const efContainer = document.getElementById('resumen-examen-fisico');
+    const dxContainer = document.getElementById('resumen-diagnostico');
+
+    // Contenedor específico para el botón de editar en la cabecera del panel general
+    const editButtonContainer = document.getElementById('resumen-ingreso-edit-button-container');
+
+    // Validación de contenedores principales de contenido
+    if (!motivoHeaContainer || !antecedentesContainer || !efContainer || !dxContainer || !editButtonContainer) {
+        console.error("Error en renderResumenIngresoPanel: Faltan elementos contenedores HTML (editButtonContainer o contenedores de tarjetas).");
+        const panelResumen = document.getElementById('panel-resumen'); // El div general del panel
+        if (panelResumen) {
+             panelResumen.innerHTML = `
+                <div class="bg-white p-4 rounded-lg shadow border border-red-300">
+                    <h4 class="text-md font-semibold text-red-700 mb-2">Error de Renderizado</h4>
+                    <p class="text-sm text-red-600">No se pudieron cargar los componentes del resumen de ingreso. Por favor, contacte al soporte.</p>
+                </div>`;
+        }
+        return;
+    }
+
+    // Aplicar clases de tarjeta a los contenedores principales de sección
+    const cardClasses = "bg-white p-4 rounded-lg shadow border border-gray-200";
+    [motivoHeaContainer, antecedentesContainer, efContainer, dxContainer].forEach(container => {
+        if (container) {
+            container.className = cardClasses; // Sobrescribe clases existentes, o usa classList.add si prefieres
+            container.innerHTML = `<p class="italic text-gray-500 text-sm">Cargando datos...</p>`; // Placeholder mientras se carga
+        }
+    });
+    editButtonContainer.innerHTML = ''; // Limpiar contenedor del botón
+
+    const consultaId = initialConsultation ? (initialConsultation.id_consulta_original || initialConsultation.id || initialConsultation.consulta_id) : null;
+    const patientId = patientInfo ? patientInfo.id : null;
+
+    // --- Generar e Insertar el Botón de Editar en la Cabecera del Panel ---
+    // Este botón va fuera de las tarjetas de contenido, usualmente en un header del panel.
+    let editButtonHtml = '';
+    if (consultaId && patientId) {
+        editButtonHtml = `
+            <button
+                type="button"
+                onclick="window.navigateToEditIngresoData(${patientId}, ${consultaId})"
+                class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-semibold rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition"
+                title="Editar Motivo, HEA, Diagnóstico y Ex. Físico de Ingreso">
+                <i class="fas fa-file-medical-alt fa-fw mr-1"></i> Editar Info. Ingreso
+            </button>
+        `;
+    } else {
+        editButtonHtml = `
+            <button
+                type="button"
+                class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-semibold rounded-md shadow-sm text-gray-400 bg-gray-100 cursor-not-allowed"
+                title="No hay ingreso activo o datos para editar" disabled>
+                <i class="fas fa-file-medical-alt fa-fw mr-1"></i> Editar Info. Ingreso
+            </button>
+        `;
+    }
+    editButtonContainer.innerHTML = editButtonHtml;
+
+
+    // --- 1. Tarjeta: Motivo de Consulta y Enfermedad Actual ---
+    if (motivoHeaContainer) {
+        let motivoHeaCardContent = `<h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Motivo y Enfermedad Actual</h4>`;
+        motivoHeaCardContent += `<div class="text-sm space-y-2">`; // Contenedor interno para el contenido
+        motivoHeaCardContent += `<div><strong class="text-gray-600">Motivo Consulta:</strong> <span class="text-gray-800">${initialConsultation?.motivo_consulta_dec || initialConsultation?.motivo_consulta || '<span class="italic text-gray-400">No registrado</span>'}</span></div>`;
+        motivoHeaCardContent += `<div><strong class="text-gray-600">Enfermedad Actual:</strong> <p class="text-gray-700 mt-1 whitespace-pre-wrap">${initialConsultation?.historia_enfermedad_actual_dec || initialConsultation?.historia_enfermedad_actual || '<span class="italic text-gray-400">No registrada</span>'}</p></div>`;
+        motivoHeaCardContent += `</div>`;
+        motivoHeaContainer.innerHTML = motivoHeaCardContent;
+    }
+
+
+    // --- 2. Tarjeta: Antecedentes ---
+    if (antecedentesContainer) {
+        let antecedentesCardContent = `<h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Antecedentes</h4>`;
+        antecedentesCardContent += `<div class="text-sm space-y-3">`; // Contenedor interno para el contenido
+        if (patientInfo) {
+            // Antecedentes Personales
+            antecedentesCardContent += `<div><h5 class="text-sm font-medium text-gray-700 mb-1">Personales:</h5><ul class="list-disc list-inside pl-2 space-y-0.5 text-xs text-gray-800">`;
+            const apFields = [
+                { label: "Asma", keyBase: "ap_asma" }, { label: "HTA", keyBase: "ap_hta" },
+                { label: "DM", keyBase: "ap_dm" }, { label: "Cardiopatía", keyBase: "ap_cardiopatia" },
+                { label: "Otros AP", keyBase: "ap_otros" }
+            ];
+            apFields.forEach(field => {
+                const refiere = patientInfo[field.keyBase] === 1;
+                const detalle = patientInfo[`${field.keyBase}_detalle_dec`] || patientInfo[`${field.keyBase}_detalle`];
+                antecedentesCardContent += `<li><span class="font-medium">${field.label}:</span> ${refiere ? (detalle || 'Refiere') : 'Niega'}</li>`;
+            });
+            antecedentesCardContent += `<li><span class="font-medium">Alergias:</span> ${patientInfo.ap_alergias_dec || patientInfo.ap_alergias || 'Niega / N/D'}</li>`;
+            antecedentesCardContent += `<li><span class="font-medium">Quirúrgicos:</span> ${patientInfo.ap_quirurgicos_dec || patientInfo.ap_quirurgicos || 'Niega / N/D'}</li>`;
+            antecedentesCardContent += `</ul></div>`;
+
+            // Antecedentes Familiares
+            antecedentesCardContent += `<div><h5 class="text-sm font-medium text-gray-700 mb-1">Familiares:</h5><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-800">`;
+            ['af_madre', 'af_padre', 'af_hermanos', 'af_hijos'].forEach(key => {
+                const label = key.substring(3).charAt(0).toUpperCase() + key.substring(4);
+                antecedentesCardContent += `<div><span class="font-medium">${label}:</span> ${patientInfo[`${key}_dec`] || patientInfo[key] || 'N/D'}</div>`;
+            });
+            antecedentesCardContent += `</div></div>`;
+
+            // Hábitos Psicobiológicos
+            antecedentesCardContent += `<div><h5 class="text-sm font-medium text-gray-700 mb-1">Hábitos Psicobiológicos:</h5><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-gray-800">`;
+            ['hab_tabaco', 'hab_alcohol', 'hab_drogas', 'hab_cafe', 'hab_perdida_peso'].forEach(key => {
+                const label = key.substring(4).charAt(0).toUpperCase() + key.substring(5).replace('_', ' ');
+                antecedentesCardContent += `<div><span class="font-medium">${label}:</span> ${patientInfo[`${key}_dec`] || patientInfo[key] || 'N/D'}</div>`;
+            });
+            antecedentesCardContent += `</div></div>`;
+        } else {
+            antecedentesCardContent += '<p class="italic text-gray-400 text-xs">Antecedentes no disponibles.</p>';
+        }
+        antecedentesCardContent += `</div>`;
+        antecedentesContainer.innerHTML = antecedentesCardContent;
+    }
+
+
+    // --- 3. Tarjeta: Examen Físico Inicial ---
+    if (efContainer) {
+        let efCardContent = `<h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Examen Físico</h4>`;
+        efCardContent += `<div class="text-sm space-y-1">`; // Contenedor interno
+        if (initialExam) {
+            // Aquí puedes mapear los campos del examen físico de forma más estructurada si quieres
+            efCardContent += `<div><strong class="text-gray-600">T/A:</strong> <span class="text-gray-800">${initialExam.ef_ta_dec || initialExam.ef_ta || 'N/D'}</span></div>`;
+            efCardContent += `<div><strong class="text-gray-600">FC:</strong> <span class="text-gray-800">${initialExam.ef_fc_dec || initialExam.ef_fc || 'N/D'}</span></div>`;
+            efCardContent += `<div><strong class="text-gray-600">FR:</strong> <span class="text-gray-800">${initialExam.ef_fr_dec || initialExam.ef_fr || 'N/D'}</span></div>`;
+            efCardContent += `<div><strong class="text-gray-600">SatO2:</strong> <span class="text-gray-800">${initialExam.ef_sato2_dec || initialExam.ef_sato2 || 'N/D'}</span></div>`;
+            efCardContent += `<div><strong class="text-gray-600">Peso:</strong> <span class="text-gray-800">${initialExam.ef_peso_dec || initialExam.ef_peso || 'N/D'}</span></div>`;
+            efCardContent += `<div><strong class="text-gray-600">Talla:</strong> <span class="text-gray-800">${initialExam.ef_talla_dec || initialExam.ef_talla || 'N/D'}</span></div>`;
+            efCardContent += `<div class="mt-2"><strong class="text-gray-600">Aspecto General:</strong> <p class="text-gray-700 mt-0.5 whitespace-pre-wrap">${initialExam.ef_aspecto_general_dec || initialExam.ef_aspecto_general || 'N/D'}</p></div>`;
+            efCardContent += `<div class="mt-1"><strong class="text-gray-600">Cardiopulmonar:</strong> <p class="text-gray-700 mt-0.5 whitespace-pre-wrap">${initialExam.ef_cardiopulmonar_dec || initialExam.ef_cardiopulmonar || 'N/D'}</p></div>`;
+            // ... Añade más campos del examen físico según sea necesario
+        } else {
+            efCardContent += `<p class="italic text-gray-400">Ex. Físico inicial no registrado.</p>`;
+        }
+        efCardContent += `</div>`;
+        efContainer.innerHTML = efCardContent;
+    }
+
+
+    // --- 4. Tarjeta: Impresión Diagnóstica Inicial ---
+    if (dxContainer) {
+        let dxCardContent = `<h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Impresión Diagnóstica</h4>`;
+        dxCardContent += `<div class="text-sm">`; // Contenedor interno
+        dxCardContent += `<p class="text-gray-700 mt-1 whitespace-pre-wrap">${initialConsultation?.diagnostico_ingreso_dec || initialConsultation?.diagnostico_ingreso || '<span class="italic text-gray-400">No registrada</span>'}</p>`;
+        dxCardContent += `</div>`;
+        dxContainer.innerHTML = dxCardContent;
+    }
+
+    console.log(`${INIT_FUNCTION_NAME}: Resumen Ingreso Renderizado Completado con estilo de tarjetas.`);
+}
+
+    function renderDatosPacientePanel(patientInfo, containerId) {
+         console.log(`${INIT_FUNCTION_NAME}: Renderizando Datos Paciente`); // Asumo que INIT_FUNCTION_NAME es del script de paciente_detalle
+         const container = document.getElementById(containerId);
+         if (!container) { console.error(`Error renderDatosPacientePanel: Contenedor #${containerId} no encontrado.`); return; }
+         if (!patientInfo) { container.innerHTML = '<p class="italic text-gray-500 p-4">Datos del paciente no disponibles.</p>'; return; }
+
+         const patientId = patientInfo.id; 
+
+         let htmlContent = `<div class="space-y-6">`; // Contenedor general para las tarjetas
+
+         // --- Cabecera de la Sección: Título + Botón Editar ---
+         htmlContent += `
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200 mb-4">
+                <h3 class="text-xl font-semibold text-teal-700">
+                    Datos del Paciente
+                </h3>
+                ${patientId ? `
+                <button 
+                    type="button" 
+                    onclick="window.navigateToEditPatientData(${patientId})" 
+                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-semibold rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition" 
+                    title="Editar Datos Demográficos y Contacto">
+                    <i class="fas fa-pencil-alt fa-fw mr-1"></i> Editar Datos Principales
+                </button>
+                ` : ''}
+            </div>
+         `;
+
+        // --- Tarjeta: Datos Demográficos ---
+        // (Tu código existente para la tarjeta de Datos Demográficos, sin cambios aquí)
+        htmlContent += `
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                <h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Datos Demográficos</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div><strong class="text-gray-600">F. Nacimiento:</strong> <span class="text-gray-800">${formatDate(patientInfo.fecha_nacimiento) || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">L. Nacimiento:</strong> <span class="text-gray-800">${patientInfo.lugar_nacimiento_dec || patientInfo.lugar_nacimiento || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">Edo. Civil:</strong> <span class="text-gray-800">${patientInfo.estado_civil_dec || patientInfo.estado_civil || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">Profesión/Oficio:</strong> <span class="text-gray-800">${patientInfo.profesion_oficio_dec || patientInfo.profesion_oficio || 'N/D'}</span></div>
+                </div>
+            </div>`;
+
+        // --- Tarjeta: Información de Contacto ---
+        // (Tu código existente para la tarjeta de Información de Contacto, sin cambios aquí)
+        htmlContent += `
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                <h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Información de Contacto</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div><strong class="text-gray-600">Teléf. Habitación:</strong> <span class="text-gray-800">${patientInfo.telefono_habitacion_dec || patientInfo.telefono_habitacion || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">Teléf. Móvil:</strong> <span class="text-gray-800">${patientInfo.telefono_movil_dec || patientInfo.telefono_movil || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">Email:</strong> <span class="text-gray-800">${patientInfo.email_dec || patientInfo.email || 'N/D'}</span></div>
+                    <div class="sm:col-span-2"><strong class="text-gray-600">Dirección:</strong> <span class="text-gray-800">${patientInfo.direccion_dec || patientInfo.direccion || 'N/D'}</span></div>
+                </div>
+            </div>`;
+        
+        // --- Tarjeta: Contacto Emergencia ---
+        // (Tu código existente, sin cambios aquí)
+        htmlContent += `
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                <h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Contacto de Emergencia</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div><strong class="text-gray-600">Nombre:</strong> <span class="text-gray-800">${patientInfo.emerg_nombre_dec || patientInfo.emerg_nombre || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">Parentesco:</strong> <span class="text-gray-800">${patientInfo.emerg_parentesco_dec || patientInfo.emerg_parentesco || 'N/D'}</span></div>
+                    <div><strong class="text-gray-600">Teléfono:</strong> <span class="text-gray-800">${patientInfo.emerg_telefono_dec || patientInfo.emerg_telefono || 'N/D'}</span></div>
+                    <div class="sm:col-span-2"><strong class="text-gray-600">Dirección:</strong> <span class="text-gray-800">${patientInfo.emerg_direccion_dec || patientInfo.emerg_direccion || 'N/D'}</span></div>
+                </div>
+            </div>`;
+
+        // --- Tarjeta: Notas Adicionales ---
+        // (Tu código existente, sin cambios aquí)
+         htmlContent += `
+            <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                <h4 class="text-md font-semibold text-teal-700 mb-3 border-b pb-2">Notas Adicionales</h4>
+                <div class="text-sm text-gray-800 bg-gray-50 p-3 rounded border border-gray-200 whitespace-pre-wrap min-h-[60px]">
+                    ${patientInfo.notas_adicionales_dec || patientInfo.notas_adicionales || '<span class="italic text-gray-400">Sin notas adicionales registradas.</span>'}
+                </div>
+            </div>`;
+
+        htmlContent += '</div>'; // Cierre del div.space-y-6 general
+
+        container.innerHTML = htmlContent;
+        console.log(`${INIT_FUNCTION_NAME}: Datos Paciente Renderizado Completado con nuevos estilos.`);
+    }
+
+    window.navigateToEditIngresoData = function(patientId, consultaId, section = null) {
+        // El INIT_FUNCTION_NAME aquí podría ser el de la vista actual (ej. paciente_detalle)
+        // o simplemente un log genérico.
+        const currentViewScriptName = "VistaDeOrigen"; // Reemplaza con el nombre real si lo tienes
+        console.log(`${currentViewScriptName}: Navegando a editar INGRESO. P:${patientId}, C:${consultaId}, Sec:${section}`);
+
+        const pId = parseInt(patientId);
+        const cId = parseInt(consultaId);
+
+        if (isNaN(pId) || pId <= 0 || isNaN(cId) || cId <= 0) {
+            console.error(`${currentViewScriptName}: IDs de paciente o consulta inválidos: P='${patientId}', C='${consultaId}'`);
+            alert("Error: No se pueden identificar los datos de ingreso para editar (IDs inválidos).");
+            return;
+        }
+
+        const intentarSetearIdsYCargarVista = () => {
+            console.log(`${currentViewScriptName}: Ejecutando intentarSetearIdsYCargarVista (P:${pId}, C:${cId})`);
+            if (typeof window.backend !== 'undefined' && typeof window.backend.set_selected_patient_and_consulta === 'function') {
+                try {
+                    console.log(`${currentViewScriptName}: Llamando a backend.set_selected_patient_and_consulta(${pId}, ${cId})`);
+                    window.backend.set_selected_patient_and_consulta(pId, cId);
+                    
+                    // Ahora carga la vista de edición
+                    if (typeof loadContent === 'function') { // loadContent es global de main_shell
+                        // Un pequeño timeout puede ser útil para dar tiempo a que el slot en Python se ejecute
+                        // y actualice las variables de instancia antes de que la nueva vista solicite los datos.
+                        setTimeout(() => {
+                            loadContent('pacientes__informacion_base__editar_ingreso');
+                        }, 50); // Puedes probar con 0 o un valor pequeño como 50.
+                    } else {
+                        console.error(`${currentViewScriptName}: Error: La función global 'loadContent' no está disponible.`);
+                        alert("Error al intentar cargar la página de edición.");
+                    }
+                } catch (e) {
+                    console.error(`${currentViewScriptName}: Error al llamar a backend.set_selected_patient_and_consulta:`, e);
+                    alert("Error de comunicación al preparar la edición del ingreso.");
+                }
+            } else {
+                console.error(`${currentViewScriptName}: En intentarSetearIdsYCargarVista: backend.set_selected_patient_and_consulta NO disponible.`);
+                console.log("  typeof window.backend:", typeof window.backend);
+                if (window.backend) {
+                    console.log("  typeof window.backend.set_selected_patient_and_consulta:", typeof window.backend.set_selected_patient_and_consulta);
+                    console.log("  Objeto window.backend:", window.backend); // Para ver qué métodos SÍ tiene
+                }
+                alert("La función para seleccionar el ingreso a editar no está disponible. Intente recargar la página.");
+            }
+        };
+
+        // Usar el mismo patrón de 'isBackendFullyReady' que en las otras vistas
+        if (window.isBackendFullyReady === true) {
+            console.log(`${currentViewScriptName}: El backend (isBackendFullyReady=true) ya estaba listo. Procediendo a setear IDs.`);
+            intentarSetearIdsYCargarVista();
+        } else {
+            console.log(`${currentViewScriptName}: Backend (isBackendFullyReady=${window.isBackendFullyReady}) no listo. Esperando 'backendReady' antes de setear IDs.`);
+            const listener = () => {
+                console.log(`${currentViewScriptName}: Evento 'backendReady' recibido. Intentando setear IDs.`);
+                document.removeEventListener('backendReady', listener);
+                intentarSetearIdsYCargarVista();
+            };
+            document.addEventListener('backendReady', listener);
+        }
+    };
+
+    // --- AÑADIR LA FUNCIÓN PARA NAVEGAR A LA PÁGINA DE EDICIÓN ---
+    window.navigateToEditPatientData = function(patientId) {
+        console.log(`${INIT_FUNCTION_NAME}: Navegando a editar datos paciente ID: ${patientId}`);
+        if (typeof patientId !== 'number' || patientId <= 0) {
+            console.error("navigateToEditPatientData: ID de paciente inválido.");
+            alert("Error: No se puede identificar al paciente para editar.");
+            return;
+        }
+
+        // 1. Guardar el ID del paciente seleccionado (si tu backend no lo mantiene)
+        // Si tu backend ya tiene 'selected_patient_id', este paso podría no ser necesario,
+        // pero es bueno asegurarse.
+        if (typeof backend !== 'undefined' && typeof backend.set_selected_patient === 'function') {
+            backend.set_selected_patient(patientId);
+        } else {
+             console.warn("navigateToEditPatientData: backend.set_selected_patient no disponible.");
+             // Continuar de todos modos, asumiendo que el ID ya está en el backend o no se necesita aquí.
+        }
+
+        // 2. Cargar la vista de edición
+        if (typeof loadContent === 'function') {
+            // Nombre de la vista correspondiente al archivo HTML
+            loadContent('pacientes__informacion_base__editar_datos_paciente');
+        } else {
+             alert("Error: Función de navegación no encontrada.");
+        }
+    }
+    // --- FIN FUNCIÓN DE NAVEGACIÓN ---
+    
+    function calculateDaysElapsed(startDateString, endDateString) {
+    if (!startDateString || !endDateString) return null;
+    try {
+        const start = new Date(startDateString);
+        const end = new Date(endDateString);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+        const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+        const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+        const diffInMilliseconds = endUtc - startUtc;
+        const days = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+        return days >= 0 ? days + 1 : null;
+    } catch (e) {
+        console.error("Error calculando días:", e); return null;
+    }
+}
+
+// Función auxiliar para calcular días (sin cambios)
+function calculateDaysElapsed(startDateString, endDateString) {
+    if (!startDateString || !endDateString) return null;
+    try {
+        const start = new Date(startDateString);
+        const end = new Date(endDateString);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+        const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+        const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+        const diffInMilliseconds = endUtc - startUtc;
+        const days = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+        return days >= 0 ? days + 1 : null;
+    } catch (e) {
+        console.error("Error calculando días:", e); return null;
+    }
+}
+
+// EN pacientes__paciente_detalle.js
+
+// Asumiendo que INIT_FUNCTION_NAME, formatDate, calculateDaysElapsed
+// y window.navigateToPage están definidos en el mismo ámbito o globalmente.
+
+function renderEvolucionesPanel(evoluciones, containerId, patientId, fechaIngresoPaciente) {
+    console.log(`${INIT_FUNCTION_NAME}: Renderizando Evoluciones. patientId: ${patientId}`);
+    const container = document.getElementById(containerId);
+
+    if (!container) {
+        console.error(`Error renderEvolucionesPanel: Contenedor #${containerId} no encontrado.`);
+        return;
+    }
+
+    const totalEvoluciones = evoluciones ? evoluciones.length : 0;
+    let diasTotalesHospitalizacion = null;
+    if (fechaIngresoPaciente) {
+        try {
+            diasTotalesHospitalizacion = calculateDaysElapsed(fechaIngresoPaciente, new Date().toISOString());
+        } catch(e) {
+            console.error("Error calculando días totales de hospitalización:", e);
+            diasTotalesHospitalizacion = null;
+        }
+    }
+
+    // --- Lógica para verificar evolución de hoy ---
+    let evolucionDeHoyId = null;
+    const hoy = new Date();
+    // Formato YYYY-MM-DD para comparación robusta solo de fecha
+    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+    if (evoluciones && evoluciones.length > 0) {
+        for (const evo of evoluciones) {
+            if (evo.fecha_hora) {
+                try {
+                    const fechaEvo = new Date(evo.fecha_hora);
+                    const fechaEvoStr = `${fechaEvo.getFullYear()}-${String(fechaEvo.getMonth() + 1).padStart(2, '0')}-${String(fechaEvo.getDate()).padStart(2, '0')}`;
+                    if (fechaEvoStr === hoyStr) {
+                        evolucionDeHoyId = evo.id || evo.evolucion_id;
+                        console.log(`Se encontró una evolución para hoy (ID: ${evolucionDeHoyId}) con fecha: ${fechaEvoStr}`);
+                        break;
+                    }
+                } catch (e) {
+                    console.error(`Error parseando fecha de evolución: ${evo.fecha_hora}`, e);
+                }
+            }
+        }
+    }
+    // --- Fin lógica para verificar evolución de hoy ---
+
+    let panelHtml = `
+        <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-300 mb-6">
+            <div>
+                <h3 class="text-xl font-semibold text-teal-700">
+                    Evoluciones Médicas (${totalEvoluciones})
+                </h3>
+                ${diasTotalesHospitalizacion !== null ? `
+                    <p class="text-sm text-gray-600 mt-1">Días de Hospitalización Totales: <span class="font-semibold">${diasTotalesHospitalizacion}</span></p>
+                ` : ''}
+            </div>
+            <div id="boton-nueva-evolucion-container" class="text-right">`; // Contenedor para el botón y/o mensaje
+
+    if (evolucionDeHoyId) {
+        // Ya existe una evolución para hoy
+        panelHtml += `
+            <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-md shadow-sm">
+                <p class="text-yellow-700 font-semibold text-sm mb-1"><i class="fas fa-exclamation-circle mr-1"></i> Ya existe una evolución registrada hoy.</p>
+                <p class="text-xs text-gray-600 mb-2">Puede editar la evolución existente o ver sus detalles.</p>
+            </div>
+        `;
+    } else if (patientId) { // Solo mostrar si hay patientId y no hay evolución de hoy
+        // No hay evolución para hoy, mostrar botón "Nueva Evolución"
+        panelHtml += `
+            <button
+                type="button"
+                onclick="console.log('Clic en Nueva Evolución. ID Paciente a pasar:', ${patientId}); window.currentPatientIdForContext = ${patientId}; window.navigateToPage('pacientes/evolucion/agregar_evolucion', { patient_id: ${patientId} });"
+                class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150"
+                title="Añadir Nueva Evolución Médica">
+                <i class="fas fa-plus fa-fw mr-2"></i> Nueva Evolución
+            </button>
+        `;
+    } else {
+        console.warn("renderEvolucionesPanel: No se puede mostrar botón 'Nueva Evolución' porque patientId no está definido y no hay evolución de hoy.");
+        // Opcional: mostrar un placeholder o nada
+    }
+
+    panelHtml += `
+            </div> <!-- Cierre de boton-nueva-evolucion-container -->
+        </div>`; // Cierre del flex justify-between
+
+    if (totalEvoluciones === 0 && !evolucionDeHoyId) {
+        panelHtml += `
+            <div class="bg-white p-6 rounded-lg shadow border border-gray-200 text-center">
+                <i class="fas fa-file-medical-alt fa-3x text-gray-300 mb-4"></i>
+                <p class="italic text-gray-600">No hay evoluciones médicas registradas para este paciente.</p>
+            </div>`;
+        container.innerHTML = panelHtml;
+        console.log(`${INIT_FUNCTION_NAME}: Panel de Evoluciones renderizado (sin evoluciones y sin una para hoy).`);
+        return;
+    }
+
+    // --- Renderizado de la lista de evoluciones existentes ---
+    panelHtml += `<div class="space-y-6">`;
+    if (evoluciones && evoluciones.length > 0) {
+        evoluciones.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora)); // Más recientes primero
+
+        evoluciones.forEach((evo) => {
+            const idActualEvolucion = evo.id || evo.evolucion_id;
+            const esLaDeHoy = idActualEvolucion === evolucionDeHoyId;
+
+            const fechaEvoObj = new Date(evo.fecha_hora);
+            const fechaEvoFormateada = formatDate(evo.fecha_hora); // Usar tu función formatDate
+            const horaEvoFormateada = formatDate(evo.fecha_hora, false, true); // Asumiendo que formatDate puede tomar (fecha, incluirTiempo, soloTiempo)
+                                                                                // Si no, usa toLocaleTimeString directamente:
+                                                                                // const horaEvoFormateada = fechaEvoObj.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            const creadorNombreCompleto = evo.usuario_creador_nombre_completo || evo.usuario_creador_nombre || 'N/D';
+            const modificadorNombreCompleto = evo.usuario_modificador_nombre_completo || evo.usuario_modificador_nombre || 'N/D';
+
+            let diaDeEvolucionCalculado = null;
+            if (fechaIngresoPaciente && evo.fecha_hora) {
+                try {
+                    diaDeEvolucionCalculado = calculateDaysElapsed(fechaIngresoPaciente, evo.fecha_hora);
+                } catch(e) { console.error("Error calculando día de evolución para una entrada:",e); }
+            }
+
+            panelHtml += `
+                <div class="bg-white p-4 rounded-lg shadow border ${esLaDeHoy ? 'border-yellow-500 ring-2 ring-yellow-400 shadow-yellow-200/50' : 'border-gray-200'}">
+                    <div class="flex justify-between items-start mb-3 pb-2 border-b border-gray-100">
+                        <div>
+                            <h4 class="text-md font-semibold ${esLaDeHoy ? 'text-yellow-700' : 'text-teal-600'}">
+                                Evolución del ${fechaEvoFormateada}
+                                ${diaDeEvolucionCalculado !== null ? `<span class="text-sm font-normal text-gray-500"> (Día ${diaDeEvolucionCalculado})</span>` : ''}
+                                ${esLaDeHoy ? '<span class="ml-2 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-bold rounded-full">HOY</span>' : ''}
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-0.5">
+                                Hora: <span class="font-medium text-gray-600">${horaEvoFormateada}</span> | Por: <span class="font-medium text-gray-700">${creadorNombreCompleto}</span>
+                            </p>
+                            ${evo.fecha_ultima_mod && modificadorNombreCompleto !== 'N/D' ? `
+                                <p class="text-xs text-gray-400 italic mt-0.5">
+                                    Modificado: ${modificadorNombreCompleto} - ${formatDate(evo.fecha_ultima_mod, true)}
+                                </p>
+                            ` : ''}
+                        </div>
+                        <div class="flex space-x-1.5 flex-shrink-0 ml-2">
+                            ${idActualEvolucion && patientId ? `
+                            <button type="button" onclick="window.navigateToPage('pacientes/evolucion/ver_evolucion', { evolucion_id: ${idActualEvolucion}, patient_id: ${patientId} })"
+                                class="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-150" title="Ver Detalles">
+                                <i class="fas fa-eye fa-fw"></i></button>
+                            <button type="button" onclick="window.navigateToPage('pacientes/evolucion/editar_evolucion', { evolucion_id: ${idActualEvolucion}, patient_id: ${patientId} })"
+                                class="p-1.5 text-gray-500 hover:text-orange-500 rounded-md hover:bg-orange-50 transition-colors duration-150" title="Editar Evolución">
+                                <i class="fas fa-pencil-alt fa-fw"></i></button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="space-y-3 text-sm">`;
+
+            const svItems = [
+                { label: "T/A", value: evo.ev_ta_dec || evo.ev_ta },
+                { label: "FC", value: evo.ev_fc, unit: "lpm" }, // Asumiendo que ev_fc no tiene _dec y es numérico
+                { label: "FR", value: evo.ev_fr, unit: "rpm" }, // Asumiendo que ev_fr no tiene _dec y es numérico
+                { label: "SatO₂", value: evo.ev_sato2, unit: "%" }, // Asumiendo que ev_sato2 no tiene _dec y es numérico
+                { label: "Temp", value: evo.ev_temp_dec || evo.ev_temp, unit: "°C" },
+            ].filter(item => typeof item.value !== 'undefined' && item.value !== null && String(item.value).trim() !== '');
+
+
+            if (svItems.length > 0) {
+                panelHtml += `
+                    <div class="py-1">
+                        <strong class="text-gray-700 font-medium text-xs block mb-0.5">Signos Vitales:</strong>
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                        ${svItems.map(item => `<span><span class="text-gray-500">${item.label}:</span> <span class="text-gray-800 font-medium">${item.value}${item.unit ? ' ' + item.unit : ''}</span></span>`).join('<span class="text-gray-300">|</span>')}
+                        </div>
+                    </div>`;
+            }
+
+            const renderTextFieldFlow = (label, value, isItalic = false) => {
+                if (typeof value !== 'undefined' && value !== null && String(value).trim() !== '') {
+                    return `
+                        <div>
+                            <strong class="text-gray-700 font-medium align-top">${label}: </strong><pre class="inline font-sans text-sm text-gray-800 whitespace-pre-wrap ${isItalic ? 'italic text-gray-600' : ''}">${value}</pre>
+                        </div>`;
+                }
+                return '';
+            };
+
+            panelHtml += renderTextFieldFlow("Subjetivo", evo.ev_subjetivo_dec || evo.ev_subjetivo);
+            panelHtml += renderTextFieldFlow("Objetivo (Ex. Físico)", evo.ev_objetivo_dec || evo.ev_objetivo);
+            panelHtml += renderTextFieldFlow("Diagnóstico(s)", evo.ev_diagnosticos_dec || evo.ev_diagnosticos);
+            panelHtml += renderTextFieldFlow("Tratamiento y Plan", evo.ev_tratamiento_plan_dec || evo.ev_tratamiento_plan);
+            panelHtml += renderTextFieldFlow("Comentario Adicional", evo.ev_comentario_dec || evo.ev_comentario, true);
+
+            panelHtml += `
+                    </div> <!-- Cierre de space-y-3 -->
+                </div> <!-- Cierre de tarjeta de evolución -->
+            `;
+        });
+    } else if (evolucionDeHoyId) { // Si solo hay la de hoy y se muestra el mensaje de editarla
+        panelHtml += `<p class="italic text-gray-500 text-center mt-4">No hay otras evoluciones registradas.</p>`;
+    }
+    panelHtml += `</div>`; // Cierre de space-y-6 principal
+
+    container.innerHTML = panelHtml;
+    console.log(`${INIT_FUNCTION_NAME}: Panel de Evoluciones renderizado completamente.`);
+}
+window.navigateToPage = function(viewName, params = {}) {
+    // viewName ejemplo: 'paciente/evolucion/agregar_evolucion'
+    // params ejemplo: { patient_id: 123, evolucion_id: 45 }
+
+    console.log(`navigateToPage: Vista: ${viewName}, Params:`, params);
+
+    // ***** INICIO DE LA MODIFICACIÓN IMPORTANTE *****
+    if (viewName.includes('agregar_evolucion') && params && params.patient_id) {
+        console.log(`navigateToPage (para agregar_evolucion): Estableciendo window.currentPatientIdForContext = ${params.patient_id}`);
+        window.currentPatientIdForContext = params.patient_id; 
+        console.log(`navigateToPage: window.currentPatientIdForContext ESTABLECIDO A: ${window.currentPatientIdForContext} (para vista ${viewName})`);
+    } else if (viewName.includes('editar_evolucion') && params && params.patient_id) {
+        // Si vas a editar, también guarda el patient_id para el "Cancelar/Volver"
+        console.log(`navigateToPage (para editar_evolucion): Estableciendo window.currentPatientIdForContext = ${params.patient_id}`);
+        window.currentPatientIdForContext = params.patient_id;
+    } else if (viewName.includes('ver_evolucion') && params && params.patient_id) {
+        // Si vas a ver, también guarda el patient_id para el "Volver"
+        console.log(`navigateToPage (para ver_evolucion): Estableciendo window.currentPatientIdForContext = ${params.patient_id}`);
+        window.currentPatientIdForContext = params.patient_id;
+    } else if ((viewName.includes('ordenes/ver_orden') || viewName.includes('ordenes/editar_orden')) && params && params.orden_id) {
+    if (window.backend && typeof window.backend.set_selected_orden === 'function') {
+        console.log(`navigateToPage (ver/editar orden): Seteando selected_orden en backend a ID: ${params.orden_id}`);
+        window.backend.set_selected_orden(params.orden_id);
+        // También mantener el patient_id para el botón de volver, si está disponible
+        if (params.patient_id) {
+            window.currentPatientIdForContext = params.patient_id;
+            if (typeof window.backend.set_selected_patient === 'function') { // Opcional, si la vista de orden necesita el paciente directamente
+                // window.backend.set_selected_patient(params.patient_id);
+            }
+        }
+    } else {
+        console.error("navigateToPage (ver/editar orden): backend.set_selected_orden no disponible.");
+        // Podrías mostrar un error aquí o dejar que la vista falle al no encontrar datos
+        return; // Importante: salir si no se puede setear la orden
+    }
+    }
+
+    // Puedes añadir más 'else if' para otras vistas que necesiten este contexto.
+    // Si no es ninguna de estas vistas o no hay patient_id, no se toca window.currentPatientIdForContext,
+    // lo cual está bien, ya que solo nos importa para las vistas que lo usan al volver.
+    // ***** FIN DE LA MODIFICACIÓN IMPORTANTE *****
+
+    const tryLoad = () => {
+        // Aquí es donde configuras el estado en el backend ANTES de cargar la vista
+        if (viewName.includes('agregar_evolucion') && params && params.patient_id) { // Añadido 'params &&' para seguridad
+            if (window.backend && typeof window.backend.set_selected_patient === 'function') {
+                console.log(`navigateToPage (agregar_evolucion): Seteando selected_patient en backend a ID: ${params.patient_id}`);
+                window.backend.set_selected_patient(params.patient_id);
+            } else {
+                console.warn("navigateToPage (agregar_evolucion): backend.set_selected_patient no disponible.");
+            }
+        } else if (viewName.includes('editar_evolucion') && params && params.evolucion_id) { // Añadido 'params &&'
+            if (window.backend && typeof window.backend.set_selected_evolucion === 'function') {
+                window.backend.set_selected_evolucion(params.evolucion_id);
+                if (params.patient_id && typeof window.backend.set_selected_patient === 'function') {
+                    window.backend.set_selected_patient(params.patient_id);
+                }
+            } else { console.error("set_selected_evolucion no disponible para editar"); return; }
+        } else if (viewName.includes('ver_evolucion') && params && params.evolucion_id) { // Añadido 'params &&'
+            if (window.backend && typeof window.backend.set_selected_evolucion === 'function') {
+                window.backend.set_selected_evolucion(params.evolucion_id);
+                if (params.patient_id && typeof window.backend.set_selected_patient === 'function') {
+                    window.backend.set_selected_patient(params.patient_id);
+                }
+            } else { console.error("set_selected_evolucion no disponible para ver"); return; }
+        }
+        // Añadir más casos para otras vistas...
+
+        const viewPathForLoadContent = viewName.replace(/\//g, '__');
+        if (typeof loadContent === 'function') { // Asegurarse que loadContent esté disponible
+            loadContent(viewPathForLoadContent);
+        } else {
+            console.error("navigateToPage: La función global 'loadContent' no está disponible.");
+            // Podrías mostrar un alert o un mensaje de error en la UI aquí.
+        }
+    };
+
+    if (window.isBackendFullyReady) {
+        tryLoad();
+    } else {
+        console.log("navigateToPage: Backend no listo, esperando evento 'backendReady'.");
+        document.addEventListener('backendReady', tryLoad, { once: true });
+    }
+};
+
+// EN pacientes__paciente_detalle.js
+
+// En el script de pacientes__paciente_detalle.html
+
+// En el script de pacientes__paciente_detalle.html
+
+function renderOrdenesMedicasPanel(ordenes, containerId, patientId) {
+    const local_INIT_FUNCTION_NAME = typeof INIT_FUNCTION_NAME !== 'undefined' ? INIT_FUNCTION_NAME : "renderOrdenesMedicasPanel";
+    // ... (console.logs y headerHtml como antes) ...
+    console.log(`${local_INIT_FUNCTION_NAME}: Renderizando Órdenes Médicas. PatientId: ${patientId}, Total órdenes: ${ordenes ? ordenes.length : 0}`);
+    if (ordenes && ordenes.length > 0) {
+        console.log(`${local_INIT_FUNCTION_NAME}: Datos crudos de órdenes recibidas (primeros 500 chars):`, JSON.stringify(ordenes).substring(0,500));
+    }
+
+    const container = document.getElementById(containerId);
+
+    if (!container) {
+        console.error(`Error ${local_INIT_FUNCTION_NAME}: Contenedor #${containerId} no encontrado.`);
+        return;
+    }
+
+    let headerHtml = `
+        <div class="flex justify-between items-center pb-3 border-b border-gray-300 mb-6">
+            <h3 class="text-xl font-semibold text-teal-700">
+                Órdenes Médicas (${ordenes ? ordenes.length : 0})
+            </h3>
+            <button
+                type="button"
+                onclick="console.log('Clic en Nueva Orden Médica. ID Paciente:', ${patientId}); window.currentPatientIdForContext = ${patientId}; window.navigateToPage('pacientes/ordenes/agregar_orden', { patient_id: ${patientId} });"
+                class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150"
+                title="Añadir Nueva Orden Médica">
+                <i class="fas fa-plus fa-fw mr-2"></i> Nueva Orden
+            </button>
+        </div>`;
+
+    let contentHtml = '';
+    if (!ordenes || ordenes.length === 0) {
+        contentHtml = '<div class="bg-white p-6 rounded-lg shadow border text-center"><i class="fas fa-notes-medical fa-3x text-gray-300 mb-4"></i><p class="italic text-gray-600">No hay órdenes médicas registradas.</p></div>';
+    } else {
+        const ordenesOrdenadas = [...ordenes].sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
+
+        contentHtml = ordenesOrdenadas.map(om => {
+            let ordenJson = null;
+            let errorParseo = null;
+
+            // console.log(`${local_INIT_FUNCTION_NAME}: Procesando orden ID ${om.id}. Blob recibido:`, om.orden_json_blob, `Tipo: ${typeof om.orden_json_blob}`);
+
+            if (om.orden_json_blob && typeof om.orden_json_blob === 'string') {
+                try {
+                    ordenJson = JSON.parse(om.orden_json_blob);
+                    // console.log(`${local_INIT_FUNCTION_NAME}: JSON parseado para orden ID ${om.id}:`, ordenJson);
+                } catch (e) {
+                    errorParseo = `Error parseando JSON de orden ID ${om.id}: ${e.message}`;
+                    console.error(errorParseo, "Data original:", om.orden_json_blob);
+                }
+            } else if (om.orden_json_blob && typeof om.orden_json_blob === 'object') {
+                ordenJson = om.orden_json_blob;
+                // console.log(`${local_INIT_FUNCTION_NAME}: orden_json_blob ya era objeto para orden ID ${om.id}:`, ordenJson);
+            } else {
+                errorParseo = `orden_json_blob para orden ID ${om.id} no es un string ni objeto válido.`;
+                // console.warn(errorParseo, "Valor:", om.orden_json_blob);
+            }
+
+            let detallesOrden = '';
+            if (ordenJson && Object.keys(ordenJson).length > 0 && !ordenJson.error_desencriptacion && !ordenJson.error_parsing_json_python) {
+                // ... (toda tu lógica para construir detallesOrden como antes)
+                // Hospitalización
+                if (ordenJson.hospitalizacion && ordenJson.hospitalizacion.indicada) {
+                    detallesOrden += `<div class="mb-1"><strong class="text-gray-700 text-xs">Hospitalizar en:</strong> <span class="text-gray-600 text-xs">${ordenJson.hospitalizacion.lugar || 'No especificado'}</span></div>`;
+                }
+                // Dieta
+                if (ordenJson.dieta && ordenJson.dieta.tipo_inicial) {
+                    let dietaStr = `<strong class="text-gray-700 text-xs">Dieta:</strong> <span class="text-gray-600 text-xs">${ordenJson.dieta.tipo_inicial}`;
+                    if (ordenJson.dieta.tipo_inicial === 'Absoluta' && ordenJson.dieta.absoluta_duracion_valor) {
+                        dietaStr += ` por ${ordenJson.dieta.absoluta_duracion_valor} ${ordenJson.dieta.absoluta_duracion_unidad || ''}`;
+                    } else if (ordenJson.dieta.tipo_inicial === 'Específica' && ordenJson.dieta.especifica_desc) {
+                        dietaStr += ` (${ordenJson.dieta.especifica_desc})`;
+                    }
+                    dietaStr += '</span>';
+                    if (ordenJson.dieta.progresion && ordenJson.dieta.progresion.indicada && ordenJson.dieta.progresion.siguiente_tipo) {
+                        dietaStr += `<br/><span class="text-xs text-gray-500 ml-2">Progresar a: ${ordenJson.dieta.progresion.siguiente_tipo} (Condición: ${ordenJson.dieta.progresion.condicion || 'S/E'})</span>`;
+                    }
+                    if (ordenJson.dieta.observaciones_generales) {
+                        dietaStr += `<br/><span class="text-xs text-gray-500 ml-2">Obs: ${ordenJson.dieta.observaciones_generales}</span>`;
+                    }
+                    detallesOrden += `<div class="mb-1">${dietaStr}</div>`;
+                }
+                // HP
+                if (ordenJson.hp && ordenJson.hp.indicada && ordenJson.hp.soluciones && ordenJson.hp.soluciones.length > 0) {
+                    detallesOrden += `<div class="mb-1"><strong class="text-gray-700 text-xs">Hidratación Parenteral:</strong><ul class="list-disc list-inside ml-4 text-xs text-gray-600">`;
+                    ordenJson.hp.soluciones.forEach(sol => {
+                        detallesOrden += `<li>${sol.tipo} ${sol.volumen || ''}cc, vía ${sol.via || 'IV'}. Vel: ${sol.velocidad_valor || ''} ${sol.velocidad_unidad || ''}. ${sol.indicaciones ? 'Indic: ' + sol.indicaciones : ''}</li>`;
+                    });
+                    detallesOrden += `</ul>`;
+                    if(ordenJson.hp.observaciones_generales) detallesOrden += `<p class="text-xs text-gray-500 ml-2">Obs. Generales HP: ${ordenJson.hp.observaciones_generales}</p>`;
+                    detallesOrden += `</div>`;
+                }
+                // Medicamentos
+                if (ordenJson.medicamentos && ordenJson.medicamentos.indicada && ordenJson.medicamentos.items && ordenJson.medicamentos.items.length > 0) {
+                    detallesOrden += `<div class="mb-1"><strong class="text-gray-700 text-xs">Medicamentos:</strong><ul class="list-disc list-inside ml-4 text-xs text-gray-600">`;
+                    ordenJson.medicamentos.items.forEach(med => {
+                         detallesOrden += `<li>${med.nombre} ${med.dosis || ''} ${med.unidad_otra || med.unidad || ''} ${med.via_otra || med.via || ''} ${med.frecuencia || ''}. ${med.observaciones || ''}</li>`;
+                    });
+                    detallesOrden += `</ul></div>`;
+                }
+                // Laboratorio
+                if (ordenJson.laboratorios && ordenJson.laboratorios.indicada) {
+                    let labStr = `<strong class="text-gray-700 text-xs">Laboratorio:</strong> <span class="text-gray-600 text-xs">`;
+                    if (ordenJson.laboratorios.solicitados && ordenJson.laboratorios.solicitados.length > 0) {
+                        labStr += ordenJson.laboratorios.solicitados.map(l => l.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())).join(', ');
+                    }
+                    if (ordenJson.laboratorios.otros) {
+                        labStr += (ordenJson.laboratorios.solicitados && ordenJson.laboratorios.solicitados.length > 0 ? ', ' : '') + ordenJson.laboratorios.otros;
+                    }
+                    if (labStr.trim() === `<strong class="text-gray-700 text-xs">Laboratorio:</strong> <span class="text-gray-600 text-xs">`) { 
+                        labStr += 'No especificados';
+                    }
+                    labStr += '</span>';
+                    if (ordenJson.laboratorios.observaciones) {
+                         labStr += `<br/><span class="text-xs text-gray-500 ml-2">Obs Lab: ${ordenJson.laboratorios.observaciones}</span>`;
+                    }
+                    detallesOrden += `<div class="mb-1">${labStr}</div>`;
+                }
+                // Imágenes
+                 if (ordenJson.imagenes && ordenJson.imagenes.indicada && ordenJson.imagenes.items && ordenJson.imagenes.items.length > 0) {
+                    detallesOrden += `<div class="mb-1"><strong class="text-gray-700 text-xs">Imágenes:</strong><ul class="list-disc list-inside ml-4 text-xs text-gray-600">`;
+                    ordenJson.imagenes.items.forEach(img => {
+                         detallesOrden += `<li>${img.tipo_otra || img.tipo}: ${img.region || 'No especificado'}</li>`;
+                    });
+                    detallesOrden += `</ul></div>`;
+                }
+                // Interconsultas/Proc
+                if (ordenJson.otros_procedimientos_interconsultas && ordenJson.otros_procedimientos_interconsultas.indicada && ordenJson.otros_procedimientos_interconsultas.items && ordenJson.otros_procedimientos_interconsultas.items.length > 0) {
+                    detallesOrden += `<div class="mb-1"><strong class="text-gray-700 text-xs">Interconsultas/Procedimientos:</strong><ul class="list-disc list-inside ml-4 text-xs text-gray-600">`;
+                    ordenJson.otros_procedimientos_interconsultas.items.forEach(proc => {
+                         detallesOrden += `<li>${proc.tipo_solicitud || 'No especificado'}: ${proc.detalle || ''}</li>`;
+                    });
+                    detallesOrden += `</ul></div>`;
+                }
+                // Monitoreo y Cuidados
+                if (ordenJson.monitoreo_cuidados && ordenJson.monitoreo_cuidados.indicada) {
+                    let cuidadosStr = `<strong class="text-gray-700 text-xs">Monitoreo y Cuidados:</strong> <span class="text-gray-600 text-xs">`;
+                    if (ordenJson.monitoreo_cuidados.items && ordenJson.monitoreo_cuidados.items.length > 0) {
+                        cuidadosStr += ordenJson.monitoreo_cuidados.items.map(c => {
+                            let CuidadoNombre = c.cuidado.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+                            return `${CuidadoNombre}${c.detalle ? ' ('+c.detalle+')' : ''}`;
+                        }).join(', ');
+                    }
+                    if (ordenJson.monitoreo_cuidados.otros_detalles) {
+                         cuidadosStr += (ordenJson.monitoreo_cuidados.items && ordenJson.monitoreo_cuidados.items.length > 0 ? '; ' : '') + `Otros: ${ordenJson.monitoreo_cuidados.otros_detalles}`;
+                    }
+                     if (cuidadosStr.trim() === `<strong class="text-gray-700 text-xs">Monitoreo y Cuidados:</strong> <span class="text-gray-600 text-xs">`) {
+                        cuidadosStr += 'No especificados';
+                    }
+                    cuidadosStr += '</span>';
+                    detallesOrden += `<div class="mb-1">${cuidadosStr}</div>`;
+                }
+
+                if (detallesOrden.trim() === '') {
+                    detallesOrden = '<p class="italic text-xs text-gray-500">Orden sin detalles específicos indicados.</p>';
+                }
+
+            } else {
+                let mensajeErrorPredeterminado = "Detalles de la orden no disponibles o corruptos.";
+                if (errorParseo) mensajeErrorPredeterminado = `Error al procesar detalles (ID: ${om.id}).`;
+                else if (ordenJson && ordenJson.error_desencriptacion) mensajeErrorPredeterminado = `Error de desencriptación (ID: ${om.id}).`;
+                else if (ordenJson && ordenJson.error_parsing_json_python) mensajeErrorPredeterminado = `Error de formato interno (ID: ${om.id}).`;
+                else if (om.orden_json_blob === null || om.orden_json_blob === undefined || (typeof om.orden_json_blob === 'string' && om.orden_json_blob.trim() === '') || (typeof om.orden_json_blob === 'object' && Object.keys(om.orden_json_blob).length === 0) ) {
+                    mensajeErrorPredeterminado = `Orden ID ${om.id} no contiene detalles.`;
+                }
+                detallesOrden = `<p class="italic text-xs text-gray-500">${mensajeErrorPredeterminado}</p>`;
+            }
+
+            const idOrdenActual = om.id; // El ID de la orden médica actual
+
+            return `
+                <div class="border rounded p-3 mb-3 bg-gray-50 text-sm shadow-sm hover:shadow-md transition-shadow duration-150">
+                    <div class="flex justify-between items-start mb-2 pb-2 border-b border-gray-200">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-800">
+                                ${formatDate(om.fecha_hora, true)}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                Orden: #${idOrdenActual} del paciente | Registrada por: ${om.usuario_orden_nombre || 'N/D'}
+                            </p>
+                        </div>
+                        <!-- ***** INICIO BOTONES DE ACCIÓN ***** -->
+                        <div class="flex space-x-1.5 flex-shrink-0 ml-2">
+                            ${idOrdenActual && patientId ? `
+                            <button type="button" 
+                                    onclick="window.currentPatientIdForContext = ${patientId}; window.navigateToPage('pacientes/ordenes/ver_orden', { orden_id: ${idOrdenActual}, patient_id: ${patientId} })"
+                                    class="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-150" 
+                                    title="Ver Detalles de la Orden">
+                                <i class="fas fa-eye fa-fw"></i>
+                            </button>
+                            <button type="button" 
+                                    onclick="window.currentPatientIdForContext = ${patientId}; window.navigateToPage('pacientes/ordenes/editar_orden', { orden_id: ${idOrdenActual}, patient_id: ${patientId} })"
+                                    class="p-1.5 text-gray-500 hover:text-orange-500 rounded-md hover:bg-orange-50 transition-colors duration-150" 
+                                    title="Editar Orden Médica">
+                                <i class="fas fa-pencil-alt fa-fw"></i>
+                            </button>
+                            ` : ''}
+                        </div>
+                        <!-- ***** FIN BOTONES DE ACCIÓN ***** -->
+                    </div>
+                    <div class="whitespace-normal text-xs text-gray-700 min-h-[50px] space-y-1">
+                        ${detallesOrden}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    container.innerHTML = headerHtml + `<div class="space-y-4">${contentHtml}</div>`;
+    console.log(`${local_INIT_FUNCTION_NAME}: Órdenes Médicas Renderizado Completado.`);
+}
+
+function renderComplementariosPanel(complementarios, containerId) {
+             console.log(`${INIT_FUNCTION_NAME}: Renderizando Estudios Complementarios`);
+             const container = document.getElementById(containerId);
+             if (!container) { console.error(`Error renderComplementariosPanel: Contenedor #${containerId} no encontrado.`); return; }
+             if (!complementarios || complementarios.length === 0) { container.innerHTML = '<p class="italic text-gray-500">No hay estudios complementarios registrados.</p>'; return; }
+             const grupos = complementarios.reduce((acc, comp) => {
+                 const tipo = comp.tipo_complementario || 'Otro';
+                 if (!acc[tipo]) acc[tipo] = [];
+                 acc[tipo].push(comp);
+                 return acc;
+             }, {});
+             let html = '';
+             for (const tipo in grupos) {
+                 html += `<h4 class="text-md font-semibold text-gray-800 mt-4 mb-2">${tipo}</h4>`;
+                 html += grupos[tipo].map(comp => `
+                     <div class="border rounded p-3 mb-3 bg-gray-50 text-sm shadow-sm">
+                         <div class="flex justify-between items-center mb-1 pb-1 border-b">
+                             <p class="text-xs font-semibold text-gray-700">
+                                 ${formatDate(comp.fecha_registro)} 
+                                 ${comp.fecha_realizacion ? `(Realizado: ${formatDate(comp.fecha_realizacion)})` : ''}
+                             </p>
+                             <p class="text-xs text-gray-500">Reg: ${comp.usuario_registrador_nombre || 'N/D'}</p>
+                         </div>
+                         <p><strong>Estudio:</strong> ${comp.nombre_estudio || 'N/D'}</p>
+                         <p class="mt-1"><strong class="text-xs block text-gray-600">Resultado/Informe:</strong></p>
+                         <p class="whitespace-pre-wrap text-xs bg-white p-2 border rounded mt-1">${comp.resultado_informe || '(Sin resultado)'}</p>
+                          ${comp.archivo_adjunto_path ? `<p class="mt-1 text-xs"><a href="${comp.archivo_adjunto_path}" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-paperclip mr-1"></i> Ver Adjunto</a></p>` : ''}
+                      </div>
+                 `).join('');
+             }
+             container.innerHTML = html || '<p class="italic text-gray-500">No hay estudios complementarios registrados.</p>';
+             console.log(`${INIT_FUNCTION_NAME}: Estudios Complementarios Renderizado Completado.`);
+        }
+    
+        function renderInterconsultasPanel(interconsultas, containerId) {
+             console.log(`${INIT_FUNCTION_NAME}: Renderizando Interconsultas`);
+             const container = document.getElementById(containerId);
+             if (!container) { console.error(`Error renderInterconsultasPanel: Contenedor #${containerId} no encontrado.`); return; }
+             if (!interconsultas || interconsultas.length === 0) { container.innerHTML = '<p class="italic text-gray-500">No hay interconsultas registradas.</p>'; return; }
+             let html = interconsultas.map(ic => `
+                 <div class="border rounded p-3 mb-3 bg-gray-50 text-sm shadow-sm">
+                     <div class="flex justify-between items-center mb-1 pb-1 border-b">
+                         <p class="text-xs font-semibold text-gray-700">
+                             Solicitud: ${formatDate(ic.fecha_solicitud, true)}
+                         </p>
+                         <p class="text-xs text-gray-500">Por: ${ic.usuario_solicitante_nombre || 'N/D'}</p>
+                     </div>
+                     <div class="flex justify-between items-center mt-1 mb-1">
+                         <p><strong>Servicio Consultado:</strong> ${ic.servicio_consultado || 'N/D'}</p>
+                         <span class="px-2 py-0.5 rounded text-xs font-medium ${ic.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : (ic.estado === 'Respondida' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')}">${ic.estado || '?'}</span>
+                     </div>
+                     <div class="mt-1"><strong class="text-xs block text-gray-600">Motivo:</strong> <p class="whitespace-pre-wrap pl-2">${ic.motivo_consulta || ''}</p></div>
+                      ${ic.estado === 'Respondida' ? `
+                         <div class="mt-2 pt-2 border-t border-gray-200">
+                              <div class="flex justify-between items-center mb-1">
+                                  <p class="text-xs font-semibold text-gray-700">Respuesta: ${formatDate(ic.fecha_respuesta, true)}</p>
+                                  <p class="text-xs text-gray-500">Por: ${ic.usuario_respuesta_nombre || 'N/D'}</p>
+                              </div>
+                              <p class="whitespace-pre-wrap text-xs bg-white p-2 border rounded">${ic.respuesta_texto || '(Sin texto de respuesta)'}</p>
+                          </div>
+                      ` : ''}
+                 </div>
+             `).join('');
+             container.innerHTML = html || '<p class="italic text-gray-500">No hay interconsultas registradas.</p>';
+             console.log(`${INIT_FUNCTION_NAME}: Interconsultas Renderizado Completado.`);
+        }
+    
+         function renderInformesPanel(informes, containerId) {
+              console.log(`${INIT_FUNCTION_NAME}: Renderizando Informes Médicos`);
+              const container = document.getElementById(containerId);
+             if (!container) { console.error(`Error renderInformesPanel: Contenedor #${containerId} no encontrado.`); return; }
+             if (!informes || informes.length === 0) { container.innerHTML = '<p class="italic text-gray-500">No hay informes médicos registrados.</p>'; return; }
+              let html = informes.map(im => `
+                 <div class="border rounded p-3 mb-3 bg-gray-50 text-sm shadow-sm">
+                     <div class="flex justify-between items-center mb-1 pb-1 border-b">
+                          <p class="text-xs font-semibold text-gray-700">
+                               ${formatDate(im.fecha_creacion, true)}
+                          </p>
+                          <p class="text-xs text-gray-500">Por: ${im.usuario_creador_nombre || 'N/D'}</p>
+                      </div>
+                     <p><strong>Tipo:</strong> ${im.tipo_informe || 'N/D'}</p>
+                     <p class="mt-1"><strong class="text-xs block text-gray-600">Contenido:</strong></p>
+                     <p class="whitespace-pre-wrap text-xs bg-white p-2 border rounded mt-1 h-40 overflow-y-auto">${im.contenido_texto || '(Sin contenido)'}</p>
+                     ${im.archivo_generado_path ? `<p class="mt-1 text-xs"><a href="${im.archivo_generado_path}" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-file-pdf mr-1"></i> Ver Archivo PDF Generado</a></p>` : ''}
+                 </div>
+             `).join('');
+             container.innerHTML = html || '<p class="italic text-gray-500">No hay informes médicos registrados.</p>';
+              console.log(`${INIT_FUNCTION_NAME}: Informes Médicos Renderizado Completado.`);
+         }
+    
+          function renderRecipesPanel(recipes, containerId) {
+              console.log(`${INIT_FUNCTION_NAME}: Renderizando Récipes`);
+              const container = document.getElementById(containerId);
+             if (!container) { console.error(`Error renderRecipesPanel: Contenedor #${containerId} no encontrado.`); return; }
+             if (!recipes || recipes.length === 0) { container.innerHTML = '<p class="italic text-gray-500">No hay récipes registrados.</p>'; return; }
+              let html = recipes.map(r => `
+                 <div class="border rounded p-3 mb-3 bg-gray-50 text-sm shadow-sm">
+                     <div class="flex justify-between items-center mb-1 pb-1 border-b">
+                         <p class="text-xs font-semibold text-gray-700">
+                              ${formatDate(r.fecha_emision, true)}
+                         </p>
+                          <p class="text-xs text-gray-500">Por: ${r.usuario_emisor_nombre || 'N/D'}</p>
+                      </div>
+                     <p><strong>Tipo:</strong> ${r.tipo || 'N/D'}</p>
+                     <p class="mt-1"><strong class="text-xs block text-gray-600">Indicaciones:</strong></p>
+                     <p class="whitespace-pre-wrap text-xs bg-white p-2 border rounded mt-1 h-40 overflow-y-auto">${r.recipe_texto || '(Sin indicaciones)'}</p>
+                 </div>
+             `).join('');
+             container.innerHTML = html || '<p class="italic text-gray-500">No hay récipes registrados.</p>';
+              console.log(`${INIT_FUNCTION_NAME}: Récipes Renderizado Completado.`);
+         }
+    
+        // --- Handler Principal de Datos ---
+        window.handlePatientDetailsResult_pacientes__paciente_detalle = function(jsonString) {
+            console.log(`${INIT_FUNCTION_NAME}: handlePatientDetailsResult recibido.`);
+            if (!contentDiv || !loadingDiv) {
+                console.error("Handler Error crítico: Elementos #detalle-content o #detalle-loading no están disponibles.");
+                return;
+            }
+            let data = null;
+            try { data = JSON.parse(jsonString); }
+            catch (e) { showError("Error procesando los datos recibidos."); console.error("Error parseando JSON:", e); return; }
+
+            if (!data || typeof data !== 'object') { showError("Datos inválidos recibidos."); return; }
+            if (data.error) { showError(`Error desde el servidor: ${data.error}`); return; }
+            if (!data.info) { showError("Respuesta incompleta: faltan datos esenciales del paciente."); return; }
+
+            currentPatientData = data;
+            renderedTabs = new Set();
+
+            loadingDiv.style.display = 'none';
+            contentDiv.style.display = 'flex';
+
+            populateField('detalle-nombre', `${data.info.nombres || ''} ${data.info.apellidos || ''}`.trim() || 'Paciente Sin Nombre');
+            populateField('detalle-cedula', data.info.cedula);
+            populateField('detalle-historia', data.info.numero_historia);
+            populateField('detalle-edad', data.info.edad_calculada);
+            populateField('detalle-sexo', data.info.sexo);
+
+            let initialTabToActivate = 'panel-datospaciente';
+            if (window.targetTabAfterLoad) {
+                console.log(`${INIT_FUNCTION_NAME}: targetTabAfterLoad detectado: ${window.targetTabAfterLoad}`);
+                if (tabPanels && Array.from(tabPanels).find(panel => panel.id === window.targetTabAfterLoad)) {
+                    initialTabToActivate = window.targetTabAfterLoad;
+                } else {
+                    console.warn(`${INIT_FUNCTION_NAME}: targetTabAfterLoad ('${window.targetTabAfterLoad}') no es un ID de panel válido o tabPanels no está listo. Usando por defecto.`);
+                }
+                window.targetTabAfterLoad = null;
+            }
+
+            console.log(`${INIT_FUNCTION_NAME}: Activando pestaña inicial: ${initialTabToActivate}`);
+            if (typeof switchTab === 'function') {
+                switchTab(initialTabToActivate);
+            } else {
+                console.error(`${INIT_FUNCTION_NAME}: La función switchTab no está definida.`);
+            }
+
+            console.log(`${INIT_FUNCTION_NAME}: handlePatientDetailsResult completado. Interfaz inicial renderizada.`);
+        };
+    
+        // --- Función para solicitar los detalles ---
+        function fetchPatientDetails() {
+            console.log(`${INIT_FUNCTION_NAME}: Ejecutando fetchPatientDetails...`);
+            if (!loadingDiv || !contentDiv) {
+                 console.error(`${INIT_FUNCTION_NAME}: No se pueden obtener elementos loadingDiv o contentDiv para fetch.`);
+                 showError("Error fatal de interfaz al intentar cargar detalles (fetch).");
+                 return;
+            }
+            loadingDiv.textContent = 'Cargando detalles del paciente...';
+            loadingDiv.style.display = 'block';
+            contentDiv.style.display = 'none'; // Ocultar mientras carga
+            
+            if (typeof window.backend !== 'undefined' && window.backend.request_patient_details) {
+                 try {
+                     console.log(`${INIT_FUNCTION_NAME}: Llamando a backend.request_patient_details().`);
+                     window.backend.request_patient_details();
+                 }
+                 catch(e) { console.error("Error llamando backend.request_patient_details:", e); showError('Error de comunicación al solicitar detalles.'); }
+            } else { console.error("Backend no disponible."); showError('Error crítico: No se puede conectar con el servidor.'); }
+        }
+    
+        // --- Función de Inicialización Principal (Llamada por el Shell) ---
+        function initializeView() {
+            console.log(`*** ${INIT_FUNCTION_NAME}: INICIALIZANDO VISTA DETALLE PACIENTE ***`);
+            if (isInitialized) {
+                console.warn(`${INIT_FUNCTION_NAME}: La vista ya fue inicializada. Refrescando datos...`);
+                currentPatientData = null;
+                renderedTabs = new Set();
+                if (typeof fetchPatientDetails === 'function') {
+                    fetchPatientDetails();
+                } else {
+                    console.error(`${INIT_FUNCTION_NAME}: La función fetchPatientDetails no está definida.`);
+                }
+                return;
+            }
+
+            loadingDiv = document.getElementById('detalle-loading');
+            contentDiv = document.getElementById('detalle-content');
+            tabButtons = document.querySelectorAll('.tab-button');
+            tabPanels = document.querySelectorAll('.tab-panel');
+
+            if (!loadingDiv || !contentDiv || !tabButtons || tabButtons.length === 0 || !tabPanels || tabPanels.length === 0) {
+                console.error(`${INIT_FUNCTION_NAME}: Error crítico - Faltan elementos esenciales de la interfaz.`);
+                if (typeof showError === 'function') {
+                    showError("Error fatal: La estructura de la página de detalles es incorrecta.");
+                }
+                return;
+            }
+            console.log(`${INIT_FUNCTION_NAME}: Elementos UI encontrados. Btn Pestañas: ${tabButtons.length}, Paneles: ${tabPanels.length}`);
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const targetPanelId = event.currentTarget.getAttribute('data-target');
+                    if (targetPanelId) {
+                        if (typeof switchTab === 'function') {
+                            switchTab(targetPanelId);
+                        } else {
+                            console.error(`${INIT_FUNCTION_NAME}: La función switchTab no está definida.`);
+                        }
+                    }
+                });
+            });
+            console.log(`${INIT_FUNCTION_NAME}: Listeners de pestañas añadidos.`);
+
+            isInitialized = true;
+            if (typeof fetchPatientDetails === 'function') {
+                fetchPatientDetails();
+            } else {
+                console.error(`${INIT_FUNCTION_NAME}: La función fetchPatientDetails no está definida.`);
+            }
+            initializePrintModal();
+        }
+    
+        // --- Registro del Inicializador ---
+        window.viewInitializationFunctions = window.viewInitializationFunctions || {};
+        if (window.viewInitializationFunctions[INIT_FUNCTION_NAME]) {
+            console.warn(`${INIT_FUNCTION_NAME}: El inicializador ya estaba registrado. Sobrescribiendo.`);
+        }
+        window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+        console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado por script ${SCRIPT_VIEW_NAME}.`);
+    
+        console.log("--- pacientes__paciente_detalle_tabs SCRIPT PARSING FINISHED (IIFE setup) ---");
+    }
+
+)();
+    </script>

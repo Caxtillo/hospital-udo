@@ -1,0 +1,305 @@
+<!-- Nombre vista: paciente/evolucion/ver_evolucion.html -->
+<div class="p-6 md:p-8 bg-gray-50 min-h-screen">
+
+    <!-- Cabecera con Título y Botones de Acción -->
+    <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-gray-300">
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800">
+                Detalle de Evolución Médica
+            </h2>
+            <p id="ver-evolucion-subheader" class="text-sm text-gray-500 mt-1">Cargando datos...</p>
+        </div>
+        <div id="ver-evolucion-actions" class="flex items-center space-x-3 mt-3 md:mt-0">
+            <button type="button" id="ver-evolucion-back-btn"
+                    class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 rounded-md shadow-sm text-sm font-medium transition duration-150">
+                <i class="fas fa-arrow-left fa-fw mr-2"></i>Volver
+            </button>
+            <button type="button" id="ver-evolucion-print-btn"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium transition duration-150">
+                <i class="fas fa-print fa-fw mr-2"></i>Imprimir
+            </button>
+            <button type="button" id="ver-evolucion-edit-btn"
+                    class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow-sm text-sm font-medium transition duration-150">
+                <i class="fas fa-pencil-alt fa-fw mr-2"></i>Editar Evolución
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenedor de Carga -->
+    <div id="ver-evolucion-loading" class="text-center py-10">
+        <p class="text-gray-500 italic">Cargando detalles de la evolución...</p>
+        <!-- Podrías añadir un spinner SVG aquí si quieres -->
+    </div>
+
+    <!-- Contenedor Principal de Datos (se muestra después de cargar) -->
+    <div id="ver-evolucion-content" class="hidden bg-white p-6 md:p-8 rounded-lg shadow-lg border border-gray-200 space-y-6">
+        
+        <!-- Información General de la Evolución -->
+        <div class="pb-4 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-teal-700 mb-3">Información General</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <div>
+                    <span class="font-semibold text-gray-600">Fecha y Hora:</span>
+                    <span id="view-fecha_hora" class="text-gray-800 ml-1"></span>
+                </div>
+                <div>
+                    <span class="font-semibold text-gray-600">Realizada por:</span>
+                    <span id="view-creador_nombre" class="text-gray-800 ml-1"></span>
+                </div>
+                <div id="view-modificado-container" class="hidden">
+                    <span class="font-semibold text-gray-600">Última Modificación:</span>
+                    <span id="view-modificado_info" class="text-gray-800 ml-1"></span>
+                </div>
+                <div id="view-dia-evolucion-container" class="hidden">
+                    <span class="font-semibold text-gray-600">Día de Evolución (Hosp.):</span>
+                    <span id="view-dia_evolucion" class="text-gray-800 ml-1"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Signos Vitales -->
+        <div id="view-signos-vitales-section">
+            <h3 class="text-xl font-semibold text-teal-700 mb-3">Signos Vitales</h3>
+            <div id="view-signos-vitales-data" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-3 text-sm">
+                <!-- Datos se insertarán aquí por JS -->
+            </div>
+            <p id="view-no-signos-vitales" class="italic text-gray-500 mt-2 hidden">No se registraron signos vitales para esta evolución.</p>
+        </div>
+        
+        <!-- Evolución Clínica Principal -->
+        <div id="view-objetivo-section"></div> <!-- Para Aspecto General -->
+        <div id="view-subjetivo-section"></div>
+        
+        <!-- Sección para Examen Físico Detallado -->
+        <div id="view-examen-fisico-detallado-section" class="hidden"> <!-- Oculto si no hay datos -->
+            <h3 class="text-xl font-semibold text-teal-700 mb-4 pt-4 border-t border-gray-200 mt-6">Examen Físico</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 text-sm">
+                <div id="view-ef-piel-item"></div>
+                <div id="view-ef-respiratorio-item"></div>
+                <div id="view-ef-cardiovascular-item"></div>
+                <div id="view-ef-abdomen-item"></div>
+                <div id="view-ef-extremidades-item"></div>
+                <div id="view-ef-neurologico-item"></div>
+                <div id="view-ef-otros-hallazgos-item" class="md:col-span-2"></div>
+            </div>
+            <p id="view-no-examen-fisico-detallado" class="italic text-gray-500 mt-3 hidden">No se registraron hallazgos detallados adicionales del examen físico.</p>
+        </div>
+        
+        <div id="view-diagnosticos-section"></div>
+        <div id="view-tratamiento-plan-section"></div>
+        <div id="view-comentario-section"></div>
+
+    </div> <!-- Fin de ver-evolucion-content -->
+</div>
+
+<script>
+(function() {
+    const VIEW_ID_FOR_SHELL_INIT = 'pacientes_evolucion_ver_evolucion';
+    const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__evolucion__ver_evolucion';
+    const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+    const HANDLER_NAME_DETAILS_RESULT = `handleEvolucionDetailsResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+
+    console.log(`SCRIPT DE VISTA (VER): ID para handler: ${VIEW_ID_FOR_SHELL_HANDLER}, ID para init: ${VIEW_ID_FOR_SHELL_INIT}`);
+    console.log(`  - Nombre Inicializador Registrado: ${INIT_FUNCTION_NAME}`);
+    console.log(`  - Nombre Handler Registrado: ${HANDLER_NAME_DETAILS_RESULT}`);
+
+    const loadingDivId = 'ver-evolucion-loading';
+    const contentDivId = 'ver-evolucion-content';
+    const subheaderId = 'ver-evolucion-subheader';
+    const fechaHoraDisplayId = 'view-fecha_hora';
+    const creadorNombreDisplayId = 'view-creador_nombre';
+    const modificadoContainerDisplayId = 'view-modificado-container';
+    const modificadoInfoDisplayId = 'view-modificado_info';
+    const diaEvolucionContainerDisplayId = 'view-dia-evolucion-container';
+    const diaEvolucionDisplayId = 'view-dia_evolucion';
+    const svDataContainerId = 'view-signos-vitales-data';
+    const noSvDisplayId = 'view-no-signos-vitales';
+    const subjetivoSectionId = 'view-subjetivo-section';
+    const objetivoSectionId = 'view-objetivo-section';
+    const efPielItemId = 'view-ef-piel-item';
+    const efRespiratorioItemId = 'view-ef-respiratorio-item';
+    const efCardiovascularItemId = 'view-ef-cardiovascular-item';
+    const efAbdomenItemId = 'view-ef-abdomen-item';
+    const efExtremidadesItemId = 'view-ef-extremidades-item';
+    const efNeurologicoItemId = 'view-ef-neurologico-item';
+    const efOtrosHallazgosItemId = 'view-ef-otros-hallazgos-item';
+    const noExamenFisicoDetalladoId = 'view-no-examen-fisico-detallado';
+    const examenFisicoDetalladoSectionContainerId = 'view-examen-fisico-detallado-section'; // Contenedor de toda la sección EF detallado
+    const diagnosticosSectionId = 'view-diagnosticos-section';
+    const tratamientoPlanSectionId = 'view-tratamiento-plan-section';
+    const comentarioSectionId = 'view-comentario-section';
+    const backBtnDisplayId = 'ver-evolucion-back-btn';
+    const printBtnDisplayId = 'ver-evolucion-print-btn';
+    const editBtnDisplayId = 'ver-evolucion-edit-btn';
+
+    function formatDateLocal(dateString, includeTime = false, onlyTime = false) {
+        if (!dateString) return 'N/D';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) { console.warn("formatDateLocal: Fecha inválida", dateString); return dateString; }
+            const optionsDate = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: true };
+            if (onlyTime) return date.toLocaleTimeString('es-VE', optionsTime);
+            let formatted = date.toLocaleDateString('es-VE', optionsDate);
+            if (includeTime) formatted += ', ' + date.toLocaleTimeString('es-VE', optionsTime);
+            return formatted;
+        } catch (e) { console.error("Error en formatDateLocal:", e, dateString); return dateString; }
+    }
+
+    function calculateDaysElapsedLocal(startDateString, endDateString) {
+        if (!startDateString || !endDateString) return null;
+        try {
+            const start = new Date(startDateString);
+            const end = new Date(endDateString);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+            const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+            const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+            const days = Math.floor((endUtc - startUtc) / (1000 * 60 * 60 * 24)) + 1;
+            return days >= 0 ? days : null; // Asegurar que no sea negativo
+        } catch (e) { console.error("Error calculando días:", e); return null; }
+    }
+
+    function renderMainSection(containerId, label, textValue, isItalic = false) {
+        const container = document.getElementById(containerId);
+        if (!container) { console.warn(`Contenedor ${containerId} no encontrado para sección principal.`); return; }
+        let contentHtml = `<h3 class="text-xl font-semibold text-teal-700 mb-2">${label}</h3>`;
+        if (textValue !== null && textValue !== undefined && textValue !== '') {
+            contentHtml += `<p class="text-gray-700 whitespace-pre-wrap ${isItalic ? 'italic text-gray-500' : ''}">${textValue}</p>`;
+        } else {
+            contentHtml += `<p class="italic text-gray-400">No registrado.</p>`;
+        }
+        container.innerHTML = contentHtml;
+        container.classList.remove('hidden'); // Asegurar que la sección sea visible
+    }
+
+    function renderEfItem(containerId, label, textValue) {
+        const container = document.getElementById(containerId);
+        if (!container) { console.warn(`Contenedor EF ${containerId} no encontrado.`); return false; }
+        if (textValue !== null && textValue !== undefined && textValue !== '') {
+            container.innerHTML = `
+                <div>
+                    <h4 class="text-md font-semibold text-gray-800 mb-1">${label}</h4>
+                    <p class="text-sm text-gray-600 whitespace-pre-wrap">${textValue}</p>
+                </div>
+            `;
+            container.classList.remove('hidden');
+            return true;
+        } else {
+            container.innerHTML = ''; // Limpiar si no hay valor, la sección padre se ocultará
+            container.classList.add('hidden');
+            return false;
+        }
+    }
+
+    function populateView(data) {
+        console.log(`POPULATE VIEW (${VIEW_ID_FOR_SHELL_HANDLER}): Iniciando. Data:`, data);
+        const loadingDiv = document.getElementById(loadingDivId);
+        const contentDiv = document.getElementById(contentDivId);
+
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (contentDiv) contentDiv.classList.remove('hidden');
+
+        if (!data || data.error) {
+            console.error(`POPULATE VIEW: Error o sin datos. Error:`, data ? data.error : "Data es null/undefined");
+            if (contentDiv) contentDiv.innerHTML = `<p class="text-red-500 p-4">Error: ${data && data.error ? data.error : "No se pudieron obtener los detalles."}</p>`;
+            return;
+        }
+
+        document.getElementById(subheaderId).textContent = `Evolución del ${formatDateLocal(data.fecha_hora)} - Paciente: ${data.paciente_nombres_dec || ''} ${data.paciente_apellidos_dec || ''} (H.C: ${data.paciente_numero_historia || 'N/A'})`;
+        document.getElementById(fechaHoraDisplayId).textContent = formatDateLocal(data.fecha_hora, true);
+        document.getElementById(creadorNombreDisplayId).textContent = data.usuario_creador_nombre_completo || 'N/D';
+
+        const modContainer = document.getElementById(modificadoContainerDisplayId);
+        if (data.fecha_ultima_mod && data.usuario_modificador_nombre_completo) {
+            document.getElementById(modificadoInfoDisplayId).textContent = `${data.usuario_modificador_nombre_completo} - ${formatDateLocal(data.fecha_ultima_mod, true)}`;
+            modContainer.classList.remove('hidden');
+        } else {
+            modContainer.classList.add('hidden');
+        }
+
+        const diaEvoContainer = document.getElementById(diaEvolucionContainerDisplayId);
+        if (data.paciente_fecha_ingreso_para_calculo && data.fecha_hora) {
+            const diaNum = calculateDaysElapsedLocal(data.paciente_fecha_ingreso_para_calculo, data.fecha_hora);
+            document.getElementById(diaEvolucionDisplayId).textContent = diaNum !== null ? diaNum : 'N/A';
+            if(diaNum !== null) diaEvoContainer.classList.remove('hidden'); else diaEvoContainer.classList.add('hidden');
+        } else {
+            diaEvoContainer.classList.add('hidden');
+        }
+
+        const svDataEl = document.getElementById(svDataContainerId);
+        const noSvEl = document.getElementById(noSvDisplayId);
+        const svItems = [
+            { label: "T/A", value: data.ev_ta_dec || data.ev_ta }, { label: "FC", value: data.ev_fc, unit: "lpm" },
+            { label: "FR", value: data.ev_fr, unit: "rpm" }, { label: "SatO₂", value: data.ev_sato2, unit: "%" },
+            { label: "Temp", value: data.ev_temp_dec || data.ev_temp, unit: "°C" },
+        ].filter(item => item.value || item.value === 0); // Incluir 0 si es un valor válido
+
+        if (svItems.length > 0) {
+            noSvEl.classList.add('hidden');
+            svDataEl.innerHTML = svItems.map(item => `<div><strong class="text-gray-600">${item.label}:</strong> <span class="text-gray-800">${item.value}${item.unit ? ' ' + item.unit : ''}</span></div>`).join('');
+        } else {
+            noSvEl.classList.remove('hidden');
+            svDataEl.innerHTML = '';
+        }
+
+        renderMainSection(subjetivoSectionId, 'Subjetivo', data.ev_subjetivo_dec || data.ev_subjetivo);
+        renderMainSection(objetivoSectionId, 'Objetivo', data.ev_objetivo_dec || data.ev_objetivo);
+        
+        let countRenderedEfItems = 0;
+        countRenderedEfItems += renderEfItem(efPielItemId, 'Piel', data.ev_piel_dec || data.ev_piel) ? 1 : 0;
+        countRenderedEfItems += renderEfItem(efRespiratorioItemId, 'Respiratorio', data.ev_respiratorio_dec || data.ev_respiratorio) ? 1 : 0;
+        countRenderedEfItems += renderEfItem(efCardiovascularItemId, 'Cardiovascular', data.ev_cardiovascular_dec || data.ev_cardiovascular) ? 1 : 0;
+        countRenderedEfItems += renderEfItem(efAbdomenItemId, 'Abdomen', data.ev_abdomen_dec || data.ev_abdomen) ? 1 : 0;
+        countRenderedEfItems += renderEfItem(efExtremidadesItemId, 'Extremidades', data.ev_extremidades_dec || data.ev_extremidades) ? 1 : 0;
+        countRenderedEfItems += renderEfItem(efNeurologicoItemId, 'Neurológico', data.ev_neurologico_dec || data.ev_neurologico) ? 1 : 0;
+        countRenderedEfItems += renderEfItem(efOtrosHallazgosItemId, 'Otros Hallazgos E.F.', data.ev_otros_dec || data.ev_otros) ? 1 : 0;
+
+        const efDetalladoSection = document.getElementById(examenFisicoDetalladoSectionContainerId);
+        const noEfDetalladoMsg = document.getElementById(noExamenFisicoDetalladoId);
+        if (countRenderedEfItems > 0) {
+            if(efDetalladoSection) efDetalladoSection.classList.remove('hidden');
+            if(noEfDetalladoMsg) noEfDetalladoMsg.classList.add('hidden');
+        } else {
+            if(efDetalladoSection) efDetalladoSection.classList.add('hidden'); // Ocultar toda la sección si no hay items
+            // if(noEfDetalladoMsg) noEfDetalladoMsg.classList.remove('hidden'); // Mostrar si se oculta la sección
+        }
+
+        renderMainSection(diagnosticosSectionId, 'Diagnóstico(s)', data.ev_diagnosticos_dec || data.ev_diagnosticos);
+        renderMainSection(tratamientoPlanSectionId, 'Tratamiento y Plan', data.ev_tratamiento_plan_dec || data.ev_tratamiento_plan);
+        renderMainSection(comentarioSectionId, 'Comentario Adicional', data.ev_comentario_dec || data.ev_comentario, true);
+
+        const editBtn = document.getElementById(editBtnDisplayId);
+        if (editBtn && data.id && data.paciente_id_real) { editBtn.onclick = () => window.navigateToEditEvolucion(data.id, data.paciente_id_real); editBtn.disabled = false; } else if(editBtn) { editBtn.disabled = true; }
+        const backBtn = document.getElementById(backBtnDisplayId);
+        if (backBtn && data.paciente_id_real) { backBtn.onclick = () => { if (window.backend && typeof window.backend.set_selected_patient === 'function') { window.backend.set_selected_patient(data.paciente_id_real); } window.targetTabAfterLoad = 'panel-evoluciones'; loadContent('pacientes__paciente_detalle'); }; backBtn.disabled = false; } else if (backBtn) { backBtn.disabled = true; }
+        const printBtn = document.getElementById(printBtnDisplayId);
+        if(printBtn) printBtn.onclick = () => alert("Imprimir no implementado.");
+
+        console.log(`POPULATE VIEW (${VIEW_ID_FOR_SHELL_HANDLER}): Fin.`);
+    }
+
+    window[HANDLER_NAME_DETAILS_RESULT] = function(jsonString) {
+        console.log(`>>> EJECUTANDO HANDLER (VER): ${HANDLER_NAME_DETAILS_RESULT} <<<`);
+        let data;
+        try { data = JSON.parse(jsonString); }
+        catch (e) { populateView({ error: "Error al procesar datos (JSON)." }); return; }
+        populateView(data);
+    };
+    console.log(`Handler ${HANDLER_NAME_DETAILS_RESULT} registrado.`);
+
+    function initializeView() {
+        console.log(`*** EJECUTANDO INICIALIZADOR (VER): ${INIT_FUNCTION_NAME} ***`);
+        const loadingDiv = document.getElementById(loadingDivId);
+        const contentDiv = document.getElementById(contentDivId);
+        if (loadingDiv) { loadingDiv.style.display = 'block'; loadingDiv.textContent = "Cargando detalles..."; }
+        if (contentDiv) contentDiv.classList.add('hidden');
+        if (window.backend && typeof window.backend.request_evolucion_details === 'function') {
+            window.backend.request_evolucion_details();
+        } else { if(loadingDiv) loadingDiv.textContent = "Error de comunicación."; }
+    }
+
+    if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+    window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+    console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado.`);
+})();
+</script>

@@ -1,0 +1,465 @@
+<!-- NO tiene <html>, <head>, <body>. Es solo el contenido para #content-area -->
+    <div class="p-6 md:p-8"> 
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+            <h2 class="text-2xl font-semibold text-teal-700">Ingreso Nuevo Paciente</h2>
+            <button type="button" id="load-random-button" class="ml-auto mr-4 px-4 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-md shadow transition duration-150">
+                <i class="fas fa-random mr-1"></i> Cargar Datos Aleatorios
+            </button>
+            <div class="flex items-center">
+                <label for="display_historia_clinica" class="text-sm font-medium text-gray-600 mr-2">N° Historia:</label>
+                <span id="display_historia_clinica" class="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1 rounded-md border border-gray-300">(Auto)
+            </div>
+        </div>
+    
+        <form id="patient-form">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8 mb-8">
+    
+                
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 space-y-4">
+                    <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Datos de Identificación y Demográficos</h3>
+                    <div>
+                        <label for="consulta_tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo Consulta</label>
+                        <input type="text" id="consulta_tipo" name="consulta_tipo" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="cedula" class="block text-sm font-medium text-gray-700 mb-1">Cédula</label>
+                        <input type="text" id="cedula" name="cedula" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="nombres" class="block text-sm font-medium text-gray-700 mb-1">Nombres</label>
+                        <input type="text" id="nombres" name="nombres" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="apellidos" class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
+                        <input type="text" id="apellidos" name="apellidos" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div class="flex items-center pt-2">
+                         <label class="block text-sm font-medium text-gray-700 mr-6">Sexo</label>
+                         <div class="flex space-x-6">
+                            <label class="inline-flex items-center"><input type="radio" name="sexo" value="Femenino" required class="form-radio text-teal-600 h-4 w-4 mr-1 focus:ring-teal-500"><span class="text-sm">Femenino</span></label>
+                            <label class="inline-flex items-center"><input type="radio" name="sexo" value="Masculino" class="form-radio text-teal-600 h-4 w-4 mr-1 focus:ring-teal-500"><span class="text-sm">Masculino</span></label>
+                         </div>
+                     </div>
+                     <div>
+                        <label for="fecha_nacimiento" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
+                        <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="edad" class="block text-sm font-medium text-gray-700 mb-1">Edad</label>
+                        <input type="number" id="edad" name="edad" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 bg-gray-100" readonly>
+                    </div>
+                    <div>
+                        <label for="lugar_nacimiento" class="block text-sm font-medium text-gray-700 mb-1">Lugar de Nacimiento</label>
+                        <input type="text" id="lugar_nacimiento" name="lugar_nacimiento" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="estado_civil" class="block text-sm font-medium text-gray-700 mb-1">Estado Civil</label>
+                        <select id="estado_civil" name="estado_civil" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]"> 
+                            <option value="">Seleccionar...</option>
+                            <option value="Soltero(a)">Soltero(a)</option>
+                            <option value="Casado(a)">Casado(a)</option>
+                            <option value="Divorciado(a)">Divorciado(a)</option>
+                            <option value="Viudo(a)">Viudo(a)</option>
+                            <option value="Union Libre">Unión Libre</option>
+                        </select>
+                    </div>
+                </section>
+    
+                
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 space-y-4">
+                    <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Datos de Contacto y Profesión</h3>
+                   <div>
+                        <label for="telefono_habitacion" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Habitación</label>
+                        <input type="tel" id="telefono_habitacion" name="telefono_habitacion" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="telefono_movil" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Móvil</label>
+                        <input type="tel" id="telefono_movil" name="telefono_movil" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                     <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                        <input type="email" id="email" name="email" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                    <div>
+                        <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                        <textarea id="direccion" name="direccion" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="profesion_oficio" class="block text-sm font-medium text-gray-700 mb-1">Profesión u Oficio</label>
+                        <input type="text" id="profesion_oficio" name="profesion_oficio" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                    </div>
+                     
+                     <div class="pt-4 border-t border-teal-200 mt-4 space-y-4">
+                         <h4 class="text-base font-semibold text-teal-700">Contacto de Emergencia</h4>
+                         <div>
+                            <label for="emerg_telefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                            <input type="tel" id="emerg_telefono" name="emerg_telefono" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                        </div>
+                         <div>
+                            <label for="emerg_parentesco" class="block text-sm font-medium text-gray-700 mb-1">Parentesco</label>
+                            <input type="text" id="emerg_parentesco" name="emerg_parentesco" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2">
+                        </div>
+                         <div>
+                            <label for="emerg_direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                            <textarea id="emerg_direccion" name="emerg_direccion" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                        </div>
+                     </div>
+                </section>
+    
+                
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 space-y-4 md:col-span-1">
+                     <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Historia Médica Actual</h3>
+                     <div>
+                         <label for="motivo_consulta" class="block text-sm font-medium text-gray-700 mb-1">Motivo de Consulta</label>
+                         <textarea id="motivo_consulta" name="motivo_consulta" rows="4" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                     </div>
+                     <div>
+                         <label for="historia_enfermedad_actual" class="block text-sm font-medium text-gray-700 mb-1">Historia de Enfermedad Actual</label>
+                         <textarea id="historia_enfermedad_actual" name="historia_enfermedad_actual" rows="8" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                     </div>
+                </section>
+    
+                
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 space-y-5">
+                    <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Antecedentes Personales Patológicos</h3>
+                     <script>
+                        function createAntecedentGroup(groupName, labelText) {
+                            const idBase = `ap_${groupName}`;
+                            const nameStatus = `ap_${groupName}`; // Name para radio
+                            const nameDetail = `ap_${groupName}_detalle`; // Name para textarea
+                            return `
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${labelText}</label>
+                                <div class="flex items-center space-x-5 mb-1">
+                                    <label class="inline-flex items-center"><input type="radio" name="${nameStatus}" value="1" class="antecedent-radio form-radio text-teal-600 h-4 w-4 mr-1 focus:ring-teal-500" data-target="${nameDetail}"> <span class="text-sm">Refiere</span></label>
+                                    <label class="inline-flex items-center"><input type="radio" name="${nameStatus}" value="0" class="antecedent-radio form-radio text-teal-600 h-4 w-4 mr-1 focus:ring-teal-500" data-target="${nameDetail}"> <span class="text-sm">Niega</span></label>
+                                </div>
+                                <textarea name="${nameDetail}" id="${nameDetail}" rows="2" class="antecedent-detail mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 hidden" placeholder="Detalles..."></textarea>
+                            </div>`;
+                        }
+                        // Inyectar los grupos generados
+                        document.currentScript.insertAdjacentHTML('afterend', createAntecedentGroup('asma', 'Asma Bronquial'));
+                        document.currentScript.insertAdjacentHTML('afterend', createAntecedentGroup('hta', 'Hipertensión Arterial'));
+                        document.currentScript.insertAdjacentHTML('afterend', createAntecedentGroup('dm', 'Diabetes Mellitus'));
+                        document.currentScript.insertAdjacentHTML('afterend', createAntecedentGroup('otros', 'Otros (Transfusiones, etc.)'));
+                     </script>
+                     <div>
+                         <label for="ap_alergias" class="block text-sm font-medium text-gray-700 mb-1">Alergias</label>
+                         <textarea id="ap_alergias" name="ap_alergias" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                         <label for="ap_quirurgicos" class="block text-sm font-medium text-gray-700 mb-1">Antecedentes Quirúrgicos</label>
+                         <textarea id="ap_quirurgicos" name="ap_quirurgicos" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                </section>
+    
+                
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 space-y-4">
+                    <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Antecedentes Familiares</h3>
+                    <div>
+                        <label for="af_madre" class="block text-sm font-medium text-gray-700 mb-1">Madre</label>
+                        <textarea id="af_madre" name="af_madre" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="af_padre" class="block text-sm font-medium text-gray-700 mb-1">Padre</label>
+                        <textarea id="af_padre" name="af_padre" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="af_hermanos" class="block text-sm font-medium text-gray-700 mb-1">Hermanos</label>
+                        <textarea id="af_hermanos" name="af_hermanos" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="af_hijos" class="block text-sm font-medium text-gray-700 mb-1">Hijos</label>
+                        <textarea id="af_hijos" name="af_hijos" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                </section>
+    
+                
+                 <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 space-y-4">
+                    <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Hábitos Psicobiológicos</h3>
+                    <div>
+                        <label for="hab_tabaco" class="block text-sm font-medium text-gray-700 mb-1">Tabaco</label>
+                        <textarea id="hab_tabaco" name="hab_tabaco" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="hab_alcohol" class="block text-sm font-medium text-gray-700 mb-1">Alcohol</label>
+                        <textarea id="hab_alcohol" name="hab_alcohol" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="hab_drogas" class="block text-sm font-medium text-gray-700 mb-1">Drogas</label>
+                        <textarea id="hab_drogas" name="hab_drogas" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label for="hab_cafe" class="block text-sm font-medium text-gray-700 mb-1">Café</label>
+                        <textarea id="hab_cafe" name="hab_cafe" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                </section>
+    
+                
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 md:col-span-1 space-y-4">
+                     <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Examen Físico</h3>
+                     
+                     <div class="border-b border-teal-200 pb-4">
+                         <h4 class="text-base font-semibold text-teal-700 mb-3">Signos Vitales</h4>
+                         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-4">
+                            <div> <label for="ef_ta" class="block text-xs font-medium text-gray-600 uppercase">T/A <span class="normal-case">(mmHg)</span></label> <input type="text" id="ef_ta" name="ef_ta" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2" placeholder="120/80"> </div>
+                            <div> <label for="ef_fr" class="block text-xs font-medium text-gray-600 uppercase">FR <span class="normal-case">(rpm)</span></label> <input type="number" id="ef_fr" name="ef_fr" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2" placeholder="16"> </div>
+                            <div> <label for="ef_fc" class="block text-xs font-medium text-gray-600 uppercase">FC <span class="normal-case">(lpm)</span></label> <input type="number" id="ef_fc" name="ef_fc" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2" placeholder="72"> </div>
+                            <div> <label for="ef_sato2" class="block text-xs font-medium text-gray-600 uppercase">SatO2 <span class="normal-case">(%)</span></label> <input type="number" id="ef_sato2" name="ef_sato2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2" placeholder="98"> </div>
+                            <div> <label for="ef_temp" class="block text-xs font-medium text-gray-600 uppercase">Temp <span class="normal-case">(°C)</span></label> <input type="text" id="ef_temp" name="ef_temp" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2" placeholder="36.5"> </div>
+                            <div> <label for="ef_glic" class="block text-xs font-medium text-gray-600 uppercase">Glic <span class="normal-case">(mg/dl)</span></label> <input type="number" id="ef_glic" name="ef_glic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2" placeholder="90"> </div>
+                         </div>
+                     </div>
+                     
+                     <div>
+                        <h4 class="text-base font-semibold text-teal-700 mb-3 pt-2">Examen por Sistemas</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
+                             <div> <label for="ef_piel" class="block text-sm font-medium text-gray-700 mb-1">Piel y Faneras</label> <textarea id="ef_piel" name="ef_piel" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_respiratorio" class="block text-sm font-medium text-gray-700 mb-1">Respiratorio</label> <textarea id="ef_respiratorio" name="ef_respiratorio" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_cardiovascular" class="block text-sm font-medium text-gray-700 mb-1">Cardiovascular</label> <textarea id="ef_cardiovascular" name="ef_cardiovascular" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_abdomen" class="block text-sm font-medium text-gray-700 mb-1">Abdomen</label> <textarea id="ef_abdomen" name="ef_abdomen" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_gastrointestinal" class="block text-sm font-medium text-gray-700 mb-1">Gastrointestinal (Específico)</label> <textarea id="ef_gastrointestinal" name="ef_gastrointestinal" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_genitourinario" class="block text-sm font-medium text-gray-700 mb-1">Genitourinario</label> <textarea id="ef_genitourinario" name="ef_genitourinario" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_extremidades" class="block text-sm font-medium text-gray-700 mb-1">Extremidades</label> <textarea id="ef_extremidades" name="ef_extremidades" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div> <label for="ef_neurologico" class="block text-sm font-medium text-gray-700 mb-1">Neurológico</label> <textarea id="ef_neurologico" name="ef_neurologico" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                             <div class="md:col-span-2"> <label for="ef_otros_hallazgos" class="block text-sm font-medium text-gray-700 mb-1">Otros Hallazgos</label> <textarea id="ef_otros_hallazgos" name="ef_otros_hallazgos" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea> </div>
+                        </div>
+                     </div>
+                </section>
+    
+                 
+                <section class="bg-teal-50 p-5 rounded-lg shadow border border-teal-100 md:col-span-1 space-y-4">
+                    <h3 class="text-lg font-semibold text-teal-700 border-b border-teal-200 pb-2 mb-4">Planteamientos Diagnósticos</h3>
+                    <div>
+                        <label for="diagnostico_ingreso" class="block text-sm font-medium text-gray-700 mb-1">Impresiones Diagnósticas</label>
+                        <textarea id="diagnostico_ingreso" name="diagnostico_ingreso" rows="6" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2"></textarea>
+                    </div>
+                </section>
+    
+            </div>
+    
+            
+            <div id="save-feedback" class="my-4 text-center text-sm"></div>
+            <div class="flex justify-end pt-4 border-t border-gray-200">
+                <button type="submit" id="save-patient-button" class="inline-flex items-center justify-center px-8 py-2 bg-gradient-to-b from-cyan-500 to-teal-600 text-white rounded-md shadow-md hover:from-cyan-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-teal-500 transition duration-200 font-medium text-base disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span id="save-button-text">Guardar Paciente</span>
+                    <svg id="save-spinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    
+    <script>
+    // Script para _paciente_registro_content.html (Sin Comentarios)
+    (function() {
+    const SCRIPT_VIEW_NAME = 'pacientes__paciente_registro';
+
+    const dobInput = document.getElementById('fecha_nacimiento');
+    const ageInput = document.getElementById('edad');
+    const patientForm = document.getElementById('patient-form');
+    const saveButton = document.getElementById('save-patient-button');
+    const saveButtonText = document.getElementById('save-button-text');
+    const saveSpinner = document.getElementById('save-spinner');
+    const feedbackDiv = document.getElementById('save-feedback');
+    const loadRandomButton = document.getElementById('load-random-button');
+
+    if (!patientForm || !saveButton || !feedbackDiv) { return; }
+
+    function calculateAge() {
+        if (!dobInput || !ageInput) return;
+        ageInput.value = '';
+        if (dobInput.value) {
+            try {
+                const birthDate = new Date(dobInput.value);
+                const today = new Date();
+                if (!isNaN(birthDate.getTime()) && birthDate.getFullYear() > 1900 && birthDate <= today) {
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const m = today.getMonth() - birthDate.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
+                    ageInput.value = age >= 0 ? age : '';
+                }
+            } catch (e) { /* ignore */ }
+        }
+    }
+
+    if (dobInput && ageInput) { dobInput.addEventListener('change', calculateAge); if(dobInput.value) calculateAge(); }
+
+    document.querySelectorAll('.antecedent-radio').forEach(radio => {
+        const targetName = radio.dataset.target;
+        const textarea = document.querySelector(`textarea[name="${targetName}"]`);
+        if (textarea) {
+            radio.addEventListener('change', function() {
+                const show = this.value === '1';
+                textarea.classList.toggle('hidden', !show);
+                if (!show) { textarea.value = ''; }
+            });
+            const groupName = radio.name;
+            const checkedRadio = document.querySelector(`input[name="${groupName}"]:checked`);
+                if(checkedRadio) { textarea.classList.toggle('hidden', checkedRadio.value !== '1'); if(checkedRadio.value !== '1') textarea.value = ''; }
+                else { textarea.classList.add('hidden'); }
+        }
+    });
+
+        if (loadRandomButton) { loadRandomButton.addEventListener('click', loadRandomData); }
+
+    async function loadRandomData() {
+        if(loadRandomButton) { loadRandomButton.disabled = true; loadRandomButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Cargando...'; }
+        if(feedbackDiv) feedbackDiv.textContent = '';
+        try {
+            const response = await fetch('json/datos_pacientes_aleatorios.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const data = await response.json();
+            if (!Array.isArray(data) || data.length === 0) throw new Error("JSON vacío o inválido.");
+            const randomIndex = Math.floor(Math.random() * data.length);
+            const randomPatient = data[randomIndex];
+            populateForm(randomPatient);
+            if(feedbackDiv) { feedbackDiv.textContent = 'Datos aleatorios cargados.'; feedbackDiv.className = 'my-4 text-center text-sm text-blue-600'; }
+        } catch (error) {
+            if(feedbackDiv) { feedbackDiv.textContent = `Error al cargar datos: ${error.message}`; feedbackDiv.className = 'my-4 text-center text-sm text-red-600'; }
+        } finally {
+            if(loadRandomButton) { loadRandomButton.disabled = false; loadRandomButton.innerHTML = '<i class="fas fa-random mr-1"></i> Cargar Datos Aleatorios'; }
+        }
+    }
+
+    function populateForm(patient) {
+        for (const key in patient) {
+            if (patient.hasOwnProperty(key)) {
+                const value = patient[key];
+                let elements = patientForm.querySelectorAll(`[name="${key}"]`);
+                if (elements.length > 0) {
+                    elements.forEach(element => {
+                        const elementType = element.type ? element.type.toLowerCase() : element.tagName.toLowerCase();
+                        if (elementType === 'radio') {
+                            const targetValue = (typeof value === 'boolean') ? (value ? '1' : '0') : value;
+                            if (element.value === targetValue) { element.checked = true; element.dispatchEvent(new Event('change', { bubbles: true })); }
+                        } else if (elementType === 'select' || elementType === 'select-one' || elementType === 'textarea' || elementType === 'text' || elementType === 'date' || elementType === 'email' || elementType === 'tel' || elementType === 'number') {
+                            element.value = value || '';
+                        }
+                    });
+                } else {
+                    const elementById = document.getElementById(key);
+                    if (elementById) {
+                            const elementType = elementById.type ? elementById.type.toLowerCase() : elementById.tagName.toLowerCase();
+                            if (elementType === 'textarea' || elementType === 'text' || elementType === 'date' || elementType === 'email' || elementType === 'tel' || elementType === 'number') { elementById.value = value || ''; }
+                    }
+                }
+            }
+        }
+            if (dobInput && patient.fecha_nacimiento) { dobInput.dispatchEvent(new Event('change')); }
+    }
+
+    let isSubmitting = false;
+    patientForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (isSubmitting) return;
+        isSubmitting = true;
+        saveButton.disabled = true;
+        if(saveButtonText) saveButtonText.textContent = 'Guardando...';
+        if(saveSpinner) saveSpinner.classList.remove('hidden');
+        if(feedbackDiv) feedbackDiv.textContent = ''; feedbackDiv.className = 'my-4 text-center text-sm';
+
+        const formData = new FormData(patientForm);
+        const patientData = {};
+        formData.forEach((value, key) => {
+                if (key.startsWith('ap_') && !key.endsWith('_detalle')) { patientData[key] = value === '1'; }
+                else { patientData[key] = value.trim() === '' ? null : value.trim(); }
+        });
+            ['ap_asma', 'ap_hta', 'ap_dm', 'ap_otros'].forEach(k => { if (!(k in patientData)) patientData[k] = false; });
+
+        if (typeof backend !== 'undefined' && backend.save_new_patient) {
+            try { backend.save_new_patient(patientData); }
+            catch (error) {
+                    if(typeof window.handleSaveResult === 'function') window.handleSaveResult(false, 'Error de comunicación al guardar.', null);
+                    isSubmitting = false;
+            }
+        } else {
+                if(typeof window.handleSaveResult === 'function') window.handleSaveResult(false, 'Error: No se puede conectar.', null);
+                isSubmitting = false;
+        }
+    });
+
+    window.displayNextHistoria_pacientes__paciente_registro = function(nextNumber) {
+        const displaySpan = document.querySelector('#content-area #display_historia_clinica');
+        if (displaySpan && nextNumber && !nextNumber.startsWith('(Error')) {
+            displaySpan.textContent = nextNumber;
+            displaySpan.classList.remove('italic', 'text-gray-500', 'text-red-500');
+            displaySpan.classList.add('text-gray-700', 'font-semibold');
+        } else if (displaySpan) {
+            displaySpan.textContent = '(No disp.)';
+                displaySpan.classList.add('text-red-500');
+        }
+    }
+
+    window.handleSaveResult_pacientes__paciente_registro = function(success, message, newHistoriaNumero) {
+         console.log(`EJECUTANDO handleSaveResult_pacientes__paciente_registro: ${success}, msg=${message}, hist=${newHistoriaNumero}`);
+         
+         // Volver a buscar los elementos de UI CADA VEZ que se llama la función
+         // (Buena práctica por si el DOM cambia, aunque aquí probablemente no sea necesario si no recargas la vista)
+         const currentFeedbackDiv = document.querySelector('#content-area #save-feedback');
+         const currentDisplayHistoriaSpan = document.querySelector('#content-area #display_historia_clinica');
+         const currentSaveButton = document.querySelector('#content-area #save-patient-button');
+         const currentSaveButtonText = document.querySelector('#content-area #save-button-text');
+         const currentSaveSpinner = document.querySelector('#content-area #save-spinner');
+         const currentPatientForm = document.querySelector('#content-area #patient-form');
+         const currentAgeInput = document.querySelector('#content-area #edad');
+
+         isSubmitting = false; // Resetear bandera de envío SIEMPRE al recibir respuesta
+
+         // Mostrar mensaje de feedback (éxito o error)
+         if(currentFeedbackDiv) currentFeedbackDiv.textContent = message;
+
+         // Restaurar estado del botón (éxito o fallo)
+         if(currentSaveButton) currentSaveButton.disabled = false;
+         if(currentSaveButtonText) currentSaveButtonText.textContent = 'Guardar Paciente';
+         if(currentSaveSpinner) currentSaveSpinner.classList.add('hidden');
+
+         if (success) {
+             // --- ACCIONES EN CASO DE ÉXITO ---
+
+             // 1. Estilo del mensaje de éxito
+             if(currentFeedbackDiv) currentFeedbackDiv.className = 'my-4 text-center text-sm text-green-600';
+             
+             // 2. Limpiar formulario
+             if(currentPatientForm) currentPatientForm.reset();
+             if(currentAgeInput) currentAgeInput.value = ''; // Resetear edad calculada
+             // Ocultar detalles de antecedentes si estaban visibles
+             document.querySelectorAll('#content-area .antecedent-detail').forEach(ta => ta.classList.add('hidden'));
+
+             // 3. Actualizar N° Historia mostrado (si vino)
+             if (currentDisplayHistoriaSpan && newHistoriaNumero) {
+                 currentDisplayHistoriaSpan.textContent = newHistoriaNumero;
+                 currentDisplayHistoriaSpan.classList.remove('text-red-500', 'italic', 'text-gray-500');
+                 currentDisplayHistoriaSpan.classList.add('text-gray-700', 'font-semibold');
+             } else if (currentDisplayHistoriaSpan) {
+                  currentDisplayHistoriaSpan.textContent = '(Guardado OK)'; 
+             }
+
+             // 4. Programar la redirección DESPUÉS de un retraso
+             console.log(`Redirección a listado_pacientes programada en 2 segundos...`);
+             setTimeout(() => {
+                 console.log("Ejecutando redirección programada...");
+                 if (typeof loadContent === 'function') {
+                     // *** ¡IMPORTANTE! Asegúrate que el nombre de la vista aquí es el correcto ***
+                     // Si tu listado está en html_files/pacientes/listado_pacientes.html y usas '__':
+                     loadContent('pacientes__listado_pacientes'); 
+                     // Si tu listado está en html_files/listado_pacientes.html:
+                     // loadContent('listado_pacientes'); 
+                 } else {
+                      console.warn("loadContent no disponible globalmente para navegar después del retraso.");
+                 }
+             }, 2000); // 2 segundos de retraso
+
+         } else { 
+             // --- ACCIONES EN CASO DE FALLO ---
+             if(currentFeedbackDiv) currentFeedbackDiv.className = 'my-4 text-center text-sm text-red-600';
+             // El estado del botón ya se restauró arriba.
+             // Opcional: Volver a solicitar el próximo N° Historia si falló por duplicado, etc.
+             // if (typeof requestNextHistoria === 'function') requestNextHistoria();
+         }
+     }
+    })();
+    </script>

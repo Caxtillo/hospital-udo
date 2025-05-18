@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Paciente - Gastroenterología</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hospital-teal': {
+                            50: '#e6f3f4',
+                            100: '#b2dbdf',
+                            200: '#80c3ca',
+                            500: '#009688', // Principal
+                            600: '#00897b', // Icon hover, etc.
+                            700: '#00685e', // Sidebar
+                            800: '#005a52',
+                            900: '#004d40'
+                        },
+                         'hospital-gray': {
+                             50: '#f9fafb',
+                             100: '#f3f4f6', // Fondo cards hover
+                             200: '#e5e7eb',
+                             300: '#d1d5db',
+                             500: '#6b7280', // Texto secundario
+                             700: '#374151', // Texto principal
+                             800: '#1f2937',
+                         }
+                    },
+                    fontFamily: {
+                        'sans': ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Estilos base y scrollbar (sin cambios) */
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background-color: #b2dbdf; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #009688; }
+
+        /* Estilo para simular el campo N° Historia (sin cambios) */
+        .historia-display {
+             @apply inline-block ml-2 px-3 py-1 bg-hospital-gray-100 rounded-md text-sm font-semibold border border-hospital-gray-200 shadow-sm;
+        }
+
+        /* --- ELIMINADO --- Ya no necesitamos estas definiciones aquí ---
+        .module-card { ... }
+        .module-card i { ... }
+        .module-card span { ... }
+        */
+
+    </style>
+</head>
+<body class="bg-hospital-gray-50 h-screen overflow-hidden font-sans">
+    <div class="flex flex-col h-full">
+        <!-- Header (Sin cambios) -->
+        <header class="flex items-center justify-between bg-white p-3 px-4 border-b-4 border-hospital-teal-500 shadow-md flex-shrink-0">
+            <div class="logo-left"><img src="/placeholder-logo-unidad.png" alt="Logo Unidad Gastro" class="h-14 w-auto rounded-full border-2 border-hospital-teal-500"></div>
+            <div class="text-center flex-grow px-4">
+                <h1 class="text-xl md:text-2xl font-semibold text-hospital-teal-700 leading-tight">UNIDAD DE GASTROENTEROLOGIA</h1>
+                <p class="text-sm md:text-base text-hospital-teal-700">"Dra. Isabel Yazmín Baldonedo"</p>
+            </div>
+            <div class="logo-right"><img src="/placeholder-logo-humnt.png" alt="Logo HU MNT" class="h-12 md:h-14 w-auto"></div>
+        </header>
+
+        <div class="flex flex-grow overflow-hidden">
+            <!-- Sidebar Navigation (Sin cambios) -->
+             <nav class="w-56 bg-hospital-teal-700 text-white flex-shrink-0 overflow-y-auto shadow-lg">
+                <div class="flex flex-col h-full py-2">
+                    <a href="#inicio" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">INICIO</a>
+                    <a href="#pacientes" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">PACIENTES</a>
+                    <a href="listado-pacientes.html" class="nav-button block bg-hospital-teal-600 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200 font-semibold">LISTADO DE PACIENTES</a>
+                    <a href="#medicos" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">MEDICOS</a>
+                    <a href="#historial" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">HISTORIAL DE ACCIONES</a>
+                    <a href="#salir" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase mt-auto">SALIR</a>
+                </div>
+             </nav>
+
+            <!-- Main Content Area -->
+            <main class="flex-grow p-6 lg:p-8 overflow-y-auto bg-hospital-gray-100">
+                <div class="flex flex-col h-full">
+
+                    <!-- Sección Superior: Nombre Paciente y N° Historia (Sin cambios) -->
+                    <div class="flex flex-wrap justify-between items-center mb-6 lg:mb-8 pb-4 border-b border-hospital-gray-200 flex-shrink-0">
+                        <h2 id="paciente-nombre" class="text-xl lg:text-2xl font-semibold text-hospital-gray-800 mb-2 sm:mb-0 mr-4">
+                            Cargando nombre...
+                        </h2>
+                        <div class="flex items-center text-sm">
+                            <span class="font-medium text-hospital-gray-600">N° de Historia:</span>
+                            <span id="paciente-historia" class="historia-display">...</span>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Módulos (Tarjetas) - CLASES APLICADAS DIRECTAMENTE -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 lg:gap-6 flex-grow pb-4">
+
+                        <!-- Card: Resumen de Ingreso -->
+                        <a href="resumen-ingreso.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                            <i class="fas fa-file-invoice text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                            <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Resumen Ingreso</span>
+                        </a>
+
+                        <!-- Card: Evolución Medica -->
+                        <a href="evolucion-opciones.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                            <i class="fas fa-notes-medical text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                            <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Evolución Médica</span>
+                        </a>
+
+                        <!-- Card: Ordenes medicas -->
+                        <a href="ordenes-opciones.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                           <i class="fas fa-clipboard-list text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                            <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Órdenes Médicas</span>
+                        </a>
+
+
+                         <!-- Card: Complementarios -->
+                         <a href="complementarios.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                             <i class="fas fa-x-ray text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                            <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Complementarios</span>
+                         </a>
+
+                         <!-- Card: Interconsultas -->
+                         <a href="interconsultas.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                            <i class="fas fa-users text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                            <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Interconsultas</span>
+                         </a>
+
+                         <!-- Card: Informe Médicos -->
+                         <a href="informes-medicos.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                            <i class="fas fa-file-alt text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                            <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Informes Médicos</span>
+                         </a>
+
+                         <!-- Card: Récipes -->
+                         <a href="recipes.html" class="group modulo-link flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg border border-hospital-gray-200 text-center transition duration-200 ease-in-out hover:shadow-xl hover:border-hospital-teal-300 hover:bg-hospital-gray-100 transform hover:-translate-y-1 cursor-pointer">
+                             <i class="fas fa-prescription-bottle-alt text-4xl mb-3 text-hospital-teal-500 group-hover:text-hospital-teal-600"></i>
+                             <span class="text-sm font-semibold text-hospital-gray-700 group-hover:text-hospital-teal-700">Récipes</span>
+                         </a>
+
+                        <!-- Puedes añadir más tarjetas aquí si es necesario, aplicando las mismas clases -->
+
+                    </div> <!-- Fin Grid Módulos -->
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Script JS (Sin cambios) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pacienteId = urlParams.get('pacienteId');
+
+            const nombrePacienteEl = document.getElementById('paciente-nombre');
+            const historiaPacienteEl = document.getElementById('paciente-historia');
+            const moduloLinks = document.querySelectorAll('a.modulo-link'); // Sigue funcionando porque la clase modulo-link se mantuvo
+
+            if (pacienteId && nombrePacienteEl && historiaPacienteEl) {
+                // --- Simulación Carga Datos (Sin cambios) ---
+                const pacienteData = {
+                    '123': { nombre: 'María José Rodríguez Jiménez', historia: 'H-789012' },
+                    '456': { nombre: 'Juana María Sánchez Sánchez', historia: 'H-345678' },
+                    '789': { nombre: 'José Gregorio Hernández', historia: 'H-112233' }
+                };
+                const data = pacienteData[pacienteId] || { nombre: `Paciente ID ${pacienteId} (No encontrado)`, historia: 'N/A'};
+                nombrePacienteEl.textContent = data.nombre;
+                historiaPacienteEl.textContent = data.historia;
+                // --- Fin Simulación ---
+
+                // --- Actualizar Enlaces (Sin cambios) ---
+                actualizarEnlacesModulos(pacienteId, moduloLinks);
+
+            } else {
+                nombrePacienteEl.textContent = 'Error: Paciente no especificado';
+                historiaPacienteEl.textContent = '---';
+                console.error("No se encontró pacienteId en la URL o faltan elementos HMTL.");
+                // Deshabilitar tarjetas visualmente si no hay pacienteId
+                moduloLinks.forEach(link => {
+                    // Aplicamos clases de deshabilitación visual de Tailwind
+                    link.classList.add('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+                    // Quitamos el estilo hover específico de las tarjetas para que no parezca interactivo
+                    link.classList.remove('hover:shadow-xl', 'hover:border-hospital-teal-300', 'hover:bg-hospital-gray-100', 'hover:-translate-y-1');
+                    link.removeAttribute('href');
+                });
+            }
+        });
+
+        function actualizarEnlacesModulos(pacienteId, links) {
+             links.forEach(link => {
+                try {
+                    const originalHref = link.getAttribute('href');
+                    if (originalHref) {
+                        // Asegurarse de que la URL base sea correcta si los href son relativos
+                        const url = new URL(originalHref, window.location.origin + window.location.pathname);
+                        url.searchParams.set('pacienteId', pacienteId);
+                         // Usar solo el nombre del archivo y los parámetros de búsqueda
+                        link.setAttribute('href', originalHref.split('?')[0] + url.search);
+                    }
+                } catch (e) {
+                     console.error(`Error al procesar enlace ${link.getAttribute('href')}: ${e}`);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

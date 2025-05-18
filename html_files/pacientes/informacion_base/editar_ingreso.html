@@ -1,0 +1,718 @@
+<!-- Nombre vista: pacientes__informacion_base__editar_ingreso -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera con Título y Botones Superiores -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Editar Datos de Ingreso y Antecedentes del Paciente
+            <span id="edit-ingreso-subheader" class="block text-sm font-normal text-gray-500 mt-1">Cargando...</span>
+        </h2>
+        <div id="edit-ingreso-actions-top" class="flex space-x-3 mt-3 md:mt-0 hidden">
+            <button type="button" id="cancel-edit-ingreso-top"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    Cancelar/Volver
+            </button>
+            <button type="submit" id="submit-edit-ingreso-top" form="edit-ingreso-form"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="edit-ingreso-btn-text-top">Guardar Cambios</span>
+                <svg id="edit-ingreso-spinner-top" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Placeholder de carga -->
+    <div id="edit-ingreso-loading" class="text-center text-gray-500 italic py-10">Cargando datos del formulario...</div>
+    <!-- Feedback -->
+    <div id="edit-ingreso-feedback" class="my-6 text-center text-sm h-5"></div>
+
+    <!-- Formulario -->
+    <form id="edit-ingreso-form" class="space-y-6 hidden">
+        <input type="hidden" id="patient_id" name="patient_id">
+        <input type="hidden" id="consulta_id" name="consulta_id">
+        <input type="hidden" id="examen_fisico_id" name="examen_fisico_id">
+
+        <!-- Sección Motivo e Historia (Datos del Ingreso) -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Datos del Ingreso: Motivo e Historia</legend>
+            <div class="space-y-5">
+                <div>
+                    <label for="motivo_consulta" class="block text-sm font-medium text-gray-700 mb-1">Motivo de Consulta <span class="text-red-500">*</span></label>
+                    <textarea id="motivo_consulta" name="motivo_consulta" rows="3" required
+                              class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="historia_enfermedad_actual" class="block text-sm font-medium text-gray-700 mb-1">Historia de Enfermedad Actual <span class="text-red-500">*</span></label>
+                    <textarea id="historia_enfermedad_actual" name="historia_enfermedad_actual" rows="5" required
+                              class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[120px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Sección Diagnóstico de Ingreso (Datos del Ingreso) -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Datos del Ingreso: Diagnóstico</legend>
+            <div>
+                <label for="diagnostico_ingreso" class="block text-sm font-medium text-gray-700 mb-1">Diagnóstico(s) de Ingreso</label>
+                <textarea id="diagnostico_ingreso" name="diagnostico_ingreso" rows="4"
+                          class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+            </div>
+        </fieldset>
+
+        <!-- ========== INICIO SECCIÓN ANTECEDENTES DEL PACIENTE ========== -->
+        <!-- Estilos de fieldset y legend igualados a los de arriba -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Antecedentes del Paciente</legend>
+        
+            <!-- Sub-fieldset para Personales -->
+            <fieldset class="border border-gray-200 p-3 rounded-md shadow-sm mb-4">
+                <legend class="text-md font-semibold text-gray-700 px-2 mb-2">Personales</legend>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 items-center mb-3">
+                        <div>
+                            <input type="checkbox" id="ap_asma" name="ap_asma" class="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 align-middle">
+                            <label for="ap_asma" class="ml-2 text-sm font-medium text-gray-700 align-middle">Asma</label>
+                            <span id="ap_asma_status" class="ml-1 text-xs text-red-600 font-semibold">Niega</span>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="ap_hta" name="ap_hta" class="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 align-middle">
+                            <label for="ap_hta" class="ml-2 text-sm font-medium text-gray-700 align-middle">HTA</label>
+                            <span id="ap_hta_status" class="ml-1 text-xs text-red-600 font-semibold">Niega</span>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="ap_dm" name="ap_dm" class="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 align-middle">
+                            <label for="ap_dm" class="ml-2 text-sm font-medium text-gray-700 align-middle">DM</label>
+                            <span id="ap_dm_status" class="ml-1 text-xs text-red-600 font-semibold">Niega</span>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="ap_cardiopatia" name="ap_cardiopatia" class="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 align-middle">
+                            <label for="ap_cardiopatia" class="ml-2 text-sm font-medium text-gray-700 align-middle">Cardiopatía</label>
+                            <span id="ap_cardiopatia_status" class="ml-1 text-xs text-red-600 font-semibold">Niega</span>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="ap_otros" name="ap_otros" class="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 align-middle">
+                            <label for="ap_otros" class="ml-2 text-sm font-medium text-gray-700 align-middle">Otros AP</label>
+                            <span id="ap_otros_status" class="ml-1 text-xs text-red-600 font-semibold">Niega</span>
+                        </div>
+                    </div>
+                    <!-- Y el campo de detalle de Otros AP que faltaba -->
+                    <div id="ap_otros_detalle_container" class="hidden mt-2"> <!-- Asegúrate que este ID sea único y lo uses en JS -->
+                        <label for="ap_otros_detalle" class="block text-sm font-medium text-gray-700 mb-1">Detalle Otros AP</label>
+                        <textarea id="ap_otros_detalle" name="ap_otros_detalle" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                    </div>
+                    
+                    <div id="ap_asma_detalle_container" class="hidden mt-2">
+                        <label for="ap_asma_detalle" class="block text-sm font-medium text-gray-700 mb-1">Detalle Asma</label>
+                        <input type="text" id="ap_asma_detalle" name="ap_asma_detalle" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div id="ap_hta_detalle_container" class="hidden mt-2">
+                        <label for="ap_hta_detalle" class="block text-sm font-medium text-gray-700 mb-1">Detalle HTA</label>
+                        <input type="text" id="ap_hta_detalle" name="ap_hta_detalle" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div id="ap_dm_detalle_container" class="hidden mt-2">
+                        <label for="ap_dm_detalle" class="block text-sm font-medium text-gray-700 mb-1">Detalle DM</label>
+                        <input type="text" id="ap_dm_detalle" name="ap_dm_detalle" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                     <div id="ap_cardiopatia_detalle_container" class="hidden mt-2">
+                        <label for="ap_cardiopatia_detalle" class="block text-sm font-medium text-gray-700 mb-1">Detalle Cardiopatía</label>
+                        <input type="text" id="ap_cardiopatia_detalle" name="ap_cardiopatia_detalle" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div id="ap_otros_detalle_container" class="hidden mt-2">
+                        <label for="ap_otros_detalle" class="block text-sm font-medium text-gray-700 mb-1">Detalle Otros AP</label>
+                        <textarea id="ap_otros_detalle" name="ap_otros_detalle" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label for="ap_alergias" class="block text-sm font-medium text-gray-700 mb-1">Alergias</label>
+                        <textarea id="ap_alergias" name="ap_alergias" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                    </div>
+                    <div class="mt-3">
+                        <label for="ap_quirurgicos" class="block text-sm font-medium text-gray-700 mb-1">Quirúrgicos</label>
+                        <textarea id="ap_quirurgicos" name="ap_quirurgicos" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                    </div>
+                </div>
+            </fieldset>
+        
+            <fieldset class="border border-gray-200 p-3 rounded-md shadow-sm mb-4">
+                <legend class="text-md font-semibold text-gray-700 px-2 mb-2">Familiares</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <div>
+                        <label for="af_madre" class="block text-sm font-medium text-gray-700 mb-1">Madre</label>
+                        <input type="text" id="af_madre" name="af_madre" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div>
+                        <label for="af_padre" class="block text-sm font-medium text-gray-700 mb-1">Padre</label>
+                        <input type="text" id="af_padre" name="af_padre" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div>
+                        <label for="af_hermanos" class="block text-sm font-medium text-gray-700 mb-1">Hermanos</label>
+                        <input type="text" id="af_hermanos" name="af_hermanos" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div>
+                        <label for="af_hijos" class="block text-sm font-medium text-gray-700 mb-1">Hijos</label>
+                        <input type="text" id="af_hijos" name="af_hijos" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                </div>
+            </fieldset>
+        
+            <fieldset class="border border-gray-200 p-3 rounded-md shadow-sm">
+                <legend class="text-md font-semibold text-gray-700 px-2 mb-2">Hábitos Psicobiológicos</legend>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <div>
+                        <label for="hab_tabaco" class="block text-sm font-medium text-gray-700 mb-1">Tabaco</label>
+                        <input type="text" id="hab_tabaco" name="hab_tabaco" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div>
+                        <label for="hab_alcohol" class="block text-sm font-medium text-gray-700 mb-1">Alcohol</label>
+                        <input type="text" id="hab_alcohol" name="hab_alcohol" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div>
+                        <label for="hab_drogas" class="block text-sm font-medium text-gray-700 mb-1">Drogas</label>
+                        <input type="text" id="hab_drogas" name="hab_drogas" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                    <div>
+                        <label for="hab_cafe" class="block text-sm font-medium text-gray-700 mb-1">Café</label>
+                        <input type="text" id="hab_cafe" name="hab_cafe" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    </div>
+                </div>
+            </fieldset>
+        </fieldset>
+        <!-- ========== FIN SECCIÓN ANTECEDENTES DEL PACIENTE ========== -->
+
+        <!-- Sección Examen Físico Inicial (Datos del Ingreso) -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Datos del Ingreso: Examen Físico Inicial</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                <div>
+                    <label for="ef_ta" class="block text-sm font-medium text-gray-700 mb-1">Tensión Arterial (TA)</label>
+                    <input type="text" id="ef_ta" name="ef_ta" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="ef_fc" class="block text-sm font-medium text-gray-700 mb-1">Frecuencia Cardíaca (FC)</label>
+                    <input type="number" id="ef_fc" name="ef_fc" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="ef_fr" class="block text-sm font-medium text-gray-700 mb-1">Frecuencia Respiratoria (FR)</label>
+                    <input type="number" id="ef_fr" name="ef_fr" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="ef_sato2" class="block text-sm font-medium text-gray-700 mb-1">SatO2 (%)</label>
+                    <input type="number" id="ef_sato2" name="ef_sato2" min="0" max="100" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="ef_temp" class="block text-sm font-medium text-gray-700 mb-1">Temperatura (°C)</label>
+                    <input type="text" id="ef_temp" name="ef_temp" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                 <div>
+                    <label for="ef_glic" class="block text-sm font-medium text-gray-700 mb-1">Glicemia Capilar (mg/dL)</label>
+                    <input type="number" id="ef_glic" name="ef_glic" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_piel" class="block text-sm font-medium text-gray-700 mb-1">Piel y Faneras</label>
+                    <textarea id="ef_piel" name="ef_piel" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_respiratorio" class="block text-sm font-medium text-gray-700 mb-1">Respiratorio</label>
+                    <textarea id="ef_respiratorio" name="ef_respiratorio" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_cardiovascular" class="block text-sm font-medium text-gray-700 mb-1">Cardiovascular</label>
+                    <textarea id="ef_cardiovascular" name="ef_cardiovascular" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                 <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_abdomen" class="block text-sm font-medium text-gray-700 mb-1">Abdomen</label>
+                    <textarea id="ef_abdomen" name="ef_abdomen" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                 <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_gastrointestinal" class="block text-sm font-medium text-gray-700 mb-1">Gastrointestinal (Examen específico)</label>
+                    <textarea id="ef_gastrointestinal" name="ef_gastrointestinal" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_genitourinario" class="block text-sm font-medium text-gray-700 mb-1">Genitourinario</label>
+                    <textarea id="ef_genitourinario" name="ef_genitourinario" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_extremidades" class="block text-sm font-medium text-gray-700 mb-1">Extremidades</label>
+                    <textarea id="ef_extremidades" name="ef_extremidades" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_neurologico" class="block text-sm font-medium text-gray-700 mb-1">Neurológico</label>
+                    <textarea id="ef_neurologico" name="ef_neurologico" rows="2" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+                <div class="md:col-span-1 lg:col-span-3">
+                    <label for="ef_otros_hallazgos" class="block text-sm font-medium text-gray-700 mb-1">Otros Hallazgos / Comentarios</label>
+                    <textarea id="ef_otros_hallazgos" name="ef_otros_hallazgos" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Botones Inferiores -->
+        <div class="flex justify-end space-x-3 pt-5 border-t border-gray-200 mt-8">
+             <button type="button" id="cancel-edit-ingreso-bottom"
+                     class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                 Cancelar/Volver
+             </button>
+            <button type="submit" id="submit-edit-ingreso-bottom"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="edit-ingreso-btn-text-bottom">Guardar Cambios</span>
+                <svg id="edit-ingreso-spinner-bottom" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function() {
+        const SCRIPT_VIEW_NAME = 'pacientes__informacion_base__editar_ingreso';
+        const INIT_FUNCTION_NAME = `initialize_${SCRIPT_VIEW_NAME.replace(/__/g, '_')}`;
+        console.log(`Script para ${SCRIPT_VIEW_NAME}.html cargado, registrando ${INIT_FUNCTION_NAME}`);
+
+        // --- Elementos DOM ---
+        let form, loadingDiv, subheader, feedbackDiv;
+        let patientIdInput, consultaIdInput, examenFisicoIdInput; 
+        let actionButtonsTopDiv, submitButtonTop, buttonTextTop, spinnerTop, cancelButtonTop;
+        let submitButtonBottom, buttonTextBottom, spinnerBottom, cancelButtonBottom;
+        // Campos de Ingreso
+        let motivoConsultaInput, heaInput, dxIngresoInput;
+        let efTaInput, efFcInput, efFrInput, efSato2Input, efTempInput, efGlicInput;
+        let efPielInput, efRespiratorioInput, efCardiovascularInput, efAbdomenInput, efGastroInput, efGenitoInput, efExtremidadesInput, efNeuroInput, efOtrosInput;
+        // Campos de Antecedentes
+        let apAsmaCheckbox, apHtaCheckbox, apDmCheckbox, apCardiopatiaCheckbox, apOtrosCheckbox;
+        let apAsmaDetalleInput, apHtaDetalleInput, apDmDetalleInput, apCardiopatiaDetalleInput, apOtrosDetalleTextarea;
+        let apAlergiasTextarea, apQuirurgicosTextarea;
+        let afMadreInput, afPadreInput, afHermanosInput, afHijosInput;
+        let habTabacoInput, habAlcoholInput, habDrogasInput, habCafeInput;
+        // Contenedores de detalle y spans de estado (MUY IMPORTANTE TENERLOS)
+        let apAsmaDetalleContainer, apHtaDetalleContainer, apDmDetalleContainer, apCardiopatiaDetalleContainer, apOtrosDetalleContainer;
+        let apAsmaStatusSpan, apHtaStatusSpan, apDmStatusSpan, apCardiopatiaStatusSpan, apOtrosStatusSpan;
+
+        // --- Estado ---
+        let isSubmitting = false;
+        let currentPatientId = null; 
+        let currentConsultaId = null; 
+
+        function formatLocalDateTime(isoDateTimeString) {
+            if (!isoDateTimeString) return 'Fecha no disponible';
+            try {
+                const date = new Date(isoDateTimeString);
+                if (isNaN(date.getTime())) return 'Fecha inválida';
+                return date.toLocaleString('es-VE', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                }).replace(',', '');
+            } catch (e) { console.warn("Error formateando fecha:", isoDateTimeString, e); return 'Error en fecha'; }
+        }
+        
+        function updateCheckboxStatusUI(checkboxElem, statusSpanElem, detailContainerElem) {
+            if (!checkboxElem || !statusSpanElem || !detailContainerElem) {
+                // console.warn("updateCheckboxStatusUI: Faltan elementos para", checkboxElem ? checkboxElem.id : 'checkbox desconocido');
+                return;
+            }
+            if (checkboxElem.checked) {
+                statusSpanElem.textContent = 'Refiere';
+                statusSpanElem.className = 'ml-1 text-xs text-green-600 font-semibold';
+                detailContainerElem.classList.remove('hidden');
+            } else {
+                statusSpanElem.textContent = 'Niega';
+                statusSpanElem.className = 'ml-1 text-xs text-red-600 font-semibold';
+                detailContainerElem.classList.add('hidden');
+                // Opcional: Limpiar el campo de detalle si se desmarca
+                // const detailInput = detailContainerElem.querySelector('input, textarea');
+                // if (detailInput) detailInput.value = '';
+            }
+        }
+
+        function populateForm(fullDetails) {
+            console.log("populateForm INGRESOS+ANTECEDENTES con:", JSON.stringify(fullDetails, null, 2));
+            if (!fullDetails || fullDetails.error) {
+                showErrorFeedback(`Error al cargar datos: ${fullDetails?.error || 'Desconocido'}`);
+                if(submitButtonTop) submitButtonTop.disabled = true;
+                if(submitButtonBottom) submitButtonBottom.disabled = true;
+                if(loadingDiv) loadingDiv.textContent = "Error al cargar datos del ingreso.";
+                if(actionButtonsTopDiv) actionButtonsTopDiv.classList.add('hidden');
+                return;
+            }
+            
+            try {
+                currentPatientId = fullDetails.paciente_id_original;
+                currentConsultaId = fullDetails.consulta_id_original;
+
+                if (patientIdInput) patientIdInput.value = currentPatientId || '';
+                if (consultaIdInput) consultaIdInput.value = currentConsultaId || '';
+
+                const pacienteInfo = fullDetails.paciente_info || {};
+                const consultaData = fullDetails.consulta_data || {};
+                const efData = fullDetails.examen_fisico_data || {};
+                
+                if (subheader) subheader.textContent = `Paciente: ${fullDetails.paciente_nombre_completo || 'N/A'} (HC: ${fullDetails.paciente_numero_historia || 'N/A'}) - Ingreso: ${formatLocalDateTime(consultaData.fecha_hora_ingreso)}`;
+
+                // Antecedentes Personales - Poblar y luego actualizar UI de visibilidad/status
+                if (apAsmaCheckbox) apAsmaCheckbox.checked = pacienteInfo.ap_asma === 1;
+                if (apHtaCheckbox) apHtaCheckbox.checked = pacienteInfo.ap_hta === 1;
+                if (apDmCheckbox) apDmCheckbox.checked = pacienteInfo.ap_dm === 1;
+                if (apCardiopatiaCheckbox) apCardiopatiaCheckbox.checked = pacienteInfo.ap_cardiopatia === 1;
+                if (apOtrosCheckbox) apOtrosCheckbox.checked = pacienteInfo.ap_otros === 1;
+                
+                if (apAsmaDetalleInput) apAsmaDetalleInput.value = pacienteInfo.ap_asma_detalle_dec || '';
+                if (apHtaDetalleInput) apHtaDetalleInput.value = pacienteInfo.ap_hta_detalle_dec || '';
+                if (apDmDetalleInput) apDmDetalleInput.value = pacienteInfo.ap_dm_detalle_dec || '';
+                if (apCardiopatiaDetalleInput) apCardiopatiaDetalleInput.value = pacienteInfo.ap_cardiopatia_detalle_dec || '';
+                if (apOtrosDetalleTextarea) apOtrosDetalleTextarea.value = pacienteInfo.ap_otros_detalle_dec || '';
+                if (apAlergiasTextarea) apAlergiasTextarea.value = pacienteInfo.ap_alergias_dec || '';
+                if (apQuirurgicosTextarea) apQuirurgicosTextarea.value = pacienteInfo.ap_quirurgicos_dec || '';
+                
+                // Actualizar UI de checkboxes después de setear su estado 'checked'
+                updateCheckboxStatusUI(apAsmaCheckbox, apAsmaStatusSpan, apAsmaDetalleContainer);
+                updateCheckboxStatusUI(apHtaCheckbox, apHtaStatusSpan, apHtaDetalleContainer);
+                updateCheckboxStatusUI(apDmCheckbox, apDmStatusSpan, apDmDetalleContainer);
+                updateCheckboxStatusUI(apCardiopatiaCheckbox, apCardiopatiaStatusSpan, apCardiopatiaDetalleContainer);
+                updateCheckboxStatusUI(apOtrosCheckbox, apOtrosStatusSpan, apOtrosDetalleContainer);
+                
+                // Familiares y Hábitos
+                if (afMadreInput) afMadreInput.value = pacienteInfo.af_madre_dec || '';
+                if (afPadreInput) afPadreInput.value = pacienteInfo.af_padre_dec || '';
+                if (afHermanosInput) afHermanosInput.value = pacienteInfo.af_hermanos_dec || '';
+                if (afHijosInput) afHijosInput.value = pacienteInfo.af_hijos_dec || '';
+                if (habTabacoInput) habTabacoInput.value = pacienteInfo.hab_tabaco_dec || '';
+                if (habAlcoholInput) habAlcoholInput.value = pacienteInfo.hab_alcohol_dec || '';
+                if (habDrogasInput) habDrogasInput.value = pacienteInfo.hab_drogas_dec || '';
+                if (habCafeInput) habCafeInput.value = pacienteInfo.hab_cafe_dec || '';
+
+                // Ingreso (Consulta)
+                if (motivoConsultaInput) motivoConsultaInput.value = consultaData.motivo_consulta_dec || '';
+                if (heaInput) heaInput.value = consultaData.historia_enfermedad_actual_dec || '';
+                if (dxIngresoInput) dxIngresoInput.value = consultaData.diagnostico_ingreso_dec || '';
+                // Ingreso (Examen Físico)
+                if (examenFisicoIdInput) examenFisicoIdInput.value = efData.id || ''; 
+                if (efTaInput) efTaInput.value = efData.ef_ta_dec || '';
+                if (efFcInput) efFcInput.value = efData.ef_fc || ''; 
+                if (efFrInput) efFrInput.value = efData.ef_fr || ''; 
+                if (efSato2Input) efSato2Input.value = efData.ef_sato2 || ''; 
+                if (efTempInput) efTempInput.value = efData.ef_temp_dec || '';
+                if (efGlicInput) efGlicInput.value = efData.ef_glic || ''; 
+                if (efPielInput) efPielInput.value = efData.ef_piel_dec || '';
+                if (efRespiratorioInput) efRespiratorioInput.value = efData.ef_respiratorio_dec || '';
+                if (efCardiovascularInput) efCardiovascularInput.value = efData.ef_cardiovascular_dec || '';
+                if (efAbdomenInput) efAbdomenInput.value = efData.ef_abdomen_dec || '';
+                if (efGastroInput) efGastroInput.value = efData.ef_gastrointestinal_dec || '';
+                if (efGenitoInput) efGenitoInput.value = efData.ef_genitourinario_dec || '';
+                if (efExtremidadesInput) efExtremidadesInput.value = efData.ef_extremidades_dec || '';
+                if (efNeuroInput) efNeuroInput.value = efData.ef_neurologico_dec || '';
+                if (efOtrosInput) efOtrosInput.value = efData.ef_otros_hallazgos_dec || '';
+
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                if (form) form.classList.remove('hidden');
+                if(actionButtonsTopDiv) actionButtonsTopDiv.classList.remove('hidden');
+                if(submitButtonTop) submitButtonTop.disabled = false;
+                if(submitButtonBottom) submitButtonBottom.disabled = false;
+
+            } catch (e) {
+                console.error("Error DENTRO de populateForm:", e);
+                showErrorFeedback("Error interno al rellenar el formulario.");
+            }
+        }
+
+        function showErrorFeedback(message) {
+             if(feedbackDiv){
+                 feedbackDiv.textContent = message;
+                 feedbackDiv.className = 'my-6 text-center text-sm h-5 text-red-600 font-medium';
+             }
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            if (isSubmitting) return;
+            
+            if(!submitButtonTop || !spinnerTop || !buttonTextTop || !submitButtonBottom || !spinnerBottom || !buttonTextBottom || !feedbackDiv) {
+                 console.error("handleFormSubmit: Faltan elementos UI para feedback/submit.");
+                 return;
+            }
+
+            isSubmitting = true;
+            submitButtonTop.disabled = true;
+            spinnerTop.classList.remove('hidden');
+            buttonTextTop.textContent = 'Guardando...';
+            submitButtonBottom.disabled = true;
+            spinnerBottom.classList.remove('hidden');
+            buttonTextBottom.textContent = 'Guardando...';
+
+            if(feedbackDiv) {
+                feedbackDiv.textContent = '';
+                feedbackDiv.className = 'my-6 text-center text-sm h-5';
+            }
+
+            const formData = new FormData(form);
+            const dataToSubmit = {}; 
+            formData.forEach((value, key) => {
+                const element = form.elements[key];
+                if (element && element.type === 'checkbox') {
+                    dataToSubmit[key] = element.checked ? 1 : 0;
+                } else {
+                    dataToSubmit[key] = (typeof value === 'string') ? value.trim() : value; 
+                }
+            });
+            
+            ['ap_asma', 'ap_hta', 'ap_dm', 'ap_cardiopatia', 'ap_otros'].forEach(cbName => {
+                if (!(cbName in dataToSubmit)) { 
+                    dataToSubmit[cbName] = 0;
+                }
+            });
+
+            if (!dataToSubmit.motivo_consulta || !dataToSubmit.historia_enfermedad_actual) {
+                 window.handleUpdateIngresoDataResult_pacientes__informacion_base__editar_ingreso(false, "Motivo de Consulta e Historia de Enfermedad Actual son requeridos.");
+                 return;
+            }
+            
+            ['ef_fc', 'ef_fr', 'ef_sato2', 'ef_glic'].forEach(field => {
+                if (dataToSubmit[field] === '') dataToSubmit[field] = null;
+            });
+
+            console.log(`${SCRIPT_VIEW_NAME}: Enviando datos para actualizar (Paciente ID ${currentPatientId}, Consulta ID ${currentConsultaId}):`, dataToSubmit);
+
+            if (typeof window.backend === 'undefined' || typeof window.backend.update_ingreso_data !== 'function') {
+                window.handleUpdateIngresoDataResult_pacientes__informacion_base__editar_ingreso(false, "Error: Función de actualización no disponible."); 
+                return;
+            }
+
+            try {
+                window.backend.update_ingreso_data(dataToSubmit); 
+            } catch (error) {
+                console.error("Error llamando a window.backend.update_ingreso_data:", error);
+                window.handleUpdateIngresoDataResult_pacientes__informacion_base__editar_ingreso(false, "Error de comunicación con el servidor al actualizar.");
+            }
+        }
+        
+        function handleCancelClick() {
+             if (confirm("¿Descartar cambios y volver a la vista del paciente?")) {
+                if (typeof loadContent === 'function') {
+                     loadContent('pacientes__paciente_detalle'); 
+                }
+             }
+        }
+        
+        function initializeView() {
+            console.log(`*** ${INIT_FUNCTION_NAME}: INICIALIZANDO VISTA ${SCRIPT_VIEW_NAME} ***`);
+            
+            form = document.getElementById('edit-ingreso-form');
+            loadingDiv = document.getElementById('edit-ingreso-loading');
+            subheader = document.getElementById('edit-ingreso-subheader');
+            feedbackDiv = document.getElementById('edit-ingreso-feedback');
+            patientIdInput = document.getElementById('patient_id');
+            consultaIdInput = document.getElementById('consulta_id');
+            examenFisicoIdInput = document.getElementById('examen_fisico_id');
+            actionButtonsTopDiv = document.getElementById('edit-ingreso-actions-top');
+            submitButtonTop = document.getElementById('submit-edit-ingreso-top');
+            buttonTextTop = document.getElementById('edit-ingreso-btn-text-top');
+            spinnerTop = document.getElementById('edit-ingreso-spinner-top');
+            cancelButtonTop = document.getElementById('cancel-edit-ingreso-top');
+            submitButtonBottom = document.getElementById('submit-edit-ingreso-bottom');
+            buttonTextBottom = document.getElementById('edit-ingreso-btn-text-bottom');
+            spinnerBottom = document.getElementById('edit-ingreso-spinner-bottom');
+            cancelButtonBottom = document.getElementById('cancel-edit-ingreso-bottom');
+            motivoConsultaInput = document.getElementById('motivo_consulta');
+            heaInput = document.getElementById('historia_enfermedad_actual');
+            dxIngresoInput = document.getElementById('diagnostico_ingreso');
+            efTaInput = document.getElementById('ef_ta');
+            efFcInput = document.getElementById('ef_fc');
+            efFrInput = document.getElementById('ef_fr');
+            efSato2Input = document.getElementById('ef_sato2');
+            efTempInput = document.getElementById('ef_temp');
+            efGlicInput = document.getElementById('ef_glic');
+            efPielInput = document.getElementById('ef_piel');
+            efRespiratorioInput = document.getElementById('ef_respiratorio');
+            efCardiovascularInput = document.getElementById('ef_cardiovascular');
+            efAbdomenInput = document.getElementById('ef_abdomen');
+            efGastroInput = document.getElementById('ef_gastrointestinal');
+            efGenitoInput = document.getElementById('ef_genitourinario');
+            efExtremidadesInput = document.getElementById('ef_extremidades');
+            efNeuroInput = document.getElementById('ef_neurologico');
+            efOtrosInput = document.getElementById('ef_otros_hallazgos');
+            
+            // Antecedentes Personales - Checkboxes
+            apAsmaCheckbox = document.getElementById('ap_asma');
+            apHtaCheckbox = document.getElementById('ap_hta');
+            apDmCheckbox = document.getElementById('ap_dm');
+            apCardiopatiaCheckbox = document.getElementById('ap_cardiopatia');
+            apOtrosCheckbox = document.getElementById('ap_otros');
+            // Antecedentes Personales - Contenedores de Detalle
+            apAsmaDetalleContainer = document.getElementById('ap_asma_detalle_container');
+            apHtaDetalleContainer = document.getElementById('ap_hta_detalle_container');
+            apDmDetalleContainer = document.getElementById('ap_dm_detalle_container');
+            apCardiopatiaDetalleContainer = document.getElementById('ap_cardiopatia_detalle_container');
+            apOtrosDetalleContainer = document.getElementById('ap_otros_detalle_container');
+            // Antecedentes Personales - Inputs/Textareas de Detalle
+            apAsmaDetalleInput = document.getElementById('ap_asma_detalle');
+            apHtaDetalleInput = document.getElementById('ap_hta_detalle');
+            apDmDetalleInput = document.getElementById('ap_dm_detalle');
+            apCardiopatiaDetalleInput = document.getElementById('ap_cardiopatia_detalle');
+            apOtrosDetalleTextarea = document.getElementById('ap_otros_detalle');
+            apAlergiasTextarea = document.getElementById('ap_alergias');
+            apQuirurgicosTextarea = document.getElementById('ap_quirurgicos');
+            // Antecedentes Personales - Spans de Status (Refiere/Niega)
+            apAsmaStatusSpan = document.getElementById('ap_asma_status');
+            apHtaStatusSpan = document.getElementById('ap_hta_status');
+            apDmStatusSpan = document.getElementById('ap_dm_status');
+            apCardiopatiaStatusSpan = document.getElementById('ap_cardiopatia_status');
+            apOtrosStatusSpan = document.getElementById('ap_otros_status');
+            // Antecedentes Familiares
+            afMadreInput = document.getElementById('af_madre');
+            afPadreInput = document.getElementById('af_padre');
+            afHermanosInput = document.getElementById('af_hermanos');
+            afHijosInput = document.getElementById('af_hijos');
+            // Hábitos Psicobiológicos
+            habTabacoInput = document.getElementById('hab_tabaco');
+            habAlcoholInput = document.getElementById('hab_alcohol');
+            habDrogasInput = document.getElementById('hab_drogas');
+            habCafeInput = document.getElementById('hab_cafe');
+
+            // Validar elementos críticos
+            const criticalElements = [form, loadingDiv, subheader, feedbackDiv, motivoConsultaInput, apAsmaCheckbox, apAsmaDetalleContainer, apAsmaStatusSpan /* ... añade más si es necesario ... */];
+            if (criticalElements.some(el => !el)) {
+                console.error(`${INIT_FUNCTION_NAME}: Error crítico - Faltan elementos DOM esenciales.`);
+                if(loadingDiv) loadingDiv.textContent = "Error fatal al cargar la interfaz.";
+                return;
+            }
+            console.log(`${INIT_FUNCTION_NAME}: Elementos UI encontrados.`);
+
+            // Configurar listeners para checkboxes de antecedentes personales
+            const apItems = [
+                { cb: apAsmaCheckbox, container: apAsmaDetalleContainer, span: apAsmaStatusSpan },
+                { cb: apHtaCheckbox, container: apHtaDetalleContainer, span: apHtaStatusSpan },
+                { cb: apDmCheckbox, container: apDmDetalleContainer, span: apDmStatusSpan },
+                { cb: apCardiopatiaCheckbox, container: apCardiopatiaDetalleContainer, span: apCardiopatiaStatusSpan },
+                { cb: apOtrosCheckbox, container: apOtrosDetalleContainer, span: apOtrosStatusSpan }
+            ];
+
+            apItems.forEach(item => {
+                if (item.cb && item.container && item.span && !item.cb.dataset.listenerAttached) {
+                    item.cb.addEventListener('change', () => updateCheckboxStatusUI(item.cb, item.span, item.container));
+                    item.cb.dataset.listenerAttached = 'true';
+                    // Inicializar el texto del span y visibilidad del contenedor al cargar la vista por primera vez
+                    // Esto se hará más completamente en populateForm después de recibir los datos.
+                    updateCheckboxStatusUI(item.cb, item.span, item.container); 
+                } else if (!item.cb || !item.container || !item.span) {
+                    // console.warn("Faltan elementos para un item de AP:", item);
+                }
+            });
+            
+            const setupBackendInteraction = () => {
+                console.log(`${INIT_FUNCTION_NAME}: Ejecutando setupBackendInteraction.`);
+                const metodoBackend = window.backend.get_ing_test || window.backend.request_ingreso_details;
+                if (typeof window.backend !== 'undefined' && typeof metodoBackend === 'function') {
+                    console.log(`${INIT_FUNCTION_NAME}: Llamando a backend.${metodoBackend.name}() (esperando señal)...`);
+                    try {
+                        metodoBackend.call(window.backend); 
+                    } catch (e) { /* ... */ }
+                } else { /* ... error ... */ }
+            };
+
+            isSubmitting = false;
+            currentPatientId = null;
+            currentConsultaId = null;
+            if(form) form.reset(); // Resetear antes de inicializar los checkboxes para que updateCheckboxStatusUI funcione bien la primera vez
+            
+            // Re-inicializar los estados visuales de los checkboxes de AP después del reset del form
+             apItems.forEach(item => {
+                if (item.cb && item.span && item.container) {
+                    updateCheckboxStatusUI(item.cb, item.span, item.container);
+                }
+            });
+
+            if(form) form.classList.add('hidden');
+            if(actionButtonsTopDiv) actionButtonsTopDiv.classList.add('hidden');
+            if(loadingDiv) loadingDiv.style.display = 'block';
+            if(subheader) subheader.textContent = 'Cargando...';
+            if(feedbackDiv) feedbackDiv.textContent = '';
+
+            if (form && !form.dataset.listenerAttached) {
+                form.addEventListener('submit', handleFormSubmit);
+                if(cancelButtonTop) cancelButtonTop.addEventListener('click', handleCancelClick);
+                if(cancelButtonBottom) cancelButtonBottom.addEventListener('click', handleCancelClick);
+                form.dataset.listenerAttached = 'true';
+            }
+
+            if (window.isBackendFullyReady === true) { 
+                setupBackendInteraction();
+            } else {
+                const backendReadyListener = () => {
+                    document.removeEventListener('backendReady', backendReadyListener);
+                    setupBackendInteraction(); 
+                };
+                document.addEventListener('backendReady', backendReadyListener);
+            }
+        }
+
+        // --- Handlers para señales del backend ---
+        window.handleIngresoDetailsResult_pacientes__informacion_base__editar_ingreso = function(jsonString) {
+        console.log(`${SCRIPT_VIEW_NAME}: Recibidos detalles (JSON string):`, jsonString);
+        let fullDetails = null; 
+        try {
+            fullDetails = JSON.parse(jsonString);
+            if (!fullDetails || typeof fullDetails !== 'object') throw new Error("Formato de datos inválido.");
+            console.log("Detalles parseados:", fullDetails); 
+            if (fullDetails.error) {
+                throw new Error(fullDetails.error);
+            }
+            populateForm(fullDetails); 
+        } catch (e) {
+            console.error(`Error procesando detalles en ${SCRIPT_VIEW_NAME}:`, e);
+            showErrorFeedback(`Error al cargar datos: ${e.message}`);
+            if (loadingDiv) loadingDiv.textContent = "Error al cargar."; // Mensaje de error
+            if (form) form.classList.add('hidden'); // Ocultar form si falla la carga
+            if (submitButtonTop) submitButtonTop.disabled = true; // Deshabilitar botones
+            if (submitButtonBottom) submitButtonBottom.disabled = true;
+            if (actionButtonsTopDiv) actionButtonsTopDiv.classList.add('hidden');
+        }
+    };
+         
+        window.handleUpdateIngresoDataResult_pacientes__informacion_base__editar_ingreso = function(success, message) {
+        console.log(`${SCRIPT_VIEW_NAME}: Resultado actualización: ${success}, msg=${message}`);
+        isSubmitting = false; // Muy importante resetear esto
+
+        // Reestablecer estado del botón superior
+        if(submitButtonTop) {
+            submitButtonTop.disabled = false;
+            if(spinnerTop) spinnerTop.classList.add('hidden');
+            if(buttonTextTop) buttonTextTop.textContent = 'Guardar Cambios';
+        }
+        // Reestablecer estado del botón inferior
+        if(submitButtonBottom) {
+            submitButtonBottom.disabled = false;
+            if(spinnerBottom) spinnerBottom.classList.add('hidden');
+            if(buttonTextBottom) buttonTextBottom.textContent = 'Guardar Cambios';
+        }
+
+        // Mostrar mensaje de feedback
+        if(feedbackDiv){
+            feedbackDiv.textContent = message;
+            feedbackDiv.className = success
+                ? 'my-6 text-center text-sm h-5 text-green-600 font-medium' // Éxito
+                : 'my-6 text-center text-sm h-5 text-red-600 font-medium';   // Error
+        }
+
+        // Si el guardado fue exitoso, deshabilitar botones de nuevo y redirigir
+        if (success) {
+            if(submitButtonTop) submitButtonTop.disabled = true;
+            if(submitButtonBottom) submitButtonBottom.disabled = true;
+            
+            // Mostrar mensaje de éxito un momento antes de redirigir
+            setTimeout(() => {
+                if (typeof loadContent === 'function') {
+                    // Volver a la vista de detalle del paciente.
+                    // Esta vista debería recargar los datos para mostrar la información actualizada.
+                    loadContent('pacientes__paciente_detalle'); 
+                } else {
+                    console.error("Función loadContent no disponible para redirección.");
+                    // Como fallback, podrías simplemente recargar la página actual,
+                    // aunque no es ideal si quieres ir a otra vista.
+                    // location.reload(); 
+                }
+            }, 1500); // Esperar 1.5 segundos antes de redirigir
+        }
+        // Si no fue exitoso (success es false), los botones ya se reestablecieron arriba para permitir reintentar.
+    };
+
+        // --- Registro del Inicializador ---
+        window.viewInitializationFunctions = window.viewInitializationFunctions || {};
+        window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+        console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado.`);
+    })();
+</script>

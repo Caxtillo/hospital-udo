@@ -1,0 +1,433 @@
+<!-- Nombre vista: paciente/evolucion/agregar_evolucion.html -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera con Título y Botones Superiores -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Añadir Nueva Evolución Médica
+            <span id="add-evolucion-subheader" class="block text-sm font-normal text-gray-500 mt-1">Paciente: [Nombre Paciente] - H.C: [HC]</span> <!-- Se llenará con JS -->
+        </h2>
+        <div id="add-evolucion-actions-top" class="flex space-x-3 mt-3 md:mt-0"> <!-- Visible por defecto -->
+            <button type="button" id="cancel-add-evolucion-top"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    Cancelar
+            </button>
+            <button type="submit" id="submit-add-evolucion-top" form="add-evolucion-form"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="add-evolucion-btn-text-top">Añadir Evolución</span>
+                <svg id="add-evolucion-spinner-top" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="add-evolucion-feedback-top" class="my-6 text-center text-sm h-5"></div>
+
+    <!-- Formulario -->
+    <form id="add-evolucion-form" class="space-y-6">
+        <!-- patient_id y consulta_id se manejarán en el backend a través de estado o se pueden pasar si es necesario -->
+        <!-- No se necesita evolucion_id para una nueva evolución -->
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Fecha y Hora de la Evolución</legend>
+            <div>
+                <label for="fecha_hora_evolucion_display_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora Actual</label>
+                <input type="text" id="fecha_hora_evolucion_display_add" name="fecha_hora_evolucion_display_add" readonly
+                       class="block w-full rounded-md border-gray-200 bg-gray-100 shadow-sm sm:text-sm px-3 py-2 h-[42px] cursor-not-allowed"
+                       title="La fecha y hora se registrarán automáticamente al guardar.">
+                <!-- El backend asignará CURRENT_TIMESTAMP al guardar -->
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Signos Vitales</legend>
+            <div class="flex flex-wrap gap-x-6 gap-y-4 items-end">
+                <div class="flex-1 min-w-[120px]">
+                    <label for="ev_ta" class="block text-sm font-medium text-gray-700 mb-1">T/A</label>
+                    <input type="text" id="ev_ta" name="ev_ta" placeholder="ej. 120/80" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_fc" class="block text-sm font-medium text-gray-700 mb-1">FC</label>
+                    <input type="number" id="ev_fc" name="ev_fc" placeholder="lpm" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_fr" class="block text-sm font-medium text-gray-700 mb-1">FR</label>
+                    <input type="number" id="ev_fr" name="ev_fr" placeholder="rpm" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_sato2" class="block text-sm font-medium text-gray-700 mb-1">SatO₂</label>
+                    <input type="number" id="ev_sato2" name="ev_sato2" placeholder="%" min="0" max="100" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="flex-1 min-w-[90px]">
+                    <label for="ev_temp" class="block text-sm font-medium text-gray-700 mb-1">Temp</label>
+                    <input type="text" id="ev_temp" name="ev_temp" placeholder="°C" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Evolución Subjetiva</legend>
+            <div>
+                <label for="ev_subjetivo" class="block text-sm font-medium text-gray-700 mb-1">Subjetivo <span class="text-red-500">*</span></label>
+                <textarea id="ev_subjetivo" name="ev_subjetivo" rows="4" required class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Evolución Objetiva (Aspecto General)</legend>
+            <div>
+                <label for="ev_objetivo" class="block text-sm font-medium text-gray-700 mb-1">Aspecto General / Hallazgos Principales <span class="text-red-500">*</span></label>
+                <textarea id="ev_objetivo" name="ev_objetivo" rows="4" required class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Examen Físico Detallado por Sistemas</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <div>
+                    <label for="ev_piel" class="block text-sm font-medium text-gray-700 mb-1">Piel</label>
+                    <textarea id="ev_piel" name="ev_piel" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_respiratorio" class="block text-sm font-medium text-gray-700 mb-1">Respiratorio</label>
+                    <textarea id="ev_respiratorio" name="ev_respiratorio" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_cardiovascular" class="block text-sm font-medium text-gray-700 mb-1">Cardiovascular</label>
+                    <textarea id="ev_cardiovascular" name="ev_cardiovascular" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_abdomen" class="block text-sm font-medium text-gray-700 mb-1">Abdomen</label>
+                    <textarea id="ev_abdomen" name="ev_abdomen" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_extremidades" class="block text-sm font-medium text-gray-700 mb-1">Extremidades</label>
+                    <textarea id="ev_extremidades" name="ev_extremidades" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_neurologico" class="block text-sm font-medium text-gray-700 mb-1">Neurológico</label>
+                    <textarea id="ev_neurologico" name="ev_neurologico" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="ev_otros" class="block text-sm font-medium text-gray-700 mb-1">Otros Hallazgos E.F.</label>
+                    <textarea id="ev_otros" name="ev_otros" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Diagnóstico(s) y Plan</legend>
+            <div class="space-y-5">
+                <div>
+                    <label for="ev_diagnosticos" class="block text-sm font-medium text-gray-700 mb-1">Diagnóstico(s) <span class="text-red-500">*</span></label>
+                    <textarea id="ev_diagnosticos" name="ev_diagnosticos" rows="4" required class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+                </div>
+                <div>
+                    <label for="ev_tratamiento_plan" class="block text-sm font-medium text-gray-700 mb-1">Tratamiento y Plan <span class="text-red-500">*</span></label>
+                    <textarea id="ev_tratamiento_plan" name="ev_tratamiento_plan" rows="6" required class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[140px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Comentario Adicional</legend>
+            <div>
+                <label for="ev_comentario" class="block text-sm font-medium text-gray-700 mb-1">Comentario (Opcional)</label>
+                <textarea id="ev_comentario" name="ev_comentario" rows="3" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[80px]"></textarea>
+            </div>
+        </fieldset>
+
+        <div id="add-evolucion-feedback-bottom" class="my-6 text-center text-sm h-5"></div>
+
+        <!-- Botones Inferiores -->
+        <div class="flex justify-end space-x-3 pt-5 border-t border-gray-200 mt-8">
+            <button type="button" id="cancel-add-evolucion-bottom" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium h-[42px]">Cancelar</button>
+            <button type="submit" id="submit-add-evolucion-bottom" class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium disabled:opacity-60 h-[42px]">
+                <span id="add-evolucion-btn-text-bottom">Añadir Evolución</span>
+                <svg id="add-evolucion-spinner-bottom" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function() {
+        const VIEW_ID_FOR_SHELL_INIT = 'pacientes_evolucion_agregar_evolucion';
+        const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__evolucion__agregar_evolucion';
+    
+        const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+        const HANDLER_SAVE_RESULT = `handleEvolucionSaveResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+    
+        console.log(`Script para AGREGAR EVOLUCION (ID para handler): ${VIEW_ID_FOR_SHELL_HANDLER}, (ID para init): ${VIEW_ID_FOR_SHELL_INIT}`);
+        console.log(` - Registrando inicializador como: ${INIT_FUNCTION_NAME}`);
+        console.log(` - Registrando handler de guardado como: ${HANDLER_SAVE_RESULT}`);
+    
+        let form, subheaderElement;
+        let feedbackDivTop, feedbackDivBottom; // Usamos estas dos
+        let fechaHoraDisplayAdd;
+        let evTaInput, evFcInput, evFrInput, evSato2Input, evTempInput;
+        let evSubjetivoTextarea, evObjetivoTextarea, evPielTextarea, evRespiratorioTextarea,
+            evCardiovascularTextarea, evAbdomenTextarea, evExtremidadesTextarea, evNeurologicoTextarea,
+            evOtrosTextarea, evDiagnosticosTextarea, evTratamientoPlanTextarea, evComentarioTextarea;
+        let cancelButtons = [], submitButtons = [], submitButtonTexts = [], submitSpinners = [];
+        let isSubmitting = false;
+        let patientInfoSignalConnected = false;
+    
+        function formatDateForDisplay(date) {
+            if (!date) return 'Calculando...';
+            return date.toLocaleString('es-VE', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        }
+    
+        function getDOMElements() {
+            form = document.getElementById('add-evolucion-form');
+            feedbackDivTop = document.getElementById('add-evolucion-feedback-top');
+            feedbackDivBottom = document.getElementById('add-evolucion-feedback-bottom');
+    
+            if (!feedbackDivTop) console.warn("Elemento 'add-evolucion-feedback-top' NO encontrado.");
+            if (!feedbackDivBottom) console.warn("Elemento 'add-evolucion-feedback-bottom' NO encontrado.");
+    
+            subheaderElement = document.getElementById('add-evolucion-subheader');
+            fechaHoraDisplayAdd = document.getElementById('fecha_hora_evolucion_display_add');
+            evTaInput = document.getElementById('ev_ta');
+            evFcInput = document.getElementById('ev_fc');
+            evFrInput = document.getElementById('ev_fr');
+            evSato2Input = document.getElementById('ev_sato2');
+            evTempInput = document.getElementById('ev_temp');
+            evSubjetivoTextarea = document.getElementById('ev_subjetivo');
+            evObjetivoTextarea = document.getElementById('ev_objetivo');
+            evPielTextarea = document.getElementById('ev_piel');
+            evRespiratorioTextarea = document.getElementById('ev_respiratorio');
+            evCardiovascularTextarea = document.getElementById('ev_cardiovascular');
+            evAbdomenTextarea = document.getElementById('ev_abdomen');
+            evExtremidadesTextarea = document.getElementById('ev_extremidades');
+            evNeurologicoTextarea = document.getElementById('ev_neurologico');
+            evOtrosTextarea = document.getElementById('ev_otros');
+            evDiagnosticosTextarea = document.getElementById('ev_diagnosticos');
+            evTratamientoPlanTextarea = document.getElementById('ev_tratamiento_plan');
+            evComentarioTextarea = document.getElementById('ev_comentario');
+            cancelButtons = [document.getElementById('cancel-add-evolucion-top'), document.getElementById('cancel-add-evolucion-bottom')];
+            submitButtons = [document.getElementById('submit-add-evolucion-top'), document.getElementById('submit-add-evolucion-bottom')];
+            submitButtonTexts = [document.getElementById('add-evolucion-btn-text-top'), document.getElementById('add-evolucion-btn-text-bottom')];
+            submitSpinners = [document.getElementById('add-evolucion-spinner-top'), document.getElementById('add-evolucion-spinner-bottom')];
+        }
+    
+        function resetForm() {
+             if (form) form.reset();
+             if (fechaHoraDisplayAdd) fechaHoraDisplayAdd.value = formatDateForDisplay(new Date());
+             if (feedbackDivTop) feedbackDivTop.textContent = '';
+             if (feedbackDivBottom) feedbackDivBottom.textContent = '';
+             if (subheaderElement) {
+                 subheaderElement.textContent = "Cargando datos del paciente...";
+                 subheaderElement.classList.add('italic', 'text-gray-400');
+                 subheaderElement.classList.remove('text-red-600');
+             }
+        }
+    
+        function handlePatientInfo(jsonString) {
+            if (!subheaderElement || !document.body.contains(subheaderElement)) {
+                console.log("AGREGAR_EVOLUCION Handler: La vista cambió, ignorando señal de info paciente.");
+                return;
+            }
+            console.log(`>>> HANDLER LOCAL (Agregar): handlePatientInfo EJECUTADO <<<`);
+            let patientInfo;
+            try {
+                patientInfo = JSON.parse(jsonString);
+            } catch (e) {
+                console.error(`AGREGAR_EVOLUCION_JS: Error parseando JSON en handlePatientInfo:`, e);
+                if (subheaderElement) {
+                    subheaderElement.textContent = "Error al procesar datos del paciente.";
+                    subheaderElement.classList.remove('italic', 'text-gray-400');
+                    subheaderElement.classList.add('text-red-600');
+                }
+                return;
+            }
+    
+            if (subheaderElement) {
+                if (patientInfo && !patientInfo.error && patientInfo.nombre_completo && patientInfo.numero_historia) {
+                    subheaderElement.textContent = `Paciente: ${patientInfo.nombre_completo} - H.C: ${patientInfo.numero_historia}`;
+                    subheaderElement.classList.remove('italic', 'text-gray-400', 'text-red-600');
+                    console.log("AGREGAR_EVOLUCION_JS: Subheader actualizado con datos del paciente.");
+                } else {
+                    const errorMsg = patientInfo?.error || "Información del paciente no disponible.";
+                    subheaderElement.textContent = `Error: ${errorMsg}`;
+                    subheaderElement.classList.remove('italic', 'text-gray-400');
+                    subheaderElement.classList.add('text-red-600');
+                    console.warn(`AGREGAR_EVOLUCION_JS: No se pudo obtener info del paciente: ${errorMsg}`);
+                }
+            }
+        }
+    
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            if (isSubmitting) return;
+            isSubmitting = true;
+            submitButtons.forEach(btn => { if(btn) btn.disabled = true; });
+            submitButtonTexts.forEach(txt => { if(txt) txt.textContent = 'Guardando...'; });
+            submitSpinners.forEach(spn => { if(spn) spn.classList.remove('hidden'); });
+            if (feedbackDivTop) feedbackDivTop.textContent = '';
+            if (feedbackDivBottom) feedbackDivBottom.textContent = '';
+    
+            const formData = new FormData(form);
+            const dataToSubmit = {};
+            for (const [key, value] of formData.entries()) {
+                if (key !== 'fecha_hora_evolucion_display_add') {
+                    dataToSubmit[key] = value;
+                }
+            }
+    
+            console.log(`AGREGAR_EVOLUCION_JS: Datos a enviar para NUEVA evolución:`, dataToSubmit);
+            const saveFunctionName = 'save_new_evolucion';
+            if (window.backend && typeof window.backend[saveFunctionName] === 'function') {
+                console.log(`Llamando a backend.${saveFunctionName}`);
+                window.backend[saveFunctionName](dataToSubmit);
+            } else {
+                console.error(`AGREGAR_EVOLUCION_JS: Backend o ${saveFunctionName} no disponible.`);
+                handleSaveResult(false, `Error de comunicación (${saveFunctionName}).`, null);
+            }
+        }
+    
+        function handleSaveResult(success, message, newEvolucionId) {
+            console.log(`AGREGAR_EVOLUCION_JS: Resultado de guardado: ${success}, Msg: ${message}, NewID: ${newEvolucionId}`);
+            isSubmitting = false;
+            submitButtons.forEach(btn => { if(btn) btn.disabled = false; });
+            submitButtonTexts.forEach(txt => { if(txt) txt.textContent = 'Añadir Evolución'; });
+            submitSpinners.forEach(spn => { if(spn) spn.classList.add('hidden'); });
+
+            const feedbackClassName = `my-6 text-center text-sm h-5 font-medium ${success ? 'text-green-600' : 'text-red-600'}`;
+
+            if (feedbackDivTop) {
+                feedbackDivTop.textContent = message;
+                feedbackDivTop.className = feedbackClassName;
+                console.log(`Mensaje de feedback '${message}' mostrado en feedbackDivTop`);
+            } else {
+                console.warn("feedbackDivTop no encontrado, no se mostrará mensaje allí.");
+            }
+
+            if (feedbackDivBottom) {
+                feedbackDivBottom.textContent = message;
+                feedbackDivBottom.className = feedbackClassName;
+                console.log(`Mensaje de feedback '${message}' mostrado en feedbackDivBottom`);
+            } else {
+                console.warn("feedbackDivBottom no encontrado, no se mostrará mensaje allí.");
+            }
+    
+            if (success) {
+                setTimeout(() => {
+                    console.log("HANDLE_SAVE_RESULT (dentro de setTimeout): window.currentPatientIdForContext =", window.currentPatientIdForContext);
+                    if (window.currentPatientIdForContext && typeof loadContent === 'function') {
+                        console.log("Guardado exitoso, volviendo a detalles del paciente...");
+                        if (window.backend && window.backend.set_selected_patient) {
+                            window.backend.set_selected_patient(window.currentPatientIdForContext);
+                        }
+                        window.targetTabAfterLoad = 'panel-evoluciones';
+                        loadContent('pacientes__paciente_detalle');
+                    } else {
+                         console.log("Guardado exitoso, pero no hay contexto para volver. Recargando dashboard.");
+                         if (typeof loadContent === 'function') loadContent('dashboard');
+                    }
+                }, 3000);
+            }
+        }
+    
+        function handleCancel() {
+            console.log("AGREGAR_EVOLUCION_JS: Operación cancelada.");
+            console.log("HANDLE_CANCEL: window.currentPatientIdForContext =", window.currentPatientIdForContext);
+            if (window.currentPatientIdForContext && typeof loadContent === 'function') {
+                 console.log(`Volviendo a detalles del paciente ID ${window.currentPatientIdForContext}`);
+                 if (window.backend && window.backend.set_selected_patient) {
+                    window.backend.set_selected_patient(window.currentPatientIdForContext);
+                }
+                window.targetTabAfterLoad = 'panel-evoluciones';
+                loadContent('pacientes__paciente_detalle');
+            } else {
+                console.warn("No se encontró ID de paciente en contexto para cancelar. Volviendo a dashboard.");
+                if (typeof loadContent === 'function') loadContent('dashboard');
+            }
+        }
+    
+        window[HANDLER_SAVE_RESULT] = function(success, message, newEvolucionId) {
+            console.log(`>>> HANDLER GLOBAL (Guardar Agregar): ${HANDLER_SAVE_RESULT} EJECUTADO <<<`);
+            handleSaveResult(success, message, newEvolucionId);
+        };
+        console.log(`Handler ${HANDLER_SAVE_RESULT} registrado globalmente.`);
+    
+        function initializeView() {
+            console.log(`*** INICIALIZADOR (Agregar): ${INIT_FUNCTION_NAME} EJECUTADO ***`);
+            getDOMElements();
+            if (!form) { console.error("Error Crítico: Formulario 'add-evolucion-form' no encontrado."); return; }
+    
+            patientInfoSignalConnected = false;
+    
+            form.addEventListener('submit', handleFormSubmit);
+            cancelButtons.forEach(btn => { if(btn) btn.addEventListener('click', handleCancel); });
+    
+            resetForm();
+            console.log(`AGREGAR_EVOLUCION_JS - initializeView: Valor de window.currentPatientIdForContext AL INICIO: ${window.currentPatientIdForContext}`);
+            if (typeof window.currentPatientIdForContext === 'undefined' || !window.currentPatientIdForContext) {
+            console.warn("¡ADVERTENCIA INICIAL!: window.currentPatientIdForContext no está definido al iniciar la vista. Esto puede causar problemas en Cancelar/Guardar si no se resuelve antes.");
+            }
+            console.log("AGREGAR_EVOLUCION_JS: Intentando conectar señal y solicitar info...");
+            if (window.backend && typeof window.backend.sendPatientInfoForAddEvolucion !== 'undefined') {
+    
+                if (!patientInfoSignalConnected) {
+                    try {
+                        window.backend.sendPatientInfoForAddEvolucion.connect(handlePatientInfo);
+                        patientInfoSignalConnected = true;
+                        console.log("AGREGAR_EVOLUCION_JS: Señal sendPatientInfoForAddEvolucion CONECTADA a handlePatientInfo local.");
+                    } catch (e) {
+                         console.error("AGREGAR_EVOLUCION_JS: Error conectando la señal sendPatientInfoForAddEvolucion:", e);
+                         if (subheaderElement) {
+                             subheaderElement.textContent = "Error fatal: Fallo al conectar con backend.";
+                             subheaderElement.classList.add('text-red-600');
+                         }
+                    }
+                } else {
+                    console.log("AGREGAR_EVOLUCION_JS: Señal sendPatientInfoForAddEvolucion ya estaba conectada, no se reconecta.");
+                }
+    
+                if (patientInfoSignalConnected && typeof window.backend.request_patient_info_for_add_evolucion === 'function') {
+                    try {
+                        console.log("AGREGAR_EVOLUCION_JS: >> Llamando a backend.request_patient_info_for_add_evolucion() <<");
+                        window.backend.request_patient_info_for_add_evolucion();
+                    } catch (e) {
+                        console.error("AGREGAR_EVOLUCION_JS: Error al llamar a backend.request_patient_info_for_add_evolucion:", e);
+                        if (subheaderElement) {
+                            subheaderElement.textContent = "Error de comunicación inicial con backend.";
+                            subheaderElement.classList.add('text-red-600');
+                        }
+                    }
+                } else if (!patientInfoSignalConnected) {
+                     console.error("AGREGAR_EVOLUCION_JS: No se pudo conectar la señal, no se solicitará info.");
+                } else {
+                    console.error("AGREGAR_EVOLUCION_JS: La función request_patient_info_for_add_evolucion no está disponible.");
+                     if (subheaderElement) {
+                         subheaderElement.textContent = "Error: Función backend no disponible.";
+                         subheaderElement.classList.add('text-red-600');
+                     }
+                }
+    
+            } else {
+                console.error("AGREGAR_EVOLUCION_JS: Backend o señal sendPatientInfoForAddEvolucion NO disponible.");
+                if (subheaderElement) {
+                    subheaderElement.textContent = "Error: Backend no accesible.";
+                    subheaderElement.classList.remove('italic', 'text-gray-400');
+                    subheaderElement.classList.add('text-red-600');
+                }
+            }
+    
+            console.log("AGREGAR_EVOLUCION_JS: Verificando ID de paciente en contexto global:", window.currentPatientIdForContext);
+            if (typeof window.currentPatientIdForContext === 'undefined' || !window.currentPatientIdForContext) {
+                 console.warn("¡ADVERTENCIA!: window.currentPatientIdForContext no está definido. Cancelar/Guardar podrían no redirigir correctamente.");
+            }
+    
+            console.log("AGREGAR_EVOLUCION_JS: Vista inicializada.");
+        }
+    
+        if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+        window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+        console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado.`);
+    
+    })();
+    </script>

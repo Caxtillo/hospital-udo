@@ -1,0 +1,478 @@
+<!-- html_files/pacientes/ordenes/ver_orden.html -->
+<div class="p-6 md:p-8 bg-gray-50 min-h-screen">
+
+    <!-- Cabecera (sin cambios) -->
+    <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-gray-300">
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800">
+                Detalle de Orden Médica
+            </h2>
+            <p id="ver-orden-subheader" class="text-sm text-gray-500 mt-1">Cargando datos...</p>
+        </div>
+        <div id="ver-orden-actions" class="flex items-center space-x-3 mt-3 md:mt-0">
+            <button type="button" id="ver-orden-back-btn" class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 rounded-md shadow-sm text-sm font-medium transition duration-150"><i class="fas fa-arrow-left fa-fw mr-2"></i>Volver</button>
+            <button type="button" id="ver-orden-print-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium transition duration-150"><i class="fas fa-print fa-fw mr-2"></i>Imprimir</button>
+            <button type="button" id="ver-orden-edit-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow-sm text-sm font-medium transition duration-150"><i class="fas fa-pencil-alt fa-fw mr-2"></i>Editar Orden</button>
+        </div>
+    </div>
+
+    <!-- Contenedor de Carga (sin cambios) -->
+    <div id="ver-orden-loading" class="text-center py-10">
+        <p class="text-gray-500 italic">Cargando detalles de la orden médica...</p>
+    </div>
+
+    <!-- Contenedor Principal de Datos MODIFICADO -->
+    <div id="ver-orden-content" class="hidden bg-white p-6 md:p-8 rounded-lg shadow-lg border border-gray-200">
+        
+        <!-- Información General de la Orden -->
+        <div class="pb-4 border-b border-gray-200 mb-6">
+            <h3 class="text-lg font-semibold text-teal-700 mb-2">Orden Médica</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                <div>
+                    <span class="font-medium text-gray-600">Fecha y Hora:</span>
+                    <span id="view-orden-fecha_hora" class="text-gray-700 ml-1"></span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-600">Registrada por:</span>
+                    <span id="view-orden-creador_nombre" class="text-gray-700 ml-1"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor para la LISTA DE INDICACIONES -->
+        <div id="view-orden-indicaciones-list" class="space-y-2 text-sm">
+            <!-- Las indicaciones numeradas se insertarán aquí por JS -->
+        </div>
+
+        <!-- Mensaje si la orden no tiene contenido parseable (sin cambios) -->
+         <div id="view-orden-no-details" class="hidden text-center py-6">
+            <p class="italic text-gray-500">No se pudieron cargar o no existen detalles específicos para esta orden.</p>
+        </div>
+
+    </div> <!-- Fin de ver-orden-content -->
+</div>
+
+<script>
+(function() {
+    // ... (constantes y formatDateLocal sin cambios) ...
+    const VIEW_ID_FOR_SHELL_INIT = 'pacientes_ordenes_ver_orden';
+    const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__ordenes__ver_orden';
+    const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+    const HANDLER_NAME_DETAILS_RESULT = `handleOrdenDetailsResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+
+    console.log(`SCRIPT DE VISTA (VER ORDEN): ID para handler: ${HANDLER_NAME_DETAILS_RESULT}, ID para init: ${INIT_FUNCTION_NAME}`);
+
+    const loadingDivId = 'ver-orden-loading';
+    const contentDivId = 'ver-orden-content';
+    const subheaderId = 'ver-orden-subheader';
+    const noDetailsDivId = 'view-orden-no-details';
+    const indicacionesListContainerId = 'view-orden-indicaciones-list'; // ID del nuevo contenedor
+
+    const backBtnId = 'ver-orden-back-btn';
+    const printBtnId = 'ver-orden-print-btn';
+    const editBtnId = 'ver-orden-edit-btn';
+
+    let currentOrdenDataForPrint = null; // Para guardar el objeto ordenJson para imprimir
+    let currentFullDataForPrint = null; // Para guardar el objeto 'data' completo para imprimir
+    let currentPatientId = null;
+
+    function formatDateLocal(dateString, includeTime = false) {
+        if (!dateString) return 'N/D';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            if (includeTime) { options.hour = '2-digit'; options.minute = '2-digit'; options.hour12 = true; }
+            return date.toLocaleString('es-VE', options);
+        } catch (e) { return dateString; }
+    }
+
+    // Función para escapar HTML (simple, para evitar XSS si los datos vinieran de fuentes no confiables)
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) return '';
+        return String(unsafe)
+             .replace(/&/g, "&")
+             .replace(/</g, "<")
+             .replace(/>/g, ">")
+             .replace(/"/g, "'")
+             .replace(/'/g, "'");
+    }
+
+
+    function populateView(data) {
+        console.log(`POPULATE VIEW (VER ORDEN): Iniciando. Data recibida:`, data);
+        const loadingDiv = document.getElementById(loadingDivId);
+        const contentDiv = document.getElementById(contentDivId);
+        const noDetailsDiv = document.getElementById(noDetailsDivId);
+        const indicacionesListContainer = document.getElementById(indicacionesListContainerId);
+
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (!indicacionesListContainer) {
+            console.error("Contenedor de indicaciones no encontrado.");
+            if (noDetailsDiv) noDetailsDiv.classList.remove('hidden');
+            return;
+        }
+        
+        if (!data || data.error_fetch) {
+            if (contentDiv) contentDiv.classList.add('hidden');
+            if (noDetailsDiv) {
+                noDetailsDiv.classList.remove('hidden');
+                noDetailsDiv.innerHTML = `<p class="italic text-red-500">${data ? data.error_fetch : "Error al cargar los datos de la orden."}</p>`;
+            }
+            document.getElementById(subheaderId).textContent = "Error al cargar";
+            return;
+        }
+        
+        currentFullDataForPrint = data; // Guardar data completa para la impresión
+        currentPatientId = data.paciente_id_real;
+
+        document.getElementById(subheaderId).textContent = `Orden del ${formatDateLocal(data.fecha_hora)} - Paciente: ${escapeHtml(data.paciente_nombre_completo) || 'N/A'} (H.C: ${escapeHtml(data.numero_historia_paciente) || 'N/A'})`;
+        document.getElementById('view-orden-fecha_hora').textContent = formatDateLocal(data.fecha_hora, true);
+        document.getElementById('view-orden-creador_nombre').textContent = escapeHtml(data.usuario_orden_nombre) || 'N/D';
+
+        let ordenJson = null;
+        if (data.orden_json_blob && typeof data.orden_json_blob === 'string') {
+            try {
+                ordenJson = JSON.parse(data.orden_json_blob);
+            } catch (e) {
+                console.error("Error parseando orden_json_blob:", e, data.orden_json_blob);
+                if (noDetailsDiv) { noDetailsDiv.classList.remove('hidden'); noDetailsDiv.innerHTML = '<p class="italic text-red-500">Error: Formato de detalles incorrecto.</p>';}
+                if (contentDiv) contentDiv.classList.add('hidden');
+                return;
+            }
+        } else if (data.orden_json_blob && typeof data.orden_json_blob === 'object') {
+            ordenJson = data.orden_json_blob;
+        }
+
+        if (!ordenJson || Object.keys(ordenJson).length === 0 || ordenJson.error_desencriptacion || ordenJson.error_parsing_json_python) {
+            if (contentDiv) contentDiv.classList.add('hidden');
+            if (noDetailsDiv) {
+                 let errorMsg = "No hay detalles específicos para esta orden.";
+                 if(ordenJson && ordenJson.error_desencriptacion) errorMsg = `Error de desencriptación: ${escapeHtml(ordenJson.error_desencriptacion)}`;
+                 if(ordenJson && ordenJson.error_parsing_json_python) errorMsg = `Error de formato interno: ${escapeHtml(ordenJson.error_parsing_json_python)}`;
+                 noDetailsDiv.classList.remove('hidden'); noDetailsDiv.innerHTML = `<p class="italic text-gray-500">${errorMsg}</p>`;
+            }
+            return;
+        }
+        
+        currentOrdenDataForPrint = ordenJson; // Guardar el JSON parseado para imprimir
+
+        if (contentDiv) contentDiv.classList.remove('hidden');
+        if (noDetailsDiv) noDetailsDiv.classList.add('hidden');
+
+        // Construir la lista de indicaciones
+        let indicacionesHtml = '<ol class="list-decimal list-inside space-y-1 pl-2">';
+        let itemCounter = 0;
+
+        const addIndicacion = (texto) => {
+            if (texto && texto.trim() !== '') {
+                itemCounter++;
+                // Usar textContent para el número y luego concatenar el texto HTML-escapado
+                const itemDiv = document.createElement('li');
+                itemDiv.className = "pl-2"; // Para alinear con el número
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.className = "font-medium"; // Hacer el número un poco más prominente
+                // numberSpan.textContent = `${itemCounter}. `; // El navegador añade el número y punto
+                
+                const textNode = document.createElement('span');
+                textNode.innerHTML = texto; // El texto ya viene formateado con etiquetas si es necesario desde las funciones helper
+                                            // o es texto plano que se escapará.
+                                            // ¡Cuidado aquí si el texto puede contener HTML malicioso!
+                                            // Si el texto es simple, considera itemDiv.textContent = texto;
+                
+                // itemDiv.appendChild(numberSpan); // No es necesario si usamos <ol>
+                itemDiv.appendChild(textNode);
+                indicacionesHtml += itemDiv.outerHTML; // Usar outerHTML para li
+            }
+        };
+        
+        const addIndicacionConPrefijo = (prefijo, valor, sufijo = '') => {
+            if (valor && valor.trim() !== '') {
+                addIndicacion(`${escapeHtml(prefijo)}: ${escapeHtml(valor)}${escapeHtml(sufijo)}`);
+            } else if (prefijo && prefijo.toLowerCase().includes('no especificado')) { // Para casos como "Hospitalizar en: No especificado"
+                addIndicacion(`${escapeHtml(prefijo)}`);
+            }
+        };
+
+
+        // Hospitalización
+        if (ordenJson.hospitalizacion && ordenJson.hospitalizacion.indicada) {
+            addIndicacion(`Hospitalizar en: ${escapeHtml(ordenJson.hospitalizacion.lugar || 'No especificado')}`);
+        }
+
+        // Dieta
+        if (ordenJson.dieta && ordenJson.dieta.tipo_inicial) {
+            let dietaTexto = `Dieta: ${escapeHtml(ordenJson.dieta.tipo_inicial)}`;
+            if (ordenJson.dieta.tipo_inicial === 'Absoluta' && ordenJson.dieta.absoluta_duracion_valor) {
+                dietaTexto += ` por ${escapeHtml(ordenJson.dieta.absoluta_duracion_valor)} ${escapeHtml(ordenJson.dieta.absoluta_duracion_unidad || '')}`;
+            } else if (ordenJson.dieta.tipo_inicial === 'Específica' && ordenJson.dieta.especifica_desc) {
+                dietaTexto += ` (${escapeHtml(ordenJson.dieta.especifica_desc)})`;
+            }
+            if (ordenJson.dieta.progresion && ordenJson.dieta.progresion.indicada && ordenJson.dieta.progresion.siguiente_tipo) {
+                dietaTexto += `. Progresar a: ${escapeHtml(ordenJson.dieta.progresion.siguiente_tipo)} (Cond: ${escapeHtml(ordenJson.dieta.progresion.condicion || 'S/E')})`;
+            }
+            if (ordenJson.dieta.observaciones_generales) {
+                dietaTexto += `. Obs: ${escapeHtml(ordenJson.dieta.observaciones_generales)}`;
+            }
+            addIndicacion(dietaTexto);
+        }
+
+        // Hidratación Parenteral
+        if (ordenJson.hp && ordenJson.hp.indicada) {
+            if (ordenJson.hp.soluciones && ordenJson.hp.soluciones.length > 0) {
+                 ordenJson.hp.soluciones.forEach(sol => {
+                    let hpTexto = `HP: ${escapeHtml(sol.tipo)} ${escapeHtml(sol.volumen || '')}cc, vía ${escapeHtml(sol.via || 'IV')}. Vel: ${escapeHtml(sol.velocidad_valor || '')} ${escapeHtml(sol.velocidad_unidad || '')}.`;
+                    if (sol.indicaciones) hpTexto += ` Indic: ${escapeHtml(sol.indicaciones)}`;
+                    addIndicacion(hpTexto);
+                });
+            }
+            if (ordenJson.hp.observaciones_generales) {
+                addIndicacion(`Obs. Generales HP: ${escapeHtml(ordenJson.hp.observaciones_generales)}`);
+            }
+            if ((!ordenJson.hp.soluciones || ordenJson.hp.soluciones.length === 0) && !ordenJson.hp.observaciones_generales) {
+                 addIndicacion("Hidratación Parenteral (sin detalles específicos).");
+            }
+        }
+        
+        // Medicamentos
+        if (ordenJson.medicamentos && ordenJson.medicamentos.indicada && ordenJson.medicamentos.items && ordenJson.medicamentos.items.length > 0) {
+            ordenJson.medicamentos.items.forEach(med => {
+                let medTexto = `${escapeHtml(med.nombre)} ${escapeHtml(med.dosis || '')} ${escapeHtml(med.unidad_otra || med.unidad || '')} ${escapeHtml(med.via_otra || med.via || '')} ${escapeHtml(med.frecuencia || '')}`;
+                if (med.observaciones) medTexto += `. ${escapeHtml(med.observaciones)}`;
+                addIndicacion(medTexto);
+            });
+        }
+
+        // Laboratorio
+        if (ordenJson.laboratorios && ordenJson.laboratorios.indicada) {
+            let labTextoGlobal = "Laboratorio: ";
+            let labsIndicados = [];
+            if (ordenJson.laboratorios.solicitados && ordenJson.laboratorios.solicitados.length > 0) {
+                labsIndicados.push(ordenJson.laboratorios.solicitados.map(l => escapeHtml(l.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))).join(', '));
+            }
+            if (ordenJson.laboratorios.otros) {
+                labsIndicados.push(escapeHtml(ordenJson.laboratorios.otros));
+            }
+            if (labsIndicados.length > 0) {
+                labTextoGlobal += labsIndicados.join('; ');
+            } else {
+                labTextoGlobal += 'No especificados.';
+            }
+            if (ordenJson.laboratorios.observaciones) {
+                labTextoGlobal += ` (Obs: ${escapeHtml(ordenJson.laboratorios.observaciones)})`;
+            }
+            addIndicacion(labTextoGlobal);
+        }
+
+        // Estudios de Imagen
+        if (ordenJson.imagenes && ordenJson.imagenes.indicada && ordenJson.imagenes.items && ordenJson.imagenes.items.length > 0) {
+             ordenJson.imagenes.items.forEach(img => {
+                addIndicacion(`Imagen: ${escapeHtml(img.tipo_otra || img.tipo)} - ${escapeHtml(img.region || 'Región no especificada')}`);
+            });
+        }
+        
+        // Interconsultas y Otros Procedimientos
+        if (ordenJson.otros_procedimientos_interconsultas && ordenJson.otros_procedimientos_interconsultas.indicada && ordenJson.otros_procedimientos_interconsultas.items && ordenJson.otros_procedimientos_interconsultas.items.length > 0) {
+            ordenJson.otros_procedimientos_interconsultas.items.forEach(proc => {
+                addIndicacion(`Solicitud: ${escapeHtml(proc.tipo_solicitud || 'No especificado')}${proc.detalle ? ' - ' + escapeHtml(proc.detalle) : ''}`);
+            });
+        }
+
+        // Monitoreo y Cuidados
+        if (ordenJson.monitoreo_cuidados && ordenJson.monitoreo_cuidados.indicada) {
+            let cuidadosTextoGlobal = "Monitoreo y Cuidados: ";
+            let cuidadosIndicados = [];
+            if (ordenJson.monitoreo_cuidados.items && ordenJson.monitoreo_cuidados.items.length > 0) {
+                cuidadosIndicados.push(ordenJson.monitoreo_cuidados.items.map(c => {
+                    let CuidadoNombre = escapeHtml(c.cuidado.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()));
+                    return `${CuidadoNombre}${c.detalle ? ' ('+escapeHtml(c.detalle)+')' : ''}`;
+                }).join(', '));
+            }
+            if (ordenJson.monitoreo_cuidados.otros_detalles) {
+                cuidadosIndicados.push(`Otros: ${escapeHtml(ordenJson.monitoreo_cuidados.otros_detalles)}`);
+            }
+            if(cuidadosIndicados.length > 0) {
+                cuidadosTextoGlobal += cuidadosIndicados.join('; ');
+            } else {
+                cuidadosTextoGlobal += 'No especificados.';
+            }
+            addIndicacion(cuidadosTextoGlobal);
+        }
+
+        // Línea final "Informar Eventualidades"
+        addIndicacion("Informar Eventualidades.");
+
+
+        indicacionesHtml += '</ol>';
+        indicacionesListContainer.innerHTML = indicacionesHtml;
+
+        // Configurar botones (sin cambios en esta parte)
+        const editBtnEl = document.getElementById(editBtnId);
+        if (editBtnEl && data.id_orden && currentPatientId) {
+            editBtnEl.onclick = () => { window.currentPatientIdForContext = currentPatientId; window.navigateToPage('pacientes/ordenes/editar_orden', { orden_id: data.id_orden, patient_id: currentPatientId });};
+            editBtnEl.disabled = false;
+        } else if(editBtnEl) { editBtnEl.disabled = true; }
+
+        const backBtnEl = document.getElementById(backBtnId);
+        if (backBtnEl && currentPatientId) {
+            backBtnEl.onclick = () => { if (window.backend && typeof window.backend.set_selected_patient === 'function') { window.backend.set_selected_patient(currentPatientId); } window.targetTabAfterLoad = 'panel-ordenes'; loadContent('pacientes__paciente_detalle'); };
+            backBtnEl.disabled = false;
+        } else if (backBtnEl) { backBtnEl.disabled = true; }
+
+        const printBtnEl = document.getElementById(printBtnId);
+        if(printBtnEl) printBtnEl.onclick = () => {
+            // Aquí llamaremos a una nueva función para generar el HTML de impresión de esta orden
+            if (currentFullDataForPrint && currentOrdenDataForPrint) {
+                generateSingleOrdenPrint(currentFullDataForPrint, currentOrdenDataForPrint);
+            } else {
+                alert("No hay datos suficientes para imprimir la orden.");
+            }
+        };
+        console.log(`POPULATE VIEW (VER ORDEN): Fin.`);
+    }
+
+    function generateSingleOrdenPrint(fullData, ordenJson) {
+        // fullData contiene data.paciente_nombre_completo, data.numero_historia_paciente, data.fecha_hora (orden), data.usuario_orden_nombre
+        // ordenJson contiene el JSON parseado de la orden
+        let printHtml = `
+            <html><head><title>Orden Médica</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; font-size: 12pt; }
+                .header-info { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+                .header-info p { margin: 2px 0; font-size: 11pt; }
+                .indicaciones-list { list-style-type: decimal; padding-left: 25px; margin-top:15px; }
+                .indicaciones-list li { margin-bottom: 8px; line-height: 1.5; }
+                h1 { text-align: center; font-size: 16pt; margin-bottom: 10px; color: #333; }
+                .footer { margin-top: 40px; text-align: right; font-size: 10pt; }
+                @media print {
+                    body { margin: 15mm; }
+                    .no-print { display: none !important; }
+                }
+            </style></head><body>
+            <h1>Órdenes Médicas</h1>
+            <div class="header-info">
+                <p><strong>Paciente:</strong> ${escapeHtml(fullData.paciente_nombre_completo) || 'N/A'}</p>
+                <p><strong>H.C:</strong> ${escapeHtml(fullData.numero_historia_paciente) || 'N/A'}</p>
+                <p><strong>Fecha y Hora:</strong> ${formatDateLocal(fullData.fecha_hora, true)}</p>
+                <p><strong>Médico:</strong> ${escapeHtml(fullData.usuario_orden_nombre) || 'N/D'}</p>
+            </div>
+            <ol class="indicaciones-list">
+        `;
+
+        // Reutilizar la lógica de addIndicacion para construir el contenido de la lista
+        const addIndicacionToPrint = (texto) => {
+            if (texto && texto.trim() !== '') {
+                 printHtml += `<li>${texto}</li>`; // El texto ya viene escapado
+            }
+        };
+        const addIndicacionConPrefijoToPrint = (prefijo, valor, sufijo = '') => {
+            if (valor && valor.trim() !== '') {
+                addIndicacionToPrint(`${escapeHtml(prefijo)}: ${escapeHtml(valor)}${escapeHtml(sufijo)}`);
+            } else if (prefijo && prefijo.toLowerCase().includes('no especificado')) {
+                addIndicacionToPrint(`${escapeHtml(prefijo)}`);
+            }
+        };
+
+        if (ordenJson.hospitalizacion && ordenJson.hospitalizacion.indicada) {
+            addIndicacionToPrint(`Hospitalizar en: ${escapeHtml(ordenJson.hospitalizacion.lugar || 'No especificado')}`);
+        }
+        if (ordenJson.dieta && ordenJson.dieta.tipo_inicial) { /* ... Lógica de Dieta para imprimir ... */ 
+            let dt = `Dieta: ${escapeHtml(ordenJson.dieta.tipo_inicial)}`;
+            if(ordenJson.dieta.tipo_inicial === 'Absoluta' && ordenJson.dieta.absoluta_duracion_valor) dt += ` por ${escapeHtml(ordenJson.dieta.absoluta_duracion_valor)} ${escapeHtml(ordenJson.dieta.absoluta_duracion_unidad||'')}`;
+            else if(ordenJson.dieta.tipo_inicial === 'Específica' && ordenJson.dieta.especifica_desc) dt += ` (${escapeHtml(ordenJson.dieta.especifica_desc)})`;
+            if(ordenJson.dieta.progresion && ordenJson.dieta.progresion.indicada) dt += `. Progresar a: ${escapeHtml(ordenJson.dieta.progresion.siguiente_tipo||'N/A')} (Cond: ${escapeHtml(ordenJson.dieta.progresion.condicion||'S/E')})`;
+            if(ordenJson.dieta.observaciones_generales) dt += `. Obs: ${escapeHtml(ordenJson.dieta.observaciones_generales)}`;
+            addIndicacionToPrint(dt);
+        }
+        if (ordenJson.hp && ordenJson.hp.indicada) { /* ... Lógica de HP para imprimir ... */ 
+            if (ordenJson.hp.soluciones && ordenJson.hp.soluciones.length > 0) {
+                 ordenJson.hp.soluciones.forEach(sol => addIndicacionToPrint(`HP: ${escapeHtml(sol.tipo)} ${escapeHtml(sol.volumen||'')}cc, vía ${escapeHtml(sol.via||'IV')}. Vel: ${escapeHtml(sol.velocidad_valor||'')} ${escapeHtml(sol.velocidad_unidad||'')}.${sol.indicaciones ? ' Indic: '+escapeHtml(sol.indicaciones) : ''}`));
+            }
+            if (ordenJson.hp.observaciones_generales) addIndicacionToPrint(`Obs. Generales HP: ${escapeHtml(ordenJson.hp.observaciones_generales)}`);
+            if ((!ordenJson.hp.soluciones || ordenJson.hp.soluciones.length === 0) && !ordenJson.hp.observaciones_generales) addIndicacionToPrint("Hidratación Parenteral (sin detalles).");
+        }
+        if (ordenJson.medicamentos && ordenJson.medicamentos.indicada && ordenJson.medicamentos.items && ordenJson.medicamentos.items.length > 0) { /* ... Lógica de Medicamentos ... */
+            ordenJson.medicamentos.items.forEach(med => addIndicacionToPrint(`${escapeHtml(med.nombre)} ${escapeHtml(med.dosis||'')} ${escapeHtml(med.unidad_otra||med.unidad||'')} ${escapeHtml(med.via_otra||med.via||'')} ${escapeHtml(med.frecuencia||'')}${med.observaciones ? '. '+escapeHtml(med.observaciones) : ''}`));
+        }
+        if (ordenJson.laboratorios && ordenJson.laboratorios.indicada) { /* ... Lógica de Labs ... */
+            let lb = "Laboratorio: "; let lbi = [];
+            if(ordenJson.laboratorios.solicitados && ordenJson.laboratorios.solicitados.length>0) lbi.push(ordenJson.laboratorios.solicitados.map(l=>escapeHtml(l.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()))).join(', '));
+            if(ordenJson.laboratorios.otros) lbi.push(escapeHtml(ordenJson.laboratorios.otros));
+            lb += lbi.length > 0 ? lbi.join('; ') : 'No especificados.';
+            if(ordenJson.laboratorios.observaciones) lb += ` (Obs: ${escapeHtml(ordenJson.laboratorios.observaciones)})`;
+            addIndicacionToPrint(lb);
+        }
+        if (ordenJson.imagenes && ordenJson.imagenes.indicada && ordenJson.imagenes.items && ordenJson.imagenes.items.length > 0) { /* ... Lógica de Imágenes ... */
+            ordenJson.imagenes.items.forEach(img => addIndicacionToPrint(`Imagen: ${escapeHtml(img.tipo_otra||img.tipo)} - ${escapeHtml(img.region||'Región no especificada')}`));
+        }
+        if (ordenJson.otros_procedimientos_interconsultas && ordenJson.otros_procedimientos_interconsultas.indicada && ordenJson.otros_procedimientos_interconsultas.items && ordenJson.otros_procedimientos_interconsultas.items.length > 0) { /* ... Lógica de Otros Proc ... */
+            ordenJson.otros_procedimientos_interconsultas.items.forEach(proc => addIndicacionToPrint(`Solicitud: ${escapeHtml(proc.tipo_solicitud||'No especificado')}${proc.detalle ? ' - '+escapeHtml(proc.detalle) : ''}`));
+        }
+        if (ordenJson.monitoreo_cuidados && ordenJson.monitoreo_cuidados.indicada) { /* ... Lógica de Monitoreo ... */
+            let cui = "Monitoreo y Cuidados: "; let cuii = [];
+            if(ordenJson.monitoreo_cuidados.items && ordenJson.monitoreo_cuidados.items.length > 0) cuii.push(ordenJson.monitoreo_cuidados.items.map(c=>{let cn=escapeHtml(c.cuidado.replace(/_/g,' ').replace(/\b\w/g,char=>char.toUpperCase())); return `${cn}${c.detalle ? ' ('+escapeHtml(c.detalle)+')' : ''}`;}).join(', '));
+            if(ordenJson.monitoreo_cuidados.otros_detalles) cuii.push(`Otros: ${escapeHtml(ordenJson.monitoreo_cuidados.otros_detalles)}`);
+            cui += cuii.length > 0 ? cuii.join('; ') : 'No especificados.';
+            addIndicacionToPrint(cui);
+        }
+        addIndicacionToPrint("Informar Eventualidades.");
+
+
+        printHtml += `
+            </ol>
+            <div class="footer">
+                <p>_________________________</p>
+                <p>Firma y Sello del Médico</p>
+            </div>
+            </body></html>
+        `;
+        
+        if (window.backend && typeof window.backend.handle_print_request === 'function') {
+            console.log("Enviando HTML de orden individual al backend para imprimir...");
+            window.backend.handle_print_request(printHtml);
+        } else {
+            console.error("window.backend.handle_print_request no disponible.");
+            alert("Error: La función de impresión no está conectada.");
+        }
+    }
+
+
+    // ... (resto del script: HANDLER_NAME_DETAILS_RESULT, initializeView, registro) ...
+    // Handler para recibir los datos de la orden desde Python
+    window[HANDLER_NAME_DETAILS_RESULT] = function(jsonString) {
+        console.log(`>>> EJECUTANDO HANDLER (VER ORDEN): ${HANDLER_NAME_DETAILS_RESULT} <<<`);
+        console.log("JSON String recibido del backend:", jsonString);
+        let data;
+        try { data = JSON.parse(jsonString); } 
+        catch (e) { console.error("Error parseando JSON en handler:", e); populateView({ error_fetch: "Error al procesar datos (JSON inválido)." }); return; }
+        populateView(data);
+    };
+    console.log(`Handler ${HANDLER_NAME_DETAILS_RESULT} registrado globalmente.`);
+
+    function initializeView() {
+        console.log(`*** EJECUTANDO INICIALIZADOR (VER ORDEN): ${INIT_FUNCTION_NAME} ***`);
+        const loadingDiv = document.getElementById(loadingDivId);
+        const contentDiv = document.getElementById(contentDivId);
+        const noDetailsDiv = document.getElementById(noDetailsDivId);
+
+        if (loadingDiv) { loadingDiv.style.display = 'block'; loadingDiv.textContent = "Cargando detalles de la orden..."; }
+        if (contentDiv) contentDiv.classList.add('hidden');
+        if (noDetailsDiv) noDetailsDiv.classList.add('hidden');
+
+        if (window.backend && typeof window.backend.request_orden_details === 'function') {
+            console.log("Solicitando detalles de la orden al backend...");
+            window.backend.request_orden_details();
+        } else {
+            console.error("Error: window.backend.request_orden_details no está disponible.");
+            if(loadingDiv) loadingDiv.textContent = "Error de comunicación.";
+            if(noDetailsDiv) { noDetailsDiv.classList.remove('hidden'); noDetailsDiv.innerHTML = '<p class="italic text-red-500">Error de comunicación.</p>';}
+        }
+    }
+
+    if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+    window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+    console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado para ${VIEW_ID_FOR_SHELL_INIT}.`);
+
+})();
+</script>

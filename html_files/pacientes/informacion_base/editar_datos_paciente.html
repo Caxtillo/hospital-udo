@@ -1,0 +1,467 @@
+<!-- Nombre vista: pacientes__informacion_base__editar_datos_paciente -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera con Título y Botones Superiores -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Editar Datos del Paciente
+            <span id="edit-patient-subheader" class="block text-sm font-normal text-gray-500 mt-1">Cargando...</span>
+        </h2>
+        <!-- Botones Superiores (inicialmente ocultos) -->
+        <div id="edit-patient-actions-top" class="flex space-x-3 mt-3 md:mt-0 hidden">
+            <button type="button" id="cancel-edit-patient-top"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    Cancelar/Volver
+            </button>
+            <button type="submit" id="submit-edit-patient-top" form="edit-patient-form"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="edit-patient-btn-text-top">Guardar Cambios</span>
+                <svg id="edit-patient-spinner-top" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Placeholder de carga -->
+    <div id="edit-patient-loading" class="text-center text-gray-500 italic py-10">Cargando datos del formulario...</div>
+            <!-- Feedback -->
+            <div id="edit-patient-feedback" class="my-6 text-center text-sm h-5"></div>
+    <!-- Formulario -->
+    <form id="edit-patient-form" class="space-y-6 hidden"> <!-- Quitado space-y-8, añadido mb-6 a fieldsets -->
+        <input type="hidden" id="patient_id" name="id">
+
+        <!-- Sección Datos Demográficos -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6"> <!-- Añadido margen inferior -->
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Datos Demográficos</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <!-- ... tus inputs para demográficos ... -->
+                 <div>
+                    <label for="nombres" class="block text-sm font-medium text-gray-700 mb-1">Nombres <span class="text-red-500">*</span></label>
+                    <input type="text" id="nombres" name="nombres" required
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="apellidos" class="block text-sm font-medium text-gray-700 mb-1">Apellidos <span class="text-red-500">*</span></label>
+                    <input type="text" id="apellidos" name="apellidos" required
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="cedula" class="block text-sm font-medium text-gray-700 mb-1">Cédula <span class="text-red-500">*</span></label>
+                    <input type="text" id="cedula" name="cedula" required placeholder="V-12345678 o E-12345678" pattern="[VEve]-\d{6,9}" title="Formato: V-####### o E-#######"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                    <p class="mt-1 text-xs text-gray-500">Identificación única.</p>
+                </div>
+                <div>
+                    <label for="numero_historia" class="block text-sm font-medium text-gray-700 mb-1">N° Historia <span class="text-red-500">*</span></label>
+                    <input type="text" id="numero_historia" name="numero_historia" required placeholder="HC-12345" title="El número de historia no se puede editar."
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px] bg-gray-100 cursor-not-allowed">
+                     <p class="mt-1 text-xs text-gray-500">Asignado por el sistema.</p>
+                </div>
+                 <div>
+                    <label for="fecha_nacimiento" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px] leading-tight">
+                </div>
+                 <div>
+                    <label for="sexo" class="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                    <select id="sexo" name="sexo"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px] pr-10 bg-white">
+                        <option value="">Seleccionar...</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="lugar_nacimiento" class="block text-sm font-medium text-gray-700 mb-1">Lugar de Nacimiento</label>
+                    <input type="text" id="lugar_nacimiento" name="lugar_nacimiento"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="estado_civil" class="block text-sm font-medium text-gray-700 mb-1">Estado Civil</label>
+                    <input type="text" id="estado_civil" name="estado_civil"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                 <div class="md:col-span-2">
+                    <label for="profesion_oficio" class="block text-sm font-medium text-gray-700 mb-1">Profesión / Oficio</label>
+                    <input type="text" id="profesion_oficio" name="profesion_oficio"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6"> <!-- Añadido margen inferior -->
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Información de Contacto</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                <!-- ... tus inputs para contacto ... -->
+                <div>
+                    <label for="telefono_habitacion" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Habitación</label>
+                    <input type="tel" id="telefono_habitacion" name="telefono_habitacion"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                 <div>
+                    <label for="telefono_movil" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Móvil</label>
+                    <input type="tel" id="telefono_movil" name="telefono_movil"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" name="email"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                    <textarea id="direccion" name="direccion" rows="3"
+                              class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[84px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm mb-6"> <!-- Añadido margen inferior -->
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Contacto Emergencia</legend>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                 <!-- ... tus inputs para contacto emergencia ... -->
+                <div>
+                    <label for="emerg_nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                    <input type="text" id="emerg_nombre" name="emerg_nombre"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                 <div>
+                    <label for="emerg_parentesco" class="block text-sm font-medium text-gray-700 mb-1">Parentesco</label>
+                    <input type="text" id="emerg_parentesco" name="emerg_parentesco"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="emerg_telefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="tel" id="emerg_telefono" name="emerg_telefono"
+                           class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="emerg_direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                    <textarea id="emerg_direccion" name="emerg_direccion" rows="2"
+                              class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[68px]"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm"> <!-- Último fieldset -->
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Notas Adicionales</legend>
+             <div>
+                <textarea id="notas_adicionales" name="notas_adicionales" rows="4" placeholder="Anotaciones generales sobre el paciente..."
+                          class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[100px]"></textarea>
+            </div>
+        </fieldset>
+
+        <!-- Feedback -->
+        <div id="edit-patient-feedback" class="my-6 text-center text-sm h-5"></div>
+
+        <!-- ***** BOTONES INFERIORES RESTAURADOS ***** -->
+        <div class="flex justify-end space-x-3 pt-5 border-t border-gray-200 mt-8"> <!-- Añadido mt-8 para separar -->
+             <button type="button" id="cancel-edit-patient-bottom"
+                     class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                 Cancelar/Volver
+             </button>
+            <button type="submit" id="submit-edit-patient-bottom"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="edit-patient-btn-text-bottom">Guardar Cambios</span>
+                <svg id="edit-patient-spinner-bottom" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+        <!-- ***** FIN BOTONES INFERIORES ***** -->
+
+    </form>
+</div>
+    <!-- SCRIPT JavaScript AJUSTADO PARA MANEJAR AMBOS JUEGOS DE BOTONES -->
+     <script>
+        (function() {
+            const SCRIPT_VIEW_NAME = 'pacientes__informacion_base__editar_datos_paciente';
+            const INIT_FUNCTION_NAME = `initialize_${SCRIPT_VIEW_NAME.replace(/__/g, '_')}`;
+            console.log(`Script para ${SCRIPT_VIEW_NAME}.html cargado, registrando ${INIT_FUNCTION_NAME}`);
+
+            // --- Elementos DOM ---
+            let form, loadingDiv, subheader, patientIdInput, feedbackDiv;
+            // Elementos botones superiores
+            let actionButtonsTopDiv, submitButtonTop, buttonTextTop, spinnerTop, cancelButtonTop;
+            // Elementos botones inferiores
+            let submitButtonBottom, buttonTextBottom, spinnerBottom, cancelButtonBottom;
+            // Referencias a los inputs
+            let nombresInput, apellidosInput, cedulaInput, historiaInput, fechaNacInput, sexoInput, lugarNacInput, edoCivilInput, profesionInput, telHabInput, telMovInput, emailInput, direccionInput, emergNombreInput, emergParentescoInput, emergTelInput, emergDirInput, notasInput;
+
+            // --- Estado ---
+            let patientId = null;
+            let isSubmitting = false;
+
+            function populateForm(patientDetails) {
+                 if (!patientDetails || patientDetails.error) {
+                    // ... (manejo de error como antes, deshabilita ambos botones submit) ...
+                    if(feedbackDiv) showErrorFeedback(`Error al cargar datos: ${patientDetails?.error || 'Desconocido'}`);
+                    if(submitButtonTop) submitButtonTop.disabled = true;
+                    if(submitButtonBottom) submitButtonBottom.disabled = true;
+                    if(loadingDiv) loadingDiv.textContent = "Error al cargar.";
+                    if(actionButtonsTopDiv) actionButtonsTopDiv.classList.add('hidden');
+                    return;
+                 }
+                console.log("Populating form with:", patientDetails);
+                try {
+                    // ... (poblar inputs como antes) ...
+                    patientIdInput.value = patientDetails.id || '';
+                    nombresInput.value = patientDetails.nombres_dec || patientDetails.nombres || '';
+                    apellidosInput.value = patientDetails.apellidos_dec || patientDetails.apellidos || '';
+                    cedulaInput.value = patientDetails.cedula_dec || patientDetails.cedula || '';
+                    historiaInput.value = patientDetails.numero_historia || '';
+                    fechaNacInput.value = patientDetails.fecha_nacimiento || '';
+                    sexoInput.value = patientDetails.sexo || '';
+                    lugarNacInput.value = patientDetails.lugar_nacimiento_dec || patientDetails.lugar_nacimiento || '';
+                    edoCivilInput.value = patientDetails.estado_civil_dec || patientDetails.estado_civil || '';
+                    profesionInput.value = patientDetails.profesion_oficio_dec || patientDetails.profesion_oficio || '';
+                    telHabInput.value = patientDetails.telefono_habitacion_dec || patientDetails.telefono_habitacion || '';
+                    telMovInput.value = patientDetails.telefono_movil_dec || patientDetails.telefono_movil || '';
+                    emailInput.value = patientDetails.email_dec || patientDetails.email || '';
+                    direccionInput.value = patientDetails.direccion_dec || patientDetails.direccion || '';
+                    emergNombreInput.value = patientDetails.emerg_nombre_dec || patientDetails.emerg_nombre || '';
+                    emergParentescoInput.value = patientDetails.emerg_parentesco_dec || patientDetails.emerg_parentesco || '';
+                    emergTelInput.value = patientDetails.emerg_telefono_dec || patientDetails.emerg_telefono || '';
+                    emergDirInput.value = patientDetails.emerg_direccion_dec || patientDetails.emerg_direccion || '';
+                    notasInput.value = patientDetails.notas_adicionales_dec || patientDetails.notas_adicionales || '';
+
+                    subheader.textContent = `Paciente: ${nombresInput.value} ${apellidosInput.value} - HC: ${historiaInput.value}`;
+
+                    loadingDiv.style.display = 'none';
+                    form.classList.remove('hidden');
+                    if(actionButtonsTopDiv) actionButtonsTopDiv.classList.remove('hidden'); // Mostrar botones superiores
+                    // Habilitar ambos botones de submit
+                    if(submitButtonTop) submitButtonTop.disabled = false;
+                    if(submitButtonBottom) submitButtonBottom.disabled = false;
+
+                } catch (e) {
+                    console.error("Error populating form fields:", e);
+                    showErrorFeedback("Error interno al rellenar el formulario.");
+                    if(submitButtonTop) submitButtonTop.disabled = true;
+                    if(submitButtonBottom) submitButtonBottom.disabled = true;
+                    if(actionButtonsTopDiv) actionButtonsTopDiv.classList.add('hidden');
+                }
+            }
+
+            function handleUpdateResult(success, message) {
+                console.log(`${SCRIPT_VIEW_NAME}: Resultado actualización: ${success}, msg=${message}`);
+                isSubmitting = false;
+
+                // Actualizar estado de AMBOS botones y spinners
+                if(submitButtonTop) submitButtonTop.disabled = false;
+                if(spinnerTop) spinnerTop.classList.add('hidden');
+                if(buttonTextTop) buttonTextTop.textContent = 'Guardar Cambios';
+                if(submitButtonBottom) submitButtonBottom.disabled = false;
+                if(spinnerBottom) spinnerBottom.classList.add('hidden');
+                if(buttonTextBottom) buttonTextBottom.textContent = 'Guardar Cambios';
+
+                if(feedbackDiv){
+                     feedbackDiv.textContent = message;
+                     feedbackDiv.className = success
+                        ? 'my-6 text-center text-sm h-5 text-green-600 font-medium'
+                        : 'my-6 text-center text-sm h-5 text-red-600 font-medium';
+                 }
+
+                if (success) {
+                    if(submitButtonTop) submitButtonTop.disabled = true;
+                    if(submitButtonBottom) submitButtonBottom.disabled = true;
+                    setTimeout(() => {
+                        if (typeof loadContent === 'function') {
+                            loadContent('pacientes__paciente_detalle');
+                        } else { console.error("Función loadContent no disponible."); }
+                    }, 1500);
+                }
+            }
+
+            function showErrorFeedback(message) {
+                 if(feedbackDiv){
+                     feedbackDiv.textContent = message;
+                     feedbackDiv.className = 'my-6 text-center text-sm h-5 text-red-600 font-medium';
+                 }
+            }
+
+            function handleFormSubmit(event) {
+                event.preventDefault();
+                if (isSubmitting) return;
+                
+                // Asegurarse que los elementos existen
+                 if(!submitButtonTop || !spinnerTop || !buttonTextTop || !submitButtonBottom || !spinnerBottom || !buttonTextBottom || !feedbackDiv) {
+                     console.error("handleFormSubmit: Faltan elementos UI para feedback/submit.");
+                     return;
+                 }
+
+                isSubmitting = true;
+                // Actualizar estado de AMBOS botones
+                submitButtonTop.disabled = true;
+                spinnerTop.classList.remove('hidden');
+                buttonTextTop.textContent = 'Guardando...';
+                submitButtonBottom.disabled = true;
+                spinnerBottom.classList.remove('hidden');
+                buttonTextBottom.textContent = 'Guardando...';
+
+                feedbackDiv.textContent = '';
+                feedbackDiv.className = 'my-6 text-center text-sm h-5';
+
+                const formData = new FormData(form);
+                const patientData = {};
+                formData.forEach((value, key) => {
+                    patientData[key] = (typeof value === 'string') ? value.trim() : value; 
+                });
+
+                if (!patientData.nombres || !patientData.apellidos || !patientData.cedula) {
+                     handleUpdateResult(false, "Nombres, Apellidos y Cédula son requeridos."); return;
+                }
+                 if (!/^[VEve]-\d{6,9}$/.test(patientData.cedula)) {
+                     handleUpdateResult(false, "Formato de Cédula inválido."); return;
+                }
+                
+                for (const key in patientData) {
+                    if (patientData[key] === "") patientData[key] = null;
+                }
+
+                console.log(`${SCRIPT_VIEW_NAME}: Enviando datos para actualizar paciente ID ${patientId}:`, patientData);
+
+                if (typeof backend === 'undefined' || typeof backend.update_patient_basic_data !== 'function') {
+                    handleUpdateResult(false, "Error: Función de actualización no disponible."); return;
+                }
+
+                try {
+                    backend.update_patient_basic_data(patientData); 
+                } catch (error) {
+                    console.error("Error llamando a backend.update_patient_basic_data:", error);
+                    handleUpdateResult(false, "Error de comunicación con el servidor.");
+                }
+            }
+
+            function handleCancelClick() {
+                 // Esta función se llama desde AMBOS botones de cancelar
+                 if (confirm("¿Descartar cambios y volver a la vista del paciente?")) {
+                    if (typeof loadContent === 'function') {
+                         loadContent('pacientes__paciente_detalle');
+                    }
+                 }
+            }
+            
+            // --- Función de Inicialización ---
+            function initializeView() {
+                console.log(`*** ${INIT_FUNCTION_NAME}: INICIALIZANDO VISTA ${SCRIPT_VIEW_NAME} ***`);
+                
+                // Obtener referencias DOM AHORA
+                form = document.getElementById('edit-patient-form');
+                loadingDiv = document.getElementById('edit-patient-loading');
+                subheader = document.getElementById('edit-patient-subheader');
+                patientIdInput = document.getElementById('patient_id');
+                feedbackDiv = document.getElementById('edit-patient-feedback');
+                // Botones superiores
+                actionButtonsTopDiv = document.getElementById('edit-patient-actions-top');
+                submitButtonTop = document.getElementById('submit-edit-patient-top');
+                buttonTextTop = document.getElementById('edit-patient-btn-text-top');
+                spinnerTop = document.getElementById('edit-patient-spinner-top');
+                cancelButtonTop = document.getElementById('cancel-edit-patient-top');
+                 // Botones inferiores
+                submitButtonBottom = document.getElementById('submit-edit-patient-bottom');
+                buttonTextBottom = document.getElementById('edit-patient-btn-text-bottom');
+                spinnerBottom = document.getElementById('edit-patient-spinner-bottom');
+                cancelButtonBottom = document.getElementById('cancel-edit-patient-bottom');
+
+                // Obtener referencias a los inputs (sin cambios)
+                nombresInput = document.getElementById('nombres');
+                apellidosInput = document.getElementById('apellidos');
+                cedulaInput = document.getElementById('cedula');
+                historiaInput = document.getElementById('numero_historia');
+                fechaNacInput = document.getElementById('fecha_nacimiento');
+                sexoInput = document.getElementById('sexo');
+                lugarNacInput = document.getElementById('lugar_nacimiento');
+                edoCivilInput = document.getElementById('estado_civil');
+                profesionInput = document.getElementById('profesion_oficio');
+                telHabInput = document.getElementById('telefono_habitacion');
+                telMovInput = document.getElementById('telefono_movil');
+                emailInput = document.getElementById('email');
+                direccionInput = document.getElementById('direccion');
+                emergNombreInput = document.getElementById('emerg_nombre');
+                emergParentescoInput = document.getElementById('emerg_parentesco');
+                emergTelInput = document.getElementById('emerg_telefono');
+                emergDirInput = document.getElementById('emerg_direccion');
+                notasInput = document.getElementById('notas_adicionales');
+
+                // Verificar elementos críticos (incluyendo los nuevos botones)
+                if (!form || !loadingDiv || !subheader || !patientIdInput || !feedbackDiv || 
+                    !actionButtonsTopDiv || !submitButtonTop || !buttonTextTop || !spinnerTop || !cancelButtonTop ||
+                    !submitButtonBottom || !buttonTextBottom || !spinnerBottom || !cancelButtonBottom ||
+                    !nombresInput /*...etc...*/ ) {
+                    console.error(`${INIT_FUNCTION_NAME}: Error crítico - Faltan elementos esenciales del formulario o botones.`);
+                    if(loadingDiv) loadingDiv.textContent = "Error fatal al cargar la interfaz de edición.";
+                    else if(document.body) document.body.innerHTML = "Error fatal de interfaz.";
+                    return;
+                }
+                console.log(`${INIT_FUNCTION_NAME}: Elementos UI del formulario y botones encontrados.`);
+
+                // Resetear estado
+                isSubmitting = false;
+                patientId = null; 
+                form.reset();
+                form.classList.add('hidden');
+                actionButtonsTopDiv.classList.add('hidden'); // Ocultar botones superiores inicialmente
+                loadingDiv.style.display = 'block';
+                feedbackDiv.textContent = '';
+
+                // Añadir listeners (solo una vez)
+                 if (!form.dataset.listenerAttached) {
+                    form.addEventListener('submit', handleFormSubmit);
+                    // Añadir listener a AMBOS botones de cancelar
+                    cancelButtonTop.addEventListener('click', handleCancelClick);
+                    cancelButtonBottom.addEventListener('click', handleCancelClick);
+                    form.dataset.listenerAttached = 'true';
+                    console.log(`${INIT_FUNCTION_NAME}: Listeners del formulario y botones añadidos.`);
+                 }
+
+
+                // Solicitar datos del paciente al backend
+                if (typeof backend !== 'undefined' && typeof backend.request_patient_details === 'function') {
+                    console.log(`${INIT_FUNCTION_NAME}: Solicitando detalles del paciente para edición...`);
+                    try {
+                        backend.request_patient_details();
+                    } catch (e) {
+                        console.error("Error llamando a backend.request_patient_details:", e);
+                        showErrorFeedback("Error de comunicación al solicitar datos.");
+                        loadingDiv.textContent = "Error.";
+                    }
+                } else {
+                    console.error("Backend o backend.request_patient_details no disponible.");
+                    showErrorFeedback("Error: No se puede conectar para obtener datos.");
+                    loadingDiv.textContent = "Error.";
+                }
+            }
+
+            // --- Handlers para señales del backend (sin cambios) ---
+             window.handlePatientDetailsResult_pacientes__informacion_base__editar_datos_paciente = function(jsonString) {
+                 console.log(`${SCRIPT_VIEW_NAME}: Recibidos detalles del paciente (JSON string)`);
+                 let patientDetails = null;
+                 try {
+                     patientDetails = JSON.parse(jsonString);
+                     if (!patientDetails || typeof patientDetails !== 'object') throw new Error("Formato de datos inválido.");
+                     if (patientDetails.error) throw new Error(patientDetails.error);
+                     if (!patientDetails.info) throw new Error("Faltan datos 'info' del paciente.");
+                     patientId = patientDetails.info.id; 
+                     populateForm(patientDetails.info); 
+                 } catch (e) {
+                     console.error(`Error procesando detalles del paciente en ${SCRIPT_VIEW_NAME}:`, e);
+                     showErrorFeedback(`Error al cargar datos: ${e.message}`);
+                     if (loadingDiv) loadingDiv.textContent = "Error.";
+                     if (form) form.classList.add('hidden'); 
+                     if (submitButtonTop) submitButtonTop.disabled = true; // Deshabilitar ambos si fallan datos
+                     if (submitButtonBottom) submitButtonBottom.disabled = true;
+                     if (actionButtonsTopDiv) actionButtonsTopDiv.classList.add('hidden');
+                 }
+             }
+             
+             window.handleUpdatePatientBasicDataResult_pacientes__informacion_base__editar_datos_paciente = handleUpdateResult;
+
+
+            // --- Registro del Inicializador ---
+            window.viewInitializationFunctions = window.viewInitializationFunctions || {};
+            if (window.viewInitializationFunctions[INIT_FUNCTION_NAME]) {
+                console.warn(`${INIT_FUNCTION_NAME} ya estaba registrado. Sobrescribiendo.`);
+            }
+            window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+            console.log(`Inicializador ${INIT_FUNCTION_NAME} registrado.`);
+
+        })();
+    </script>

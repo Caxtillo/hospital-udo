@@ -1,0 +1,305 @@
+<!-- html_files/historial_acciones.html -->
+<div class="p-6 md:p-8 h-full flex flex-col">
+
+    <!-- Título y Controles -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200 flex-shrink-0 gap-y-4 gap-x-3">
+        <h2 class="text-2xl font-semibold text-teal-700 w-full md:w-auto">Historial de Acciones</h2>
+        <span class="block text-xs text-gray-500 mt-1">
+            Presiona Espacio para abrir calendario
+        </span>
+        <!-- Container for controls - ALWAYS full width -->
+        <div class="flex flex-wrap items-end gap-x-3 gap-y-4 w-full">
+            <!-- Search Input Container - Allow it to grow -->
+            <!-- Search Input Container -->
+            <div class="flex-grow relative">
+                <label for="general-search-input" class="block text-xs font-medium text-gray-600 mb-1">Buscar</label>
+                <span class="absolute left-3 top-1/2 mt-2.5 transform -translate-y-1/2 text-gray-400 text-sm">
+                    <i class="fas fa-search"></i>
+                </span>
+                <!-- Search Input - Apply consistent style -->
+                <input type="text" id="general-search-input" placeholder="Buscar en historial..."
+                    class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition duration-150 h-[42px]">
+                    <!-- Padding pl-9 is specific due to icon -->
+            </div>
+
+            <!-- Date Start Container -->
+            <div class="flex-shrink-0">
+                <label for="filter-date-start" class="block text-xs font-medium text-gray-600 mb-1">Desde</label>
+                <!-- Date Start Input - Apply consistent style -->
+                <input type="date" id="filter-date-start" title="Fecha Inicio"
+                        class="w-full sm:w-auto text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition duration-150 py-2 px-3 h-[42px]">
+            </div>
+
+            <!-- Date End Container -->
+            <div class="flex-shrink-0">
+                <label for="filter-date-end" class="block text-xs font-medium text-gray-600 mb-1">Hasta</label>
+                <!-- Date End Input - Apply consistent style -->
+                <input type="date" id="filter-date-end" title="Fecha Fin"
+                    class="w-full sm:w-auto text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition duration-150 py-2 px-3 h-[42px]">
+            </div>
+
+            <!-- Button Container - Align to end, don't shrink buttons -->
+            <div class="flex space-x-2 pt-1 sm:pt-0 self-end flex-shrink-0">
+                <button id="filter-button" title="Aplicar Filtros"
+                        class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    <i class="fas fa-filter mr-1"></i> Filtrar
+                </button>
+                <button id="clear-filter-button" title="Limpiar Filtros"
+                        class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    <i class="fas fa-times"></i> Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="historial-table-container" class="flex-grow overflow-auto rounded-lg border border-gray-200 shadow-md bg-white relative">
+        <div id="historial-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500 italic bg-gray-50 z-10">Cargando historial...</div>
+        <table class="min-w-full divide-y divide-gray-200 hidden">
+             <thead class="bg-gray-100 sticky top-0 z-5">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-40">Fecha y Hora</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-32">Usuario</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-40">Tipo Acción</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Descripción</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-24">Tabla Afect.</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-20">ID Reg.</th>
+                </tr>
+            </thead>
+            <tbody id="historial-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+        </table>
+    </div>
+
+     
+    <div id="historial-pagination" class="flex justify-between items-center pt-4 flex-shrink-0" style="display: none;">
+        <span id="historial-pagination-info" class="text-sm text-gray-600"></span>
+        <div class="space-x-2">
+            <button id="historial-prev-page" class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Ant</button>
+            <button id="historial-next-page" class="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Sig</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const SCRIPT_VIEW_NAME = 'historial__historial_acciones';
+        console.log(`Ejecutando script de ${SCRIPT_VIEW_NAME}.html`);
+    
+        // --- Elementos DOM ---
+        // ***** CORRECTED ID HERE *****
+        const searchInput = document.getElementById('general-search-input'); // Corrected ID
+        const dateStartInput = document.getElementById('filter-date-start');
+        const dateEndInput = document.getElementById('filter-date-end');
+        const filterButton = document.getElementById('filter-button');
+        const clearFilterButton = document.getElementById('clear-filter-button');
+        const tableContainer = document.getElementById('historial-table-container');
+        const table = tableContainer ? tableContainer.querySelector('table') : null;
+        const tableBody = document.getElementById('historial-table-body');
+        const placeholder = document.getElementById('historial-placeholder');
+        const paginationControls = document.getElementById('historial-pagination');
+        const paginationInfo = document.getElementById('historial-pagination-info');
+        const prevButton = document.getElementById('historial-prev-page');
+        const nextButton = document.getElementById('historial-next-page');
+    
+        // --- Estado Local ---
+        let allLogs = [];
+        let filteredLogs = [];
+        let currentPage = 1;
+        const itemsPerPage = 30; // Items por página
+    
+        // Verificar elementos esenciales
+        // ***** THIS CHECK SHOULD NOW PASS *****
+        if (!tableContainer || !table || !tableBody || !placeholder || !searchInput || !dateStartInput || !dateEndInput || !filterButton || !clearFilterButton || !paginationControls || !paginationInfo || !prevButton || !nextButton ) {
+            console.error(`Error crítico en ${SCRIPT_VIEW_NAME}: Faltan elementos UI.`);
+            // Log which element is missing if possible
+            if (!tableContainer) console.error("Missing: tableContainer");
+            if (tableContainer && !table) console.error("Missing: table");
+            if (!tableBody) console.error("Missing: tableBody");
+            if (!placeholder) console.error("Missing: placeholder");
+            if (!searchInput) console.error("Missing: searchInput (check ID 'general-search-input')"); // Updated hint
+            if (!dateStartInput) console.error("Missing: dateStartInput");
+            if (!dateEndInput) console.error("Missing: dateEndInput");
+            if (!filterButton) console.error("Missing: filterButton");
+            if (!clearFilterButton) console.error("Missing: clearFilterButton");
+            if (!paginationControls) console.error("Missing: paginationControls");
+            if (!paginationInfo) console.error("Missing: paginationInfo");
+            if (!prevButton) console.error("Missing: prevButton");
+            if (!nextButton) console.error("Missing: nextButton");
+    
+            if(placeholder) placeholder.textContent = "Error al cargar interfaz.";
+            return; // Stop execution if critical elements are missing
+        }
+    
+        // --- Funciones de Filtrado y Paginación JS ---
+        function applyFiltersAndDisplay() {
+            const generalSearchTerm = searchInput.value.toLowerCase().trim(); // Use searchInput
+            const startDateStr = dateStartInput.value;
+            const endDateStr = dateEndInput.value;
+    
+            console.log(`${SCRIPT_VIEW_NAME}: Aplicando filtros - General: "${generalSearchTerm}", Inicio: ${startDateStr}, Fin: ${endDateStr}`);
+    
+            let startDate = null; let endDate = null;
+            if (startDateStr) startDate = new Date(startDateStr + 'T00:00:00');
+            if (endDateStr) endDate = new Date(endDateStr + 'T23:59:59');
+    
+            filteredLogs = allLogs.filter(log => {
+                let dateMatch = true;
+                if (log.fecha_iso) {
+                    const logDate = new Date(log.fecha_iso);
+                    if (!isNaN(logDate.getTime())) {
+                        if (startDate && logDate < startDate) dateMatch = false;
+                        if (endDate && logDate > endDate) dateMatch = false;
+                    } else { dateMatch = false; }
+                } else { dateMatch = !(startDate || endDate); }
+    
+                if (!dateMatch) return false;
+                if (!generalSearchTerm) return true;
+    
+                const usuario = (log.nombre_usuario || '').toLowerCase();
+                const tipoAccion = (log.tipo_accion || '').toLowerCase();
+                const descripcion = (log.descripcion || '').toLowerCase();
+                const tabla = (log.tabla_afectada || '').toLowerCase();
+                const regIdStr = log.registro_afectado_id !== null ? String(log.registro_afectado_id) : '';
+                const fechaFormateada = (log.fecha_hora_formateada || '').toLowerCase();
+    
+                return (
+                    usuario.includes(generalSearchTerm) ||
+                    tipoAccion.includes(generalSearchTerm) ||
+                    descripcion.includes(generalSearchTerm) ||
+                    tabla.includes(generalSearchTerm) ||
+                    regIdStr.includes(generalSearchTerm) ||
+                    fechaFormateada.includes(generalSearchTerm)
+                );
+            });
+    
+            currentPage = 1;
+            displayCurrentPage();
+        }
+    
+        function displayCurrentPage() {
+            if (!tableBody || !placeholder || !table || !paginationInfo || !prevButton || !nextButton || !paginationControls) return;
+            tableBody.innerHTML = '';
+            const totalFilteredItems = filteredLogs.length;
+            const totalPages = Math.ceil(totalFilteredItems / itemsPerPage);
+            if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = filteredLogs.slice(startIndex, endIndex);
+    
+            if (totalFilteredItems === 0) {
+                placeholder.textContent = allLogs.length === 0 ? 'No hay acciones registradas.' : 'No hay acciones que coincidan con los filtros.';
+                placeholder.classList.remove('hidden');
+                table.classList.add('hidden');
+                paginationControls.style.display = 'none';
+            } else {
+                placeholder.classList.add('hidden');
+                table.classList.remove('hidden');
+                pageItems.forEach(log => {
+                    const row = tableBody.insertRow();
+                    row.className = 'text-xs hover:bg-gray-50';
+                    const tabla = log.tabla_afectada || '-';
+                    const regId = log.registro_afectado_id !== null ? log.registro_afectado_id : '-';
+                    const usuario = log.nombre_usuario || `ID:${log.usuario_id}`;
+                    row.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-600">${log.fecha_hora_formateada || log.fecha_hora}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-700 font-medium">${usuario}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-blue-600">${log.tipo_accion || '?'}</td>
+                        <td class="px-4 py-2 text-gray-800 break-words min-w-[200px] max-w-lg">${log.descripcion || ''}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${tabla}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-500">${regId}</td>
+                    `;
+                });
+                updatePaginationControls(totalFilteredItems, totalPages);
+            }
+        }
+    
+        function updatePaginationControls(totalItems, totalPg) {
+             const startItemNum = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+             const endItemNum = Math.min(currentPage * itemsPerPage, totalItems);
+             if(paginationInfo) paginationInfo.textContent = `Mostrando ${startItemNum}-${endItemNum} de ${totalItems}`;
+             if(prevButton) prevButton.disabled = (currentPage <= 1);
+             if(nextButton) nextButton.disabled = (currentPage >= totalPg);
+             if (paginationControls) paginationControls.style.display = totalPg > 0 ? 'flex' : 'none'; // Show even if only 1 page, but hide if 0 results
+        }
+    
+        // --- Solicitud Inicial (Log completo) ---
+        function fetchInitialLog() {
+            console.log(`${SCRIPT_VIEW_NAME}: Solicitando historial COMPLETO...`);
+            if(placeholder) { placeholder.textContent = 'Cargando historial...'; placeholder.classList.remove('hidden'); }
+            if(table) table.classList.add('hidden');
+            if(paginationControls) paginationControls.style.display = 'none';
+    
+            if (typeof backend !== 'undefined' && backend.request_action_log) {
+                 try { backend.request_action_log(); }
+                 catch(e) { console.error("Error llamando request_action_log:", e); if(placeholder) placeholder.textContent = 'Error de comunicación.'; }
+            } else { console.error("Backend o request_action_log no disponible."); if(placeholder) placeholder.textContent = 'Error: No se puede conectar.'; }
+        }
+    
+        // --- Manejadores de Eventos UI ---
+        filterButton.addEventListener('click', applyFiltersAndDisplay);
+    
+        clearFilterButton.addEventListener('click', () => {
+             // ***** CORRECTED variable name HERE *****
+             searchInput.value = ''; // Use searchInput
+             dateStartInput.value = '';
+             dateEndInput.value = '';
+             applyFiltersAndDisplay(); // Mostrar todo de nuevo
+        });
+    
+        // Filtrar también con Enter en los inputs
+        // ***** CORRECTED variable name HERE *****
+        [searchInput, dateStartInput, dateEndInput].forEach(input => { // Use searchInput
+            if(input) { // Add a check to prevent errors if an input is somehow still null
+                input.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFiltersAndDisplay(); });
+            }
+        });
+    
+        // Paginación
+        prevButton.addEventListener('click', () => { if (currentPage > 1) { currentPage--; displayCurrentPage(); } });
+        nextButton.addEventListener('click', () => { const totalPages = Math.ceil(filteredLogs.length / itemsPerPage); if (currentPage < totalPages) { currentPage++; displayCurrentPage(); } });
+    
+    
+        // --- Handler de la Señal del Backend ---
+        window[`handleActionLogResult_${SCRIPT_VIEW_NAME}`]= function(logList, totalItems) {
+            console.log(`${SCRIPT_VIEW_NAME}: Recibida lista COMPLETA (${totalItems} total).`);
+            if (logList === null || !Array.isArray(logList)) {
+                 console.error(`${SCRIPT_VIEW_NAME}: Error en datos de historial recibidos.`);
+                 if(placeholder) placeholder.textContent = 'Error al cargar historial.';
+                 if(placeholder) placeholder.classList.remove('hidden');
+                 if(table) table.classList.add('hidden');
+                 allLogs = []; filteredLogs = [];
+                 updatePaginationControls(0,0);
+            } else {
+                // Pre-process dates for reliable filtering
+                 allLogs = logList.map(log => {
+                    try {
+                        // Assuming fecha_hora is like 'YYYY-MM-DD HH:MM:SS' or similar parseable format
+                        // Store as ISO string for consistent comparison
+                        log.fecha_iso = new Date(log.fecha_hora).toISOString();
+                        // Create a user-friendly formatted date/time string if needed elsewhere
+                        log.fecha_hora_formateada = new Date(log.fecha_iso).toLocaleString();
+                    } catch(e) {
+                        console.warn(`Could not parse date for log: ${log.id_log_accion}`, log.fecha_hora);
+                        log.fecha_iso = null; // Mark as invalid/unparseable
+                        log.fecha_hora_formateada = log.fecha_hora; // Keep original string
+                    }
+                    return log;
+                });
+    
+                // Sort logs by date descending (most recent first) AFTER getting all data
+                allLogs.sort((a, b) => {
+                    const dateA = a.fecha_iso ? new Date(a.fecha_iso) : new Date(0); // Handle null dates
+                    const dateB = b.fecha_iso ? new Date(b.fecha_iso) : new Date(0);
+                    return dateB - dateA; // Descending order
+                });
+    
+                applyFiltersAndDisplay();
+            }
+        }
+    
+        // --- Carga inicial ---
+        fetchInitialLog(); // Solicitar la lista completa
+    
+    })();
+    </script>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema - Gastroenterología</title>
+
+    <script src="js/tailwind.js"></script>
+    <link rel="stylesheet" href="fa/css/all.min.css">
+    <script src="js/qwebchannel.js"></script>
+    <style>
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background-color: #b2dbdf; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #009688; }
+        .nav-button.active { background-color: #00685e; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-teal-50 h-screen overflow-hidden font-sans antialiased">
+    <div class="flex flex-col h-full">
+<!-- HEADER -->
+<header class="flex items-center justify-evenly bg-white p-4 md:px-6 lg:px-8 border-b-4 border-teal-500 shadow-md flex-shrink-0"> 
+    <div class="header-logo flex-shrink-0"> 
+        <img src="assets/logo-unidad.png" alt="Logo Unidad Gastro" 
+             class="h-16 md:h-20 w-auto rounded-full border-2 md:border-3 border-teal-600">
+    </div>
+    <div class="text-center px-4"> 
+        <h1 class="text-xl md:text-2xl lg:text-3xl font-semibold text-teal-700 leading-tight">UNIDAD DE GASTROENTEROLOGIA</h1>
+        <p class="text-sm md:text-base lg:text-lg text-teal-700">"Dra. Isabel Yazmín Baldonedo"</p>
+    </div>
+    <div class="header-logo flex-shrink-0">
+        <img src="assets/logo-humnt.png" alt="Logo HU MNT" 
+             class="h-16 md:h-20 w-auto">
+    </div>
+</header>
+<!-- FIN HEADER -->
+
+        <div class="flex flex-grow overflow-hidden">
+            <nav class="w-56 bg-teal-600 text-white flex-shrink-0 flex flex-col">
+                 <div class="flex flex-col h-full py-2">
+                    <a href="#" onclick="loadContent('dashboard', this); return false;" data-view="dashboard"
+                       class="nav-button block py-3 px-5 text-sm uppercase border-b border-teal-700 hover:bg-teal-700 transition duration-200 active">
+                        INICIO
+                    </a>
+                    <a href="#" onclick="loadContent('pacientes__paciente_registro', this); return false;" data-view="paciente_registro"
+                       class="nav-button block py-3 px-5 text-sm uppercase border-b border-teal-700 hover:bg-teal-700 transition duration-200">
+                       NUEVO PACIENTE
+                    </a>
+                    <a href="#" onclick="loadContent('pacientes__listado_pacientes', this); return false;" data-view="listado_pacientes"
+                       class="nav-button block py-3 px-5 text-sm uppercase border-b border-teal-700 hover:bg-teal-700 transition duration-200">
+                        LISTADO PACIENTES
+                    </a>
+                    <a href="#" onclick="loadContent('medicos__medicos', this); return false;" data-view="medicos"
+                       class="nav-button block py-3 px-5 text-sm uppercase border-b border-teal-700 hover:bg-teal-700 transition duration-200">
+                        MEDICOS
+                    </a>
+                    <a href="#" onclick="loadContent('historial__historial_acciones', this); return false;" data-view="historial__historial_acciones"
+                    class="nav-button block py-3 px-5 text-sm uppercase border-b border-teal-700 hover:bg-teal-700 transition duration-200">
+                        HISTORIAL
+                    </a>
+                    <div class="mt-auto"></div>
+                    <div class="px-5 py-3 border-t border-teal-700 text-sm text-teal-100">
+                        <span id="sidebar-username" class="block font-semibold text-white truncate mb-1">Cargando...</span>
+                        <span id="sidebar-datetime" class="block">--/--/---- --:--:--</span>
+                    </div>
+                    <div class="px-5 pt-2 pb-4 text-center">
+                        <button onclick="confirmLogout();"
+                                class="inline-flex items-center justify-center w-auto px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold uppercase rounded-full shadow hover:shadow-md transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-teal-600">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <main id="content-area" class="flex-grow p-6 bg-white overflow-y-auto">
+                <p class="italic text-gray-500">Cargando vista inicial...</p>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // === Variables Globales del Shell ===
+        let backend; 
+        let currentView = 'dashboard'; 
+        let dateTimeInterval; 
+        window.viewInitializationFunctions = {}; 
+        window.medicoIdToEditFromBackend = null; 
+        window.isBackendFullyReady = false; // <--- NUEVO FLAG GLOBAL
+
+        // === Funciones de Utilidad del Shell ===
+        function displayErrorInContent(errorMessageHtml) {
+            const contentArea = document.getElementById('content-area');
+            if(contentArea) contentArea.innerHTML = errorMessageHtml;
+            else console.error("Shell Error: No se encontró #content-area para mostrar error.");
+        }
+
+        function setActiveNav(viewName) {
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active', 'bg-teal-700', 'font-semibold');
+                if (btn.getAttribute('data-view') === viewName) {
+                    btn.classList.add('active', 'bg-teal-700', 'font-semibold');
+                }
+            });
+        }
+
+        function loadContent(viewName, clickedElement) {
+            console.log(`Shell: loadContent solicitado para vista: ${viewName}`);
+            if (typeof setActiveNav !== 'function' || typeof displayErrorInContent !== 'function') {
+                 console.error("Shell Error: Funciones UI críticas no definidas."); return;
+            }
+            const contentArea = document.getElementById('content-area');
+            if (!contentArea) {
+                console.error("Shell Error: No se encontró #content-area."); return;
+            }
+
+            contentArea.innerHTML = '<p class="italic text-gray-500">Cargando...</p>';
+            currentView = viewName; 
+            setActiveNav(viewName); 
+
+            if (backend && backend.request_view_content) {
+                try {
+                    backend.request_view_content(viewName);
+                    if (viewName === 'paciente_registro' && backend.get_next_historia_number) {
+                         setTimeout(() => { if(backend && backend.get_next_historia_number) { backend.get_next_historia_number(); } }, 50);
+                     }
+                } catch (e) {
+                     console.error(`Shell Error: Al llamar a backend.request_view_content(${viewName})`, e);
+                     displayErrorInContent('<p class="text-red-600">Error interno al solicitar vista.</p>');
+                }
+            } else {
+                 console.error("Shell Error: Backend o backend.request_view_content no disponible (posiblemente llamado antes de 'backendReady').");
+                 // No mostramos error aquí directamente, la vista que intenta cargar se quejará si el backend no está listo.
+            }
+        }
+
+        function injectHtmlContent(htmlContent, viewName) {
+             const injectedViewName = viewName; 
+             console.log(`Shell: Injecting content for view: ${injectedViewName}`);
+             const contentArea = document.getElementById('content-area');
+             if (!contentArea) { console.error("Shell Error: #content-area no encontrado para inyección."); return; }
+
+             contentArea.innerHTML = htmlContent;
+             executeScriptsInElement(contentArea); 
+             contentArea.scrollTop = 0;
+
+             setTimeout(() => {
+                 const initFuncName = `initialize_${injectedViewName.replace(/__/g, '_')}`;
+                 if (typeof window.viewInitializationFunctions[initFuncName] === 'function') {
+                     console.log(`Shell: Llamando a inicializador registrado: ${initFuncName}`);
+                     try {
+                         window.viewInitializationFunctions[initFuncName]();
+                     } catch (e) { console.error(`Shell Error: Al ejecutar ${initFuncName}:`, e); }
+                 } else {
+                     console.log(`Shell: No se encontró inicializador (${initFuncName}) para la vista ${injectedViewName}.`);
+                 }
+             }, 10); 
+        }
+
+        function executeScriptsInElement(element) {
+             const scripts = element.querySelectorAll("script");
+             console.log(`Shell: Encontrados ${scripts.length} scripts en el contenido inyectado.`);
+             scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                if (oldScript.src){
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent; 
+                }
+                if (oldScript.parentNode) {
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                }
+             });
+             console.log(`Shell: executeScriptsInElement completado.`);
+        }
+
+        function updateUserInfo(userDataArg) { 
+            const usernameSidebar = document.getElementById('sidebar-username');
+            if (!usernameSidebar) { return; }
+            if (userDataArg && typeof userDataArg.username === 'string' && userDataArg.username.trim() !== "") {
+                usernameSidebar.textContent = userDataArg.username;
+            } else {
+                usernameSidebar.textContent = 'Usuario N/D';
+            }
+        }
+
+        function startClock() { updateDateTime(); dateTimeInterval = setInterval(updateDateTime, 1000); }
+        function updateDateTime() {
+             const dtElement = document.getElementById('sidebar-datetime');
+             if (dtElement) {
+                const now = new Date();
+                const dateString = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const timeString = now.toLocaleTimeString('es-ES', { hour12: false });
+                dtElement.textContent = `${dateString} ${timeString}`;
+             }
+         }
+
+        function confirmLogout() {
+            if (confirm("¿Está seguro de que desea salir?")) {
+                if (backend && typeof backend.perform_logout === 'function') {
+                    try { backend.perform_logout(); } catch (e) { console.error("Shell Error: Excepción al llamar a backend.perform_logout():", e); alert("Error al cerrar sesión."); }
+                } else { console.error("Shell Error: backend.perform_logout no disponible."); alert("Error de comunicación al cerrar sesión."); }
+            }
+        }
+
+        function routeBackendSignal(functionName, ...args) {
+            console.log(`Shell: routeBackendSignal llamada para ${functionName} desde vista: ${currentView}`);
+            const viewSpecificFunctionName = `${functionName}_${currentView}`; 
+            const genericFunctionName = functionName; 
+            const argumentToPass = (args.length === 1) ? args[0] : args; 
+            try {
+                if (typeof window[viewSpecificFunctionName] === 'function') {
+                    if (args.length === 1) { window[viewSpecificFunctionName](argumentToPass); } else { window[viewSpecificFunctionName](...argumentToPass); }
+                }
+                else if (typeof window[genericFunctionName] === 'function' && window[genericFunctionName] !== window.routeBackendSignal) {
+                     if (args.length === 1) { window[genericFunctionName](argumentToPass); } else { window[genericFunctionName](...argumentToPass); }
+                } else {
+                    console.warn(`Shell: No se encontró función manejadora (${viewSpecificFunctionName} o ${genericFunctionName}) para ${functionName}`);
+                }
+            } catch (e) {
+                console.error(`Shell Error DENTRO de routeBackendSignal al llamar a ${viewSpecificFunctionName || genericFunctionName}:`, e);
+            }
+        }
+
+        // === Handlers Genéricos/Fallback (Definidos globalmente) ===
+        window.handleSaveResult = function(success, message, idOrHistoria) { console.warn(`Shell: GENÉRICO handleSaveResult (vista: ${currentView})`, success, message); }
+        window.displayNextHistoria = function(nextNumber) { console.warn(`Shell: GENÉRICO displayNextHistoria (vista: ${currentView})`, nextNumber); }
+        window.handlePatientListResult = function(patientList, totalItems){ console.warn(`Shell: GENÉRICO handlePatientListResult (vista: ${currentView})`, totalItems); }
+        window.handleActionLogResult = function(logList, totalItems) { console.warn(`Shell: GENÉRICO handleActionLogResult (vista: ${currentView})`, totalItems); }
+        window.handleMedicoListResult = function(medicoList, totalItems){ console.warn(`Shell: GENÉRICO handleMedicoListResult (vista: ${currentView})`, totalItems); }
+        window.handleMedicoAddResult = function(success, message){ console.warn(`Shell: GENÉRICO handleMedicoAddResult (vista: ${currentView})`, success); }
+        window.handleMedicoDetailsResult = function(data) { console.warn(`Shell: GENÉRICO handleMedicoDetailsResult (vista: ${currentView})`); }
+        window.handleMedicoUpdateResult = function(success, message) { console.warn(`Shell: GENÉRICO handleMedicoUpdateResult (vista: ${currentView})`, success); }
+        
+        // === Inicialización de la Aplicación ===
+        function initializeApp() {
+            console.log("Shell: Initializing application...");
+            window.isBackendFullyReady = false; // Inicializar el flag
+            startClock(); 
+            setActiveNav(currentView); 
+
+            if (typeof qt !== 'undefined' && typeof qt.webChannelTransport !== 'undefined') {
+                console.log("Shell: QWebChannel transport detectado. Conectando...");
+                try { 
+                    new QWebChannel(qt.webChannelTransport, function (channel) {
+                        if (channel && channel.objects && channel.objects.backend) {
+                            window.backend = channel.objects.backend;
+                            backend = window.backend; 
+                            if (!backend) {
+                                console.error("Shell Error Crítico: Objeto backend NO RECIBIDO del canal después de la asignación.");
+                                displayErrorInContent('<p class="text-red-600">Error crítico: Comunicación con backend fallida.</p>');
+                                window.isBackendFullyReady = false; // Asegurar que esté false
+                                return;
+                            }
+                            console.log("Shell: Backend conectado y asignado a window.backend.");
+
+                            // --- Conectar todas las señales del backend a routeBackendSignal ---
+                            if(backend.viewContentLoaded) backend.viewContentLoaded.connect(injectHtmlContent); else console.warn("Shell: Señal viewContentLoaded no encontrada.");
+                            if(backend.userDataLoaded) backend.userDataLoaded.connect(updateUserInfo); else console.warn("Shell: Señal userDataLoaded no encontrada.");
+                            if(backend.nextHistoriaReady) backend.nextHistoriaReady.connect((nextNum) => routeBackendSignal('displayNextHistoria', nextNum)); else console.warn("Shell: Señal nextHistoriaReady no encontrada.");
+                            if(backend.patientSaveResult) backend.patientSaveResult.connect((success, msg, histNum) => routeBackendSignal('handleSaveResult', success, msg, histNum)); else console.warn("Shell: Señal patientSaveResult no encontrada.");
+                            if(backend.patientListResult) backend.patientListResult.connect((list, total) => routeBackendSignal('handlePatientListResult', list, total)); else console.warn("Shell: Señal patientListResult no encontrada.");
+                            if(backend.actionLogResult) backend.actionLogResult.connect((logList, total) => routeBackendSignal('handleActionLogResult', logList, total)); else console.warn("Shell: Señal actionLogResult no encontrada.");
+                            if(backend.medicoListResult) backend.medicoListResult.connect((list, total) => routeBackendSignal('handleMedicoListResult', list, total)); else console.warn("Shell: Señal medicoListResult no encontrada.");
+                            if(backend.medicoAddResult) backend.medicoAddResult.connect((success, msg) => routeBackendSignal('handleMedicoAddResult', success, msg)); else console.warn("Shell: Señal medicoAddResult no encontrada.");
+                            if(backend.patientDetailsResult) backend.patientDetailsResult.connect((jsonString) => routeBackendSignal('handlePatientDetailsResult', jsonString)); else console.warn("Shell: Señal patientDetailsResult no encontrada.");
+                            if(backend.medicoDetailsResult) backend.medicoDetailsResult.connect((detailsDict) => routeBackendSignal('handleMedicoDetailsResult', detailsDict)); else console.warn("Shell: Señal medicoDetailsResult no encontrada."); 
+                            if(backend.medicoUpdateResult) backend.medicoUpdateResult.connect((success, msg) => routeBackendSignal('handleMedicoUpdateResult', success, msg)); else console.warn("Shell: Señal medicoUpdateResult no encontrada."); 
+                            if(backend.medicoStatusToggleResult) backend.medicoStatusToggleResult.connect((success, msg, medico_id, nuevo_estado) => routeBackendSignal('handleToggleMedicoStatusResult', success, msg, medico_id, nuevo_estado)); else console.warn("Shell: Señal medicoStatusToggleResult no encontrada.");
+                            if(backend.updatePatientBasicDataResult) { 
+                                backend.updatePatientBasicDataResult.connect((success, msg) => {
+                                    routeBackendSignal('handleUpdatePatientBasicDataResult', success, msg);
+                                });
+                            } else {
+                                console.warn("Shell: Señal updatePatientBasicDataResult no encontrada.");
+                            }
+                            if(backend.ingresoDetailsResult) { 
+                                backend.ingresoDetailsResult.connect((jsonStringIngresoData) => {
+                                    routeBackendSignal('handleIngresoDetailsResult', jsonStringIngresoData);
+                                });
+                            } else {
+                                console.warn("Shell: Señal ingresoDetailsResult no encontrada en el backend.");
+                            }
+                            if(backend.updateIngresoDataResult) { 
+                                backend.updateIngresoDataResult.connect((success, msg) => {
+                                    routeBackendSignal('handleUpdateIngresoDataResult', success, msg);
+                                });
+                            } else {
+                                console.warn("Shell: Señal updateIngresoDataResult no encontrada en el backend.");
+                            }
+                            if (backend.evolucionSaveResult) {
+                                backend.evolucionSaveResult.connect((success, msg, newEvoId) => {
+                                    routeBackendSignal('handleEvolucionSaveResult', success, msg, newEvoId);
+                                });
+                            } else {
+                                console.warn("Shell: Señal evolucionSaveResult no encontrada en el backend.");
+                            }
+
+                            if (backend.evolucionDetailsResult) {
+                                backend.evolucionDetailsResult.connect((jsonStringEvoData) => {
+                                    routeBackendSignal('handleEvolucionDetailsResult', jsonStringEvoData);
+                                });
+                            } else {
+                                console.warn("Shell: Señal evolucionDetailsResult no encontrada en el backend.");
+                            }
+
+                            if (backend.evolucionUpdateResult) {
+                                backend.evolucionUpdateResult.connect((success, msg) => {
+                                    routeBackendSignal('handleEvolucionUpdateResult', success, msg);
+                                });
+                            } else {
+                                console.warn("Shell: Señal evolucionUpdateResult no encontrada en el backend.");
+                            }
+                            if (backend.ordenMedicaSaveResult) {
+                                backend.ordenMedicaSaveResult.connect((success, msg) => {
+                                    // El handler se llamará handleOrdenSaveResult_pacientes__ordenes__agregar_orden
+                                    // routeBackendSignal se encargará de buscarlo.
+                                    routeBackendSignal('handleOrdenSaveResult', success, msg);
+                                });
+                            } else {
+                                console.warn("Shell: Señal ordenMedicaSaveResult no encontrada en el backend.");
+                            }
+                            if (backend.ordenDetailsResult) {
+                                backend.ordenDetailsResult.connect((jsonStringOrdenData) => {
+                                    routeBackendSignal('handleOrdenDetailsResult', jsonStringOrdenData);
+                                });
+                            } else {
+                                console.warn("Shell: Señal ordenDetailsResult no encontrada en el backend.");
+                            }
+                            // No hay señal usernameLoaded, userDataLoaded ya cumple esa función
+                            console.log("Shell: Señales conectadas.");
+
+                            window.isBackendFullyReady = true; // <--- FLAG ESTABLECIDO AQUÍ
+                            console.log("Shell: window.isBackendFullyReady establecido en true.");
+
+                            const event = new CustomEvent('backendReady');
+                            document.dispatchEvent(event);
+                            console.log("Shell: Evento 'backendReady' despachado.");
+
+                            if(backend.request_initial_data) {
+                                console.log("Shell: Solicitando datos iniciales...");
+                                backend.request_initial_data();
+                            } else {
+                                console.error("Shell Error: backend.request_initial_data no disponible.");
+                                displayErrorInContent('<p class="text-red-600">Error al solicitar datos iniciales.</p>');
+                            }
+                        } else {
+                             console.error("Shell Error Crítico: channel.objects.backend es nulo o indefinido en el callback de QWebChannel.");
+                             displayErrorInContent('<p class="text-red-600">Error crítico: Fallo al obtener el objeto backend.</p>');
+                             window.isBackendFullyReady = false; // Asegurar que esté false
+                        }
+                    });
+                } catch (e) {
+                    console.error("Shell Error Crítico: Excepción durante new QWebChannel().", e);
+                    displayErrorInContent('<p class="text-red-600">Error crítico al inicializar QWebChannel.</p>');
+                    window.isBackendFullyReady = false; // Asegurar que esté false
+                }
+            } else {
+                 console.error("Shell Error Crítico: QWebChannel transport no disponible (qt o qt.webChannelTransport es undefined).");
+                 displayErrorInContent('<p class="text-red-600">Error: QWebChannel no disponible. No se puede comunicar con la aplicación.</p>');
+                 window.isBackendFullyReady = false; // Asegurar que esté false
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

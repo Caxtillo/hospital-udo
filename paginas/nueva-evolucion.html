@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Evolución Médica - Gastroenterología</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hospital-teal': {
+                            50: '#e6f3f4',
+                            100: '#b2dbdf',
+                            200: '#80c3ca',
+                            500: '#009688',
+                            600: '#00897b',
+                            700: '#00685e',
+                            900: '#004d40'
+                        },
+                         'hospital-gray': { // Grises para texto/fondos neutros
+                             50: '#f9fafb',
+                             100: '#f3f4f6',
+                             200: '#e5e7eb',
+                             300: '#d1d5db',
+                             500: '#6b7280',
+                             700: '#374151',
+                             800: '#1f2937',
+                         }
+                    },
+                    fontFamily: {
+                        'sans': ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Estilos base y scrollbar */
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background-color: #b2dbdf; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #009688; }
+
+         /* Estilo botones Guardar/Imprimir */
+        .btn-primary {
+            @apply bg-gradient-to-b from-cyan-500 to-teal-600 text-white px-6 py-2 rounded-md shadow-md hover:from-cyan-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-teal-500 transition duration-200 font-medium text-sm;
+        }
+        .btn-secondary {
+             @apply bg-hospital-gray-200 text-hospital-gray-700 px-6 py-2 rounded-md shadow-md hover:bg-hospital-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-hospital-gray-500 transition duration-200 font-medium text-sm;
+        }
+
+    </style>
+</head>
+<body class="bg-hospital-gray-50 h-screen overflow-hidden font-sans">
+    <div class="flex flex-col h-full">
+        <!-- Header (Consistente) -->
+        <header class="flex items-center justify-between bg-white p-3 px-4 border-b-4 border-hospital-teal-500 shadow-md flex-shrink-0">
+            <div class="logo-left"><img src="/placeholder-logo-unidad.png" alt="Logo Unidad Gastro" class="h-14 w-auto rounded-full border-2 border-hospital-teal-500"></div>
+            <div class="text-center flex-grow px-4">
+                <h1 class="text-xl md:text-2xl font-semibold text-hospital-teal-700 leading-tight">UNIDAD DE GASTROENTEROLOGIA</h1>
+                <p class="text-sm md:text-base text-hospital-teal-700">"Dra. Isabel Yazmín Baldonedo"</p>
+            </div>
+            <div class="logo-right"><img src="/placeholder-logo-humnt.png" alt="Logo HU MNT" class="h-12 md:h-14 w-auto"></div>
+        </header>
+
+        <div class="flex flex-grow overflow-hidden">
+            <!-- Sidebar Navigation (Consistente) -->
+             <nav class="w-56 bg-hospital-teal-700 text-white flex-shrink-0 overflow-y-auto">
+                 <div class="flex flex-col h-full py-2">
+                    <a href="#inicio" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">INICIO</a>
+                    <a href="#pacientes" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">PACIENTES</a>
+                    <a href="listado-pacientes.html" class="nav-button block bg-hospital-teal-600 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200 font-semibold">LISTADO DE PACIENTES</a>
+                    <a href="#medicos" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">MEDICOS</a>
+                    <a href="#historial" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase border-b border-hospital-teal-900 transition duration-200">HISTORIAL DE ACCIONES</a>
+                    <a href="#salir" class="nav-button block hover:bg-hospital-teal-800 py-3 px-5 text-sm uppercase mt-auto">SALIR</a>
+                </div>
+             </nav>
+
+            <!-- Main Content Area -->
+            <main class="flex-grow p-6 overflow-y-auto bg-white"> <!-- Fondo blanco como el form original -->
+                <div class="flex flex-col h-full">
+
+                    <!-- Cabecera de la página: Título, Paciente, Fecha -->
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-hospital-gray-200 flex-shrink-0">
+                        <h2 class="text-xl font-bold text-hospital-teal-700">Evolución Médica (Nueva)</h2>
+                        <div class="text-right text-sm">
+                            <div class="font-semibold text-hospital-gray-800 mb-1" id="paciente-nombre-evolucion">Cargando paciente...</div>
+                            <div class="text-hospital-gray-500" id="fecha-actual-evolucion">Cargando fecha...</div>
+                            <!-- Podrías añadir Días de Hospitalización aquí si aplica -->
+                            <!-- <div class="text-hospital-gray-500 mt-1">Días Hosp: <span id="dias-hosp">...</span></div> -->
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Evolución -->
+                    <form id="evolucion-form" class="space-y-6 flex-grow">
+
+                        <!-- Sección: Signos Vitales -->
+                        <div class="bg-hospital-teal-50 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-4 text-hospital-teal-700">Signos Vitales</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-5 gap-y-4">
+                                <div>
+                                    <label for="ev_ta" class="block text-sm font-medium text-gray-700 mb-1">T/A <span class="text-xs">(mmHg)</span></label>
+                                    <input type="text" id="ev_ta" name="ev_ta" placeholder="120/80" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2">
+                                </div>
+                                <div>
+                                    <label for="ev_fc" class="block text-sm font-medium text-gray-700 mb-1">FC <span class="text-xs">(lpm)</span></label>
+                                    <input type="number" id="ev_fc" name="ev_fc" placeholder="72" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2">
+                                </div>
+                                <div>
+                                    <label for="ev_fr" class="block text-sm font-medium text-gray-700 mb-1">FR <span class="text-xs">(rpm)</span></label>
+                                    <input type="number" id="ev_fr" name="ev_fr" placeholder="16" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2">
+                                </div>
+                                <div>
+                                    <label for="ev_sato2" class="block text-sm font-medium text-gray-700 mb-1">SatO₂ <span class="text-xs">(%)</span></label>
+                                    <input type="number" id="ev_sato2" name="ev_sato2" placeholder="98" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2">
+                                </div>
+                                <div>
+                                    <label for="ev_temp" class="block text-sm font-medium text-gray-700 mb-1">Temp <span class="text-xs">(°C)</span></label>
+                                    <input type="text" id="ev_temp" name="ev_temp" placeholder="36.5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Diagnósticos y Tratamiento -->
+                        <div class="bg-hospital-teal-50 p-4 rounded-lg shadow-md">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
+                                 <div>
+                                     <label for="ev_diagnosticos" class="block text-sm font-medium text-gray-700 mb-1">Diagnósticos</label>
+                                     <textarea id="ev_diagnosticos" name="ev_diagnosticos" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                 </div>
+                                 <div>
+                                     <label for="ev_tratamiento" class="block text-sm font-medium text-gray-700 mb-1">Tratamiento / Plan</label>
+                                     <textarea id="ev_tratamiento" name="ev_tratamiento" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                 </div>
+                             </div>
+                        </div>
+
+                        <!-- Sección: Subjetivo y Objetivo -->
+                        <div class="bg-hospital-teal-50 p-4 rounded-lg shadow-md">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
+                                <div>
+                                    <label for="ev_subjetivo" class="block text-sm font-medium text-gray-700 mb-1">Subjetivo</label>
+                                    <textarea id="ev_subjetivo" name="ev_subjetivo" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                <div>
+                                    <label for="ev_objetivo" class="block text-sm font-medium text-gray-700 mb-1">Objetivo (Hallazgos relevantes no incluidos abajo)</label>
+                                    <textarea id="ev_objetivo" name="ev_objetivo" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Examen Físico (Segmentado) -->
+                        <div class="bg-hospital-teal-50 p-4 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-4 text-hospital-teal-700">Examen Físico (Evolución)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
+                                <div>
+                                    <label for="ef_piel" class="block text-sm font-medium text-gray-700 mb-1">Piel</label>
+                                    <textarea id="ef_piel" name="ef_piel" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                <div>
+                                    <label for="ef_respiratorio" class="block text-sm font-medium text-gray-700 mb-1">Respiratorio</label>
+                                    <textarea id="ef_respiratorio" name="ef_respiratorio" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                <div>
+                                    <label for="ef_cardiovascular" class="block text-sm font-medium text-gray-700 mb-1">Cardiovascular</label>
+                                    <textarea id="ef_cardiovascular" name="ef_cardiovascular" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                <div class="md:col-span-1 lg:col-span-1"> <!-- Ajusta span si es necesario -->
+                                    <label for="ef_abdomen" class="block text-sm font-medium text-gray-700 mb-1">Abdomen</label>
+                                    <textarea id="ef_abdomen" name="ef_abdomen" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                <div>
+                                    <label for="ef_extremidades" class="block text-sm font-medium text-gray-700 mb-1">Extremidades</label>
+                                    <textarea id="ef_extremidades" name="ef_extremidades" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                 <div>
+                                    <label for="ef_neurologico" class="block text-sm font-medium text-gray-700 mb-1">Neurológico</label>
+                                    <textarea id="ef_neurologico" name="ef_neurologico" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                                <div class="md:col-span-2 lg:col-span-3"> <!-- Ocupa todo el ancho -->
+                                    <label for="ef_otros" class="block text-sm font-medium text-gray-700 mb-1">Otros</label>
+                                    <textarea id="ef_otros" name="ef_otros" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Comentario Adicional -->
+                         <div class="bg-hospital-teal-50 p-4 rounded-lg shadow-md">
+                             <label for="ev_comentario" class="block text-sm font-medium text-gray-700 mb-1">Comentario</label>
+                             <textarea id="ev_comentario" name="ev_comentario" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-hospital-teal-500 focus:ring focus:ring-hospital-teal-200 focus:ring-opacity-50 text-sm px-3 py-2"></textarea>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="flex justify-end space-x-4 pt-4 pb-2 flex-shrink-0">
+                            <button type="button" id="btn-imprimir-evolucion" class="btn-secondary">
+                                <i class="fas fa-print mr-2"></i>Imprimir
+                            </button>
+                            <button type="submit" id="btn-guardar-evolucion" class="btn-primary">
+                               <i class="fas fa-save mr-2"></i> Guardar Evolución
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+     <!-- Script para cargar datos dinámicos -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pacienteId = urlParams.get('pacienteId');
+
+            const nombrePacienteEl = document.getElementById('paciente-nombre-evolucion');
+            const fechaActualEl = document.getElementById('fecha-actual-evolucion');
+
+            // --- Cargar Nombre Paciente (Simulado) ---
+            if (pacienteId && nombrePacienteEl) {
+                 const pacienteData = { // Datos ejemplo
+                    '123': { nombre: 'María José Rodríguez Jiménez'},
+                    '456': { nombre: 'Juana María Sánchez Sánchez'},
+                    '789': { nombre: 'José Gregorio Hernández'}
+                };
+                const data = pacienteData[pacienteId] || { nombre: `Paciente ID ${pacienteId}`};
+                nombrePacienteEl.textContent = data.nombre;
+            } else if (nombrePacienteEl) {
+                 nombrePacienteEl.textContent = 'Paciente no especificado';
+            }
+
+            // --- Mostrar Fecha Actual ---
+            if (fechaActualEl) {
+                const hoy = new Date();
+                const opcionesFecha = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' };
+                fechaActualEl.textContent = `Fecha Actual: ${hoy.toLocaleDateString('es-ES', opcionesFecha)}`;
+            }
+
+            // --- Lógica Formulario (Ejemplo básico) ---
+            const form = document.getElementById('evolucion-form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault(); // Prevenir envío normal
+                    console.log('Formulario enviado (simulación)');
+                    // Aquí iría la lógica para recolectar datos con new FormData(form)
+                    // y enviarlos a la API con fetch()
+                    alert('Evolución guardada (simulación).');
+                     // Podrías redirigir a visualizar evoluciones o al detalle del paciente
+                     // window.location.href = `visualizar-evoluciones.html?pacienteId=${pacienteId}`;
+                });
+            }
+            // Lógica para el botón imprimir (ejemplo)
+             const btnImprimir = document.getElementById('btn-imprimir-evolucion');
+             if (btnImprimir) {
+                 btnImprimir.addEventListener('click', () => {
+                     alert('Funcionalidad de Imprimir no implementada en este ejemplo.');
+                     // En una app real: podrías generar un PDF o usar window.print()
+                 });
+             }
+
+        });
+    </script>
+
+</body>
+</html>

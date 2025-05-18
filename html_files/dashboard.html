@@ -1,0 +1,478 @@
+<script src='js/index.global.min.js'></script>
+<style>
+  /* Estilos básicos para que el header del calendario no se vea mal con Tailwind */
+  .fc .fc-toolbar.fc-header-toolbar {
+    margin-bottom: 1.5em;
+    display: flex;
+    justify-content: space-between;
+  }
+  /* Ajustes para los botones de FullCalendar con Tailwind */
+  .fc .fc-button {
+    background-color: #14b8a6; /* teal-500 */
+    border-color: #0d9488;    /* teal-600 */
+    color: white;
+    padding: 0.5em 1em;
+    text-transform: capitalize;
+    border-radius: 0.375rem; /* rounded-md */
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .fc .fc-button:hover {
+    background-color: #0d9488; /* teal-600 */
+  }
+  .fc .fc-button-primary:disabled {
+    background-color: #9ca3af;
+    border-color: #9ca3af;
+  }
+  .fc .fc-button-primary:not(:disabled).fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active {
+    background-color: #0f766e; /* teal-700 */
+    border-color: #115e59;    /* teal-800 */
+  }
+  .fc-theme-standard .fc-list-day-cushion, .fc-theme-standard .fc-list-table .fc-list-day-text {
+    background-color: #f0fdfa; /* teal-50 */
+  }
+  .fc-theme-standard td, .fc-theme-standard th {
+    border: 1px solid #e5e7eb; /* gray-200 */
+  }
+</style>
+<!-- Nombre vista: dashboard -->
+<!-- Nombre vista: dashboard -->
+<!-- Nombre vista: dashboard -->
+<div class="p-6 md:p-8 space-y-8 bg-gray-50 min-h-full">
+
+    <!-- Cabecera del Dashboard -->
+    <div class="flex flex-wrap justify-between items-center gap-4 pb-6 border-b border-gray-200">
+        <h2 class="text-3xl font-light text-gray-700">Panel de Control</h2>
+        <div class="flex items-center space-x-4">
+            <div class="bg-white p-4 rounded-xl shadow-lg flex items-center space-x-3 text-teal-700 border border-gray-100">
+                <i class="fas fa-users fa-2x"></i>
+                <div class="text-right">
+                    <span class="font-bold text-3xl" id="db-total-patients">--</span>
+                    <div class="text-xs uppercase tracking-wider text-gray-500">Pacientes Registrados</div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-lg flex items-center space-x-3 text-blue-700 border border-gray-100">
+                <i class="fas fa-calendar-check fa-2x"></i>
+                <div class="text-right">
+                    <span class="font-bold text-3xl" id="db-evoluciones-hoy">--</span>
+                    <div class="text-xs uppercase tracking-wider text-gray-500">Evoluciones de Hoy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal del Dashboard -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Columna Izquierda y Central (AHORA: Notificaciones arriba, luego Calendario) -->
+        <div class="lg:col-span-2 space-y-8">
+
+            <!-- Sección de "Atención Requerida" (AHORA ARRIBA DEL CALENDARIO) -->
+            <div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-4 flex items-center">
+                    <i class="fas fa-bell fa-fw mr-3 text-yellow-500"></i>Atención Requerida
+                </h3>
+                <!-- Contenedor con altura fija y scroll para las notificaciones -->
+                <div class="bg-white p-4 rounded-lg shadow-md space-y-4 border-l-4 border-yellow-400 max-h-72 overflow-y-auto">
+                    <div id="db-evoluciones-pendientes-hoy-list">
+                        <div class="flex items-center text-sm text-yellow-700 mb-1">
+                            <i class="fas fa-file-medical-alt fa-fw mr-2"></i>
+                            <span class="font-medium">Evoluciones de Hoy Pendientes:</span>
+                        </div>
+                        <div id="lista-evoluciones-pendientes" class="pl-6 text-xs space-y-1">
+                             <p class="italic text-gray-500">Cargando...</p>
+                        </div>
+                    </div>
+                    <hr class="border-gray-200 my-3">
+                    <div id="db-interconsultas-pendientes-list-container">
+                        <div class="flex items-center text-sm text-orange-600 mb-1">
+                            <i class="fas fa-user-md fa-fw mr-2"></i>
+                            <span class="font-medium">Interconsultas por Responder:</span>
+                        </div>
+                        <div id="lista-interconsultas-pendientes" class="pl-6 text-xs space-y-1">
+                            <p class="italic text-gray-500">Cargando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendario Interactivo (AHORA DEBAJO DE NOTIFICACIONES) -->
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-xl">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Calendario de Actividades</h3>
+                <div id="dashboard-calendar" class="w-full min-h-[350px] md:min-h-[450px]">
+                    <p class="italic text-gray-400 text-center py-8">Cargando calendario...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha (Lista de Tareas "To-Do") -->
+        <div class="lg:col-span-1">
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-xl h-full flex flex-col">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <i class="fas fa-check-square fa-fw mr-3 text-blue-500"></i>Mis Tareas Pendientes
+                </h3>
+                <div class="space-y-3 mb-4">
+                    <input type="text" id="new-todo-input" placeholder="Añadir nueva tarea..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 text-sm">
+                    <button id="add-todo-btn"
+                            class="w-full px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150">
+                        Añadir Tarea
+                    </button>
+                </div>
+                <div id="todo-list" class="space-y-2 flex-grow overflow-y-auto pr-1 border-t border-gray-200 pt-3">
+                    <p class="italic text-gray-400 text-sm">No hay tareas pendientes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10 pt-8 border-t border-gray-200">
+        <div class="bg-white p-6 rounded-xl shadow-xl">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Pacientes Registrados por Mes</h3>
+            <div id="chart-pacientes-mes" class="w-full h-80 md:h-96"></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-xl">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Distribución de Pacientes por Sexo</h3>
+            <div id="chart-pacientes-sexo" class="w-full h-80 md:h-96"></div>
+        </div>
+    </div>
+
+</div>
+<!-- El script JS no necesita cambios para esta reordenación de HTML -->
+<!-- <script> ... tu script del dashboard ... </script> -->
+
+<script>
+
+    (function() { // Inicio del IIFE
+        const VIEW_ID_INIT = 'initialize_dashboard';
+        console.log(`Dashboard Script: Registrando inicializador: ${VIEW_ID_INIT}`);
+    
+        // --- DATOS DE EJEMPLO (AHORA INCLUYEN TODO) ---
+        const dashboardStaticData = {
+            totalPatients: 142,
+            evolucionesPendientesHoy: [
+                { pacienteNombre: 'Laura Gil', hc: 'HC-031', pacienteId: 12, ultimaEvolucion: 'Ayer' },
+                { pacienteNombre: 'Laura Gil', hc: 'HC-031', pacienteId: 2, ultimaEvolucion: 'Ayer' },
+                { pacienteNombre: 'Laura Gil', hc: 'HC-031', pacienteId: 4, ultimaEvolucion: 'Ayer' },
+                { pacienteNombre: 'Laura Gil', hc: 'HC-031', pacienteId: 15, ultimaEvolucion: 'Ayer' },
+                { pacienteNombre: 'Laura Gil', hc: 'HC-031', pacienteId: 4, ultimaEvolucion: 'Ayer' },
+                { pacienteNombre: 'Pedro Gómez', hc: 'HC-019', pacienteId: 1, ultimaEvolucion: 'Hoy (Temprano)'} // Ejemplo
+            ],
+            interconsultasPorResponder: [
+                { pacienteNombre: 'Ana Méndez', hc: 'HC-009', especialidad: 'Nefrología', pacienteId: 9, fechaSolicitud: '2024-05-11' },
+                { pacienteNombre: 'Carlos Ruiz', hc: 'HC-011', especialidad: 'Cardiología', pacienteId: 11, fechaSolicitud: '2024-05-12' },
+            ],
+            evolucionesHoyCount: 15, // Número de evoluciones completadas hoy
+            pacientesPorMes: {
+                labels: ['Dic \'23', 'Ene \'24', 'Feb \'24', 'Mar \'24', 'Abr \'24', 'May \'24'],
+                data: [20, 28, 22, 33, 29, 38]
+            },
+            pacientesPorSexo: {
+                data: [
+                    { value: 68, name: 'Masculino', itemStyle: { color: '#26A69A' } },
+                    { value: 72, name: 'Femenino', itemStyle: { color: '#80CBC4' } },
+                    { value: 2, name: 'Otro', itemStyle: { color: '#B2DFDB' } }
+                ]
+            },
+            eventosCalendario: [
+                { title: 'Consulta Dr. Pérez - Ana M.', start: new Date().toISOString().split('T')[0] + 'T10:00:00', color: '#009688' },
+                { title: 'Cirugía Programada - Luis G.', start: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().split('T')[0] + 'T08:00:00', end: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString().split('T')[0] + 'T12:00:00', color: '#FF9800'},
+                { title: 'Reunión de equipo', start: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0] + 'T14:00:00', color: '#2196F3' }
+            ],
+            tareasTodo: [
+                { id: 1, text: 'Revisar resultados lab de Paciente X', completed: false },
+                { id: 2, text: 'Preparar informe de alta Paciente Y', completed: true },
+                { id: 3, text: 'Llamar a familiar Paciente Z', completed: false }
+            ]
+        };
+        // --- FIN DATOS DE EJEMPLO ---
+    
+        // Variables para elementos DOM y instancias de gráficos/calendario
+        let chartPacientesMesDom, chartPacientesSexoDom;
+        let calendar;
+        let newTodoInput, addTodoBtn, todoListDiv;
+    
+        function populateDashboardWidgets() {
+            console.log("Dashboard: populateDashboardWidgets llamada.");
+            const totalPatientsEl = document.getElementById('db-total-patients');
+            if (totalPatientsEl) totalPatientsEl.textContent = dashboardStaticData.totalPatients;
+    
+            const evolucionesHoyEl = document.getElementById('db-evoluciones-hoy');
+            if (evolucionesHoyEl) evolucionesHoyEl.textContent = dashboardStaticData.evolucionesHoyCount;
+    
+            const evolPendientesListEl = document.getElementById('lista-evoluciones-pendientes');
+            if (evolPendientesListEl) {
+                if (dashboardStaticData.evolucionesPendientesHoy.length > 0) {
+                    evolPendientesListEl.innerHTML = dashboardStaticData.evolucionesPendientesHoy.map(item =>
+                        `<p><a href="#" onclick="window.currentPatientIdForContext=${item.pacienteId}; if(window.backend) window.backend.set_selected_patient(${item.pacienteId}); window.targetTabAfterLoad='panel-evoluciones'; loadContent('pacientes__paciente_detalle'); return false;" class="text-blue-600 hover:underline font-medium">${item.pacienteNombre}</a> (HC: ${item.hc}) - Últ. evo: ${item.ultimaEvolucion}</p>`
+                    ).join('');
+                } else {
+                    evolPendientesListEl.innerHTML = '<p class="italic text-gray-500 text-xs">Todas las evoluciones de hoy al día.</p>';
+                }
+            }
+    
+            const interconsultasListEl = document.getElementById('lista-interconsultas-pendientes');
+            if (interconsultasListEl) {
+                if (dashboardStaticData.interconsultasPorResponder.length > 0) {
+                    interconsultasListEl.innerHTML = dashboardStaticData.interconsultasPorResponder.map(item =>
+                        `<p><a href="#" onclick="window.currentPatientIdForContext=${item.pacienteId}; if(window.backend) window.backend.set_selected_patient(${item.pacienteId}); window.targetTabAfterLoad='panel-interconsultas'; loadContent('pacientes__paciente_detalle'); return false;" class="text-blue-600 hover:underline font-medium">${item.pacienteNombre}</a> (HC: ${item.hc}) - ${item.especialidad} (sol. ${item.fechaSolicitud})</p>`
+                    ).join('');
+                } else {
+                    interconsultasListEl.innerHTML = '<p class="italic text-gray-500 text-xs">No hay interconsultas pendientes.</p>';
+                }
+            }
+        }
+    
+        function initializeActualECharts() {
+            console.log("Dashboard: initializeActualECharts llamada.");
+            if (chartPacientesMesDom) chartPacientesMesDom.innerHTML = '';
+            if (chartPacientesSexoDom) chartPacientesSexoDom.innerHTML = '';
+    
+            if (chartPacientesMesDom) {
+                try {
+                    const chartPacientesMes = echarts.init(chartPacientesMesDom, null, { renderer: 'svg' });
+                    const optionPacientesMes = {
+                        tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.7)', textStyle: { color: '#fff' }, confine: true },
+                        legend: { data: ['Pacientes Nuevos'], bottom: 0, textStyle: {color: '#666'} },
+                        grid: { left: '3%', right: '4%', top: '12%', bottom: '18%', containLabel: true },
+                        xAxis: [{ type: 'category', boundaryGap: false, data: dashboardStaticData.pacientesPorMes.labels, axisLine: { lineStyle: { color: '#ccc' } }, axisLabel: { color: '#666', fontSize: 10 } }],
+                        yAxis: [{ type: 'value', name: 'N° Pacientes', nameLocation: 'middle', nameGap: 35, nameTextStyle: { color: '#666', fontSize: 11 }, axisLine: { show:true, lineStyle: { color: '#ccc' } }, axisLabel: { color: '#666', fontSize: 10 }, splitLine: { lineStyle: { type: 'dashed', color: '#e5e5e5' } } }],
+                        series: [{
+                            name: 'Pacientes Nuevos', type: 'line', smooth: 0.4, symbol: 'emptyCircle', symbolSize: 6,
+                            lineStyle: { width: 2, color: '#009688' },
+                            itemStyle: { color: '#009688', borderWidth: 2, borderColor: '#009688' },
+                            areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(0, 150, 136, 0.3)' }, { offset: 1, color: 'rgba(0, 150, 136, 0)' }]) },
+                            emphasis: { focus: 'series', lineStyle:{width:3}, itemStyle:{borderWidth:3} },
+                            data: dashboardStaticData.pacientesPorMes.data
+                        }],
+                        dataZoom: [{ type: 'inside', start: 0, end: 100 }, { show: true, type: 'slider', bottom: 35, height: 20, start: 0, end: 100, borderColor: '#ddd', dataBackground:{lineStyle:{color:'#ddd'}, areaStyle:{color:'#f0f0f0'}}, selectedDataBackground:{lineStyle:{color:'#009688'}, areaStyle:{color:'#009688A0'}} }],
+                        toolbox: { feature: { saveAsImage: { title: 'Guardar', backgroundColor: '#fff' } }, orient: 'vertical', top: 'center', right: 0 }
+                    };
+                    chartPacientesMes.setOption(optionPacientesMes);
+                    window.addEventListener('resize', () => { if(chartPacientesMes && !chartPacientesMes.isDisposed()) chartPacientesMes.resize(); });
+                    console.log("Dashboard: Gráfico Pacientes por Mes INICIALIZADO.");
+                } catch(e) { console.error("Dashboard: Error inicializando EChart 'chart-pacientes-mes':", e); if(chartPacientesMesDom) chartPacientesMesDom.innerHTML = '<p class="text-red-500">Error gráfico Mes.</p>'; }
+            } else { console.warn("chart-pacientes-mes no encontrado."); }
+    
+            if (chartPacientesSexoDom) {
+                try {
+                    const chartPacientesSexo = echarts.init(chartPacientesSexoDom, null, { renderer: 'svg' });
+                    const optionPacientesSexo = {
+                        tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+                        legend: { orient: 'horizontal', bottom: 0, data: dashboardStaticData.pacientesPorSexo.data.map(item => item.name), textStyle: {color: '#666'} },
+                        series: [{
+                            name: 'Distribución por Sexo', type: 'pie', radius: ['40%', '65%'], center: ['50%', '45%'], avoidLabelOverlap: true,
+                            itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 1 },
+                            label: { show: true, position: 'outside', formatter: '{b}\n{d}%', color: '#555', fontSize: 10, lineHeight: 14 },
+                            labelLine: { show: true, length: 8, length2: 10, smooth: true },
+                            emphasis: { label: { show: true, fontSize: 12, fontWeight: 'bold' }, itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.3)'}},
+                            data: dashboardStaticData.pacientesPorSexo.data
+                        }],
+                        toolbox: { feature: { saveAsImage: { title: 'Guardar', backgroundColor: '#fff' } }, orient: 'vertical', top: 'center', right: 0 }
+                    };
+                    chartPacientesSexo.setOption(optionPacientesSexo);
+                    window.addEventListener('resize', () => { if(chartPacientesSexo && !chartPacientesSexo.isDisposed()) chartPacientesSexo.resize(); });
+                    console.log("Dashboard: Gráfico Pacientes por Sexo INICIALIZADO.");
+                } catch(e) { console.error("Dashboard: Error inicializando EChart 'chart-pacientes-sexo':", e); if(chartPacientesSexoDom) chartPacientesSexoDom.innerHTML = '<p class="text-red-500">Error gráfico Sexo.</p>'; }
+            } else { console.warn("chart-pacientes-sexo no encontrado."); }
+        }
+    
+        function loadEChartsAndInit() {
+            console.log("Dashboard: loadEChartsAndInit llamada.");
+            chartPacientesMesDom = document.getElementById('chart-pacientes-mes');
+            chartPacientesSexoDom = document.getElementById('chart-pacientes-sexo');
+    
+            const tempLoadingMsg = '<p class="text-gray-400 italic text-center p-4 text-sm">Cargando datos gráficos...</p>';
+            if (chartPacientesMesDom) chartPacientesMesDom.innerHTML = tempLoadingMsg;
+            if (chartPacientesSexoDom) chartPacientesSexoDom.innerHTML = tempLoadingMsg;
+    
+            if (typeof echarts !== 'undefined' && echarts.init) {
+                console.log("Dashboard: ECharts ya definido. Inicializando.");
+                initializeActualECharts();
+                return;
+            }
+    
+            const script = document.createElement('script');
+            script.src = 'js/echarts.min.js';
+            script.onload = function() {
+                console.log("Dashboard: Script ECharts cargado dinámicamente.");
+                if (typeof echarts !== 'undefined' && echarts.init) {
+                    initializeActualECharts();
+                } else {
+                    console.error("ECharts cargado pero 'echarts' u 'echarts.init' sigue indefinido.");
+                    const errorMsg = '<p class="text-red-600 italic text-center p-4 text-sm">Error crítico al cargar librería de gráficos.</p>';
+                    if (chartPacientesMesDom) chartPacientesMesDom.innerHTML = errorMsg;
+                    if (chartPacientesSexoDom) chartPacientesSexoDom.innerHTML = errorMsg;
+                }
+            };
+            script.onerror = function() {
+                console.error("Error al cargar script ECharts. Verifica la ruta: " + script.src);
+                const errorMsg = '<p class="text-red-600 italic text-center p-4 text-sm">No se pudo cargar la librería de gráficos.</p>';
+                if (chartPacientesMesDom) chartPacientesMesDom.innerHTML = errorMsg;
+                if (chartPacientesSexoDom) chartPacientesSexoDom.innerHTML = errorMsg;
+            };
+            document.head.appendChild(script);
+            console.log("Dashboard: Script ECharts añadido al head.");
+        }
+    
+        function initializeActualFullCalendar(calendarEl) {
+            try {
+                calendarEl.innerHTML = '';
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth', locale: 'es',
+                    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+                    buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Día', list: 'Lista' },
+                    events: dashboardStaticData.eventosCalendario,
+                    editable: true, selectable: true,
+                    eventClick: function(info) { alert('Evento: ' + info.event.title + '\nInicia: ' + info.event.start.toLocaleString()); },
+                    select: function(info) {
+                        const title = prompt('Título del nuevo evento:');
+                        if (title) {
+                            calendar.addEvent({ title: title, start: info.startStr, end: info.endStr, allDay: info.allDay });
+                            alert("Evento añadido (solo frontend).");
+                        }
+                        calendar.unselect();
+                    },
+                    dayMaxEvents: true, height: 'auto',
+                });
+                calendar.render();
+                console.log("Dashboard: FullCalendar INICIALIZADO.");
+            } catch(e) {
+                console.error("Dashboard: Error inicializando FullCalendar:", e);
+                calendarEl.innerHTML = '<p class="text-red-500 italic text-center p-4">Error al renderizar el calendario.</p>';
+            }
+        }
+    
+        function loadFullCalendarAndInit() {
+            console.log("Dashboard: loadFullCalendarAndInit llamada.");
+            const calendarEl = document.getElementById('dashboard-calendar');
+            if (!calendarEl) { console.error("Elemento #dashboard-calendar no encontrado."); return; }
+            calendarEl.innerHTML = '<p class="text-blue-500 italic text-center p-4">Cargando calendario...</p>';
+    
+            let attempts = 0;
+            function tryInitCalendar() {
+                if (typeof FullCalendar !== 'undefined' && FullCalendar.Calendar) {
+                    console.log("Dashboard: FullCalendar detectado. Inicializando.");
+                    initializeActualFullCalendar(calendarEl);
+                } else if (attempts < 20) {
+                    attempts++;
+                    console.log("Dashboard: FullCalendar aún no disponible, reintentando...");
+                    setTimeout(tryInitCalendar, 100);
+                } else {
+                    console.error("Dashboard: FullCalendar no se cargó.");
+                    calendarEl.innerHTML = '<p class="text-red-500 italic text-center p-4">Error al cargar el calendario.</p>';
+                }
+            }
+            tryInitCalendar();
+        }
+    
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, "'").replace(/'/g, "'");
+        }
+    
+        function renderTodoList() {
+            if (!todoListDiv) return; // Asegurarse de que todoListDiv esté definido
+            if (dashboardStaticData.tareasTodo.length === 0) {
+                todoListDiv.innerHTML = '<p class="italic text-gray-400 text-sm text-center">No hay tareas pendientes.</p>';
+                return;
+            }
+            todoListDiv.innerHTML = dashboardStaticData.tareasTodo.map(todo => `
+                <div data-id="${todo.id}" class="todo-item flex items-center justify-between p-2.5 rounded-md ${todo.completed ? 'bg-green-100 text-green-800 line-through' : 'bg-gray-100 text-gray-800'} hover:bg-gray-200 transition-colors group">
+                    <label class="flex items-center cursor-pointer flex-grow">
+                        <input type="checkbox" class="toggle-todo form-checkbox h-4 w-4 text-teal-600 rounded border-gray-300 mr-3 focus:ring-teal-500" ${todo.completed ? 'checked' : ''}>
+                        <span class="${todo.completed ? 'text-gray-500' : ''}">${escapeHtml(todo.text)}</span>
+                    </label>
+                    <button class="delete-todo text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2 p-1" title="Eliminar tarea">
+                        <i class="fas fa-trash-alt fa-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+    
+        function addTodoItem() {
+            if (!newTodoInput) return;
+            const text = newTodoInput.value.trim();
+            if (text) {
+                const newTodo = { id: Date.now(), text: text, completed: false };
+                dashboardStaticData.tareasTodo.unshift(newTodo);
+                renderTodoList();
+                newTodoInput.value = '';
+                newTodoInput.focus(); // Mantener el foco en el input
+                console.log("Tarea añadida (frontend):", newTodo);
+                // TODO: window.backend.saveTodoItem(newTodo)
+            }
+        }
+    
+        function toggleTodoCompleted(todoId) {
+            const todo = dashboardStaticData.tareasTodo.find(t => t.id === todoId);
+            if (todo) {
+                todo.completed = !todo.completed;
+                renderTodoList(); // Volver a renderizar toda la lista para reflejar el cambio de estilo
+                console.log(`Tarea ${todoId} completada: ${todo.completed} (frontend)`);
+                // TODO: window.backend.updateTodoItem(todoId, { completed: todo.completed })
+            }
+        }
+    
+        function deleteTodoItem(todoId) {
+            dashboardStaticData.tareasTodo = dashboardStaticData.tareasTodo.filter(t => t.id !== todoId);
+            renderTodoList();
+            console.log(`Tarea ${todoId} eliminada (frontend)`);
+            // TODO: window.backend.deleteTodoItem(todoId)
+        }
+        
+        function initializeTodoList() {
+            console.log("Dashboard: initializeTodoList llamada.");
+            newTodoInput = document.getElementById('new-todo-input');
+            addTodoBtn = document.getElementById('add-todo-btn');
+            todoListDiv = document.getElementById('todo-list');
+    
+            if (!newTodoInput || !addTodoBtn || !todoListDiv) {
+                console.warn("Elementos de la lista To-Do no encontrados. Funcionalidad To-Do no se inicializará.");
+                return;
+            }
+    
+            addTodoBtn.addEventListener('click', addTodoItem);
+            newTodoInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Evitar submit de formulario si estuviera dentro de uno
+                    addTodoItem();
+                }
+            });
+            
+            todoListDiv.addEventListener('click', function(e) {
+                const todoItemDiv = e.target.closest('.todo-item');
+                if (!todoItemDiv) return;
+                const todoId = parseInt(todoItemDiv.dataset.id);
+    
+                if (e.target.classList.contains('toggle-todo') || e.target.tagName === 'LABEL' || e.target.tagName === 'SPAN') {
+                     // Si se hace clic en el checkbox o en el texto/label, alternar completado
+                     // Prevenir que el click en el label dispare dos veces por el checkbox
+                     if(e.target.tagName !== 'INPUT') {
+                        toggleTodoCompleted(todoId);
+                     }
+                } else if (e.target.classList.contains('delete-todo') || e.target.closest('.delete-todo')) {
+                    if (confirm("¿Está seguro de que desea eliminar esta tarea?")) {
+                        deleteTodoItem(todoId);
+                    }
+                }
+            });
+            renderTodoList(); // Renderizar la lista inicial
+        }
+    
+        function initializeDashboard() {
+            console.log("Dashboard: Ejecutando initializeDashboard()...");
+            populateDashboardWidgets();
+            loadEChartsAndInit();
+            loadFullCalendarAndInit();
+            initializeTodoList();
+        }
+    
+        if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+        window.viewInitializationFunctions[VIEW_ID_INIT] = initializeDashboard;
+        console.log(`Inicializador ${VIEW_ID_INIT} registrado por script de dashboard.`);
+    
+    })(); // Fin del IIFE
+    </script>

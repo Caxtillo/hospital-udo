@@ -1,0 +1,219 @@
+<!-- html_files/medicos.html -->
+<div class="p-6 md:p-8 h-full flex flex-col">
+
+    <!-- Título y Botón Añadir -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200 flex-shrink-0 gap-4">
+        <h2 class="text-2xl font-semibold text-teal-700 w-full sm:w-auto">Gestión de Usuarios / Médicos</h2>
+        <button id="add-medico-button" class="w-full sm:w-auto px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+            <i class="fas fa-user-plus mr-2"></i> Añadir Nuevo
+        </button>
+    </div>
+
+    <div id="medico-status-feedback" class="my-2 text-center text-sm h-5"></div> <!-- << ESTE DIV DEBE ESTAR AQUÍ -->
+    
+    <!-- Contenedor Tabla -->
+    <div id="medicos-table-container" class="flex-grow overflow-auto rounded-lg border border-gray-200 shadow-md bg-white relative">
+        <div id="medicos-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500 italic bg-gray-50 z-10">Cargando usuarios...</div>
+        <table class="min-w-full divide-y divide-gray-200 hidden">
+            <thead class="bg-gray-100 sticky top-0 z-5">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-16">ID</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Nombre Completo</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-40">Username</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-32">Rol</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-24">Estado</th>
+                    <th scope="col" class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b w-40">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="medicos-table-body" class="bg-white divide-y divide-gray-200">
+                <!-- Filas se insertarán aquí -->
+            </tbody>
+        </table>
+    </div>
+    
+</div>
+
+<script>
+    (function() {
+        const SCRIPT_VIEW_NAME = 'medicos__medicos';
+        console.log(`Ejecutando script de ${SCRIPT_VIEW_NAME}.html`);
+    
+        const tableContainer = document.getElementById('medicos-table-container');
+        const table = tableContainer ? tableContainer.querySelector('table') : null;
+        const tableBody = document.getElementById('medicos-table-body');
+        const placeholder = document.getElementById('medicos-placeholder');
+        const addMedicoButton = document.getElementById('add-medico-button');
+        const statusFeedbackDiv = document.getElementById('medico-status-feedback');
+    
+        if (!tableContainer || !table || !tableBody || !placeholder || !addMedicoButton || !statusFeedbackDiv) {
+            console.error(`Error crítico en ${SCRIPT_VIEW_NAME}: Faltan elementos UI.`);
+            const errorDisplayElement = placeholder || document.getElementById('medicos-placeholder');
+            if(errorDisplayElement) errorDisplayElement.textContent = "Error al cargar interfaz.";
+            return;
+        }
+    
+        function renderMedicoTable(medicosList) {
+            console.log(`${SCRIPT_VIEW_NAME}: renderMedicoTable llamado con ${medicosList ? medicosList.length : 0} médicos.`);
+            if (!tableBody || !placeholder || !table) {
+                console.warn(`${SCRIPT_VIEW_NAME}: renderMedicoTable abortado, elementos de tabla no encontrados.`);
+                return;
+            }
+            tableBody.innerHTML = ''; // Limpiar contenido anterior
+    
+            if (!medicosList || medicosList.length === 0) {
+                placeholder.textContent = 'No hay usuarios registrados.';
+                placeholder.classList.remove('hidden');
+                table.classList.add('hidden');
+                return;
+            }
+    
+            // Si hay datos, asegurarse que el placeholder está oculto y la tabla visible
+            placeholder.classList.add('hidden');
+            table.classList.remove('hidden');
+    
+            medicosList.forEach(medico => {
+                const row = tableBody.insertRow();
+                row.className = 'text-sm hover:bg-gray-50';
+                const estadoText = medico.activo ? 'Activo' : 'Inactivo';
+                const estadoClass = medico.activo ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100';
+                const nombreCompleto = medico.nombre_completo_dec || medico.nombre_completo || '[No disponible]';
+    
+                // El botón de activar/desactivar SÍ tiene la lógica para cambiar su texto y color
+                // basado en medico.activo. El problema es que la tabla no se refresca.
+                row.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-500">${medico.id}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">${nombreCompleto}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-600">${medico.nombre_usuario || 'N/A'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-600 capitalize">${medico.rol || 'N/A'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${estadoClass}">
+                            ${estadoText}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-center font-medium space-x-2">
+                        <button onclick="window.editMedico(${medico.id})" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-semibold rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition" title="Ver / Editar">
+                            <i class="fas fa-pencil-alt mr-1"></i> Ver/Editar
+                        </button>
+                        <button onclick="window.toggleMedicoStatus(${medico.id}, ${medico.activo})" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md shadow-sm text-white ${medico.activo ? 'bg-red-500 hover:bg-red-600 focus:ring-red-500' : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'} focus:outline-none focus:ring-2 focus:ring-offset-2 transition" title="${medico.activo ? 'Desactivar' : 'Activar'}">
+                            <i class="fas ${medico.activo ? 'fa-toggle-off' : 'fa-toggle-on'} mr-1"></i> ${medico.activo ? 'Desactivar' : 'Activar'}
+                        </button>
+                    </td>
+                `;
+            });
+        }
+    
+        // Handler para la lista de médicos (cuando se carga inicialmente o se refresca)
+        window.handleMedicoListResult_medicos__medicos = function(medicoList, totalItems) {
+            console.log(`${SCRIPT_VIEW_NAME}: handleMedicoListResult: Recibida lista de ${totalItems} médicos.`);
+            if (medicoList === null || !Array.isArray(medicoList)) {
+                 if(placeholder) {placeholder.textContent = 'Error al cargar usuarios.'; placeholder.classList.remove('hidden');}
+                 if(table) table.classList.add('hidden');
+            } else {
+                 renderMedicoTable(medicoList); // Esto vuelve a dibujar la tabla
+            }
+        }
+    
+        // Handler para el resultado del cambio de estado
+        window.handleToggleMedicoStatusResult_medicos__medicos = function(success, message, medicoId, nuevoEstado) {
+            // ESTA FUNCIÓN DEBERÍA SER LLAMADA POR main_shell.html cuando la señal medicoStatusToggleResult llega del backend.
+            console.log(`${SCRIPT_VIEW_NAME}: handleToggleMedicoStatusResult: ID ${medicoId}, Éxito: ${success}, Mensaje: '${message}', Nuevo Estado: ${nuevoEstado}`);
+            
+            if (statusFeedbackDiv) {
+                statusFeedbackDiv.textContent = message;
+                statusFeedbackDiv.className = success ? 'my-2 text-center text-sm h-5 text-green-600 font-medium' : 'my-2 text-center text-sm h-5 text-red-600 font-medium';
+                setTimeout(() => { 
+                    if (statusFeedbackDiv) statusFeedbackDiv.textContent = ''; 
+                }, 3000); // Ocultar mensaje después de 3 segundos
+            } else {
+                console.warn(`${SCRIPT_VIEW_NAME}: statusFeedbackDiv no encontrado al manejar resultado del toggle.`);
+            }
+    
+            if (success) {
+                console.log(`${SCRIPT_VIEW_NAME}: handleToggleMedicoStatusResult: El cambio de estado fue exitoso. Llamando a fetchMedicoList para refrescar la tabla.`);
+                fetchMedicoList(); // <<<--- ESTA ES LA LLAMADA CRUCIAL PARA RECARGAR LA TABLA
+            } else {
+                console.warn(`${SCRIPT_VIEW_NAME}: handleToggleMedicoStatusResult: El cambio de estado falló. La tabla no se refrescará automáticamente.`);
+            }
+        }
+    
+        function fetchMedicoList() {
+            console.log(`${SCRIPT_VIEW_NAME}: fetchMedicoList: Solicitando lista de médicos...`);
+            if(placeholder) { placeholder.textContent = 'Cargando usuarios...'; placeholder.classList.remove('hidden'); }
+            if(table) table.classList.add('hidden');
+            if (statusFeedbackDiv) statusFeedbackDiv.textContent = ''; // Limpiar mensajes previos
+    
+            if (typeof backend !== 'undefined' && backend.request_medico_list) {
+                 try { backend.request_medico_list(); }
+                 catch(e) { console.error("Error llamando request_medico_list:", e); if(placeholder) placeholder.textContent = 'Error de comunicación.'; }
+            } else { console.error("Backend o request_medico_list no disponible."); if(placeholder) placeholder.textContent = 'Error: No se puede conectar.'; }
+        }
+    
+        addMedicoButton.addEventListener('click', () => {
+             console.log(`${SCRIPT_VIEW_NAME}: Clic en añadir nuevo médico.`);
+             if (typeof loadContent === 'function') {
+                 if (backend && typeof backend.set_selected_medico_for_edit === 'function') {
+                      backend.set_selected_medico_for_edit(null);
+                 }
+                 loadContent('medicos__medico_registro'); 
+             } else {
+                  alert("Error: Función de navegación no encontrada.");
+             }
+        });
+    
+        window.editMedico = function(medicoId) {
+            console.log(`${SCRIPT_VIEW_NAME}: EDITAR médico ID: ${medicoId}`);
+            if (typeof medicoId !== 'number' || medicoId <= 0) {
+                console.error("editMedico: ID de médico inválido:", medicoId);
+                return;
+            }
+            if (typeof backend !== 'undefined' && typeof backend.set_selected_medico_for_edit === 'function') {
+                backend.set_selected_medico_for_edit(medicoId);
+                if (typeof loadContent === 'function') {
+                    loadContent('medicos__medico_registro'); 
+                } else { alert("Error: Función de navegación no encontrada."); }
+            } else { alert("Error: Comunicación con backend no disponible."); }
+        }
+    
+        window.toggleMedicoStatus = function(medicoId, currentState) {
+            console.log(`${SCRIPT_VIEW_NAME}: toggleMedicoStatus: Intentando cambiar estado para médico ID: ${medicoId} (actual: ${currentState})`);
+            
+            if (statusFeedbackDiv) {
+                statusFeedbackDiv.textContent = 'Procesando...';
+                statusFeedbackDiv.className = 'my-2 text-center text-sm h-5 text-gray-600'; // Texto gris para "Procesando"
+            } else {
+                console.warn(`${SCRIPT_VIEW_NAME}: statusFeedbackDiv no encontrado para mensaje 'Procesando...'.`);
+            }
+    
+            const nuevoEstadoDeseado = currentState ? 0 : 1;
+            const confirmMessage = `¿Seguro que deseas ${nuevoEstadoDeseado === 1 ? 'ACTIVAR' : 'DESACTIVAR'} a este usuario?`;
+            
+            if (confirm(confirmMessage)) {
+                if (typeof backend !== 'undefined' && typeof backend.toggle_medico_status === 'function') {
+                    try {
+                        console.log(`${SCRIPT_VIEW_NAME}: toggleMedicoStatus: Llamando a backend.toggle_medico_status(${medicoId})`);
+                        backend.toggle_medico_status(medicoId);
+                    } catch (e) {
+                        console.error("Error llamando a backend.toggle_medico_status:", e);
+                        if (statusFeedbackDiv) {
+                            statusFeedbackDiv.textContent = 'Error de comunicación con el servidor.';
+                            statusFeedbackDiv.className = 'my-2 text-center text-sm h-5 text-red-600 font-medium';
+                        }
+                    }
+                } else {
+                    console.error("Backend o backend.toggle_medico_status no disponible.");
+                    if (statusFeedbackDiv) {
+                        statusFeedbackDiv.textContent = 'Error: La función para cambiar estado no está disponible.';
+                        statusFeedbackDiv.className = 'my-2 text-center text-sm h-5 text-red-600 font-medium';
+                    }
+                }
+            } else {
+                console.log(`${SCRIPT_VIEW_NAME}: toggleMedicoStatus: Usuario canceló la acción.`);
+                if (statusFeedbackDiv) statusFeedbackDiv.textContent = ''; 
+            }
+        }
+    
+        // Carga inicial de la lista de médicos cuando la vista se carga.
+        fetchMedicoList();
+    
+    })();
+    </script>
