@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/ # Tu carpeta .venv
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+.hypothesis/
+.pytest_cache/
+
+# Build artifacts
+build/  # Tu carpeta build
+dist/   # Tu carpeta dist
+*.spec  # Los archivos .spec de PyInstaller (a menos que quieras versionarlos)
+
+# Bases de datos SQLite (generalmente no se versionan los datos, solo el esquema si acaso)
+*.sqlite
+*.sqlite3
+# Específicamente tus archivos:
+123.sqlite
+asd.sqlite
+gastro_db_encrypted copy.sqlite
+gastro_db_encrypted.sqlite
+
+# Archivos de entorno y secretos (¡NUNCA SUBAS SECRETOS!)
+secret.key # ¡MUY IMPORTANTE IGNORAR ESTO!
+.env
+
+# Otros
+*.log
+.DS_Store # Si usas macOS
+Thumbs.db # Si usas Windows
