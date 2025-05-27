@@ -7,6 +7,7 @@ import bcrypt
 import traceback # Import traceback for detailed error printing
 from datetime import datetime, timedelta
 from faker import Faker
+import json
 print("--- carga_datos.py: Imports done ---")
 # Importar funciones y constantes desde database.py
 import database # <<< ASEGÚRATE QUE ESTO FUNCIONA (database.py en el mismo dir o PYTHONPATH)
@@ -323,173 +324,217 @@ def crear_consultas_y_detalles(conn, cursor, pacientes, usuarios, admin_user_id)
 
 
 def poblar_detalles_consulta(conn, cursor, consulta_id, paciente_id, fecha_ingreso, fecha_egreso, usuarios, medicos, enfermeria, admin_user_id, hea_enc_consulta, diag_ingreso_enc_consulta):
-    """Puebla detalles. Usa database.encrypt/decrypt/log_action."""
-    #print(f"      Poblando detalles para Consulta ID: {consulta_id}")
+    print(f"      Poblando detalles para Consulta ID: {consulta_id} (Paciente ID: {paciente_id})")
     fecha_fin_periodo = fecha_egreso if fecha_egreso else datetime.now()
 
-    # --- Examen Físico (Uno por consulta) ---
+    # --- Examen Físico ---
+    # ... (tu código de examen físico, parece estar bien) ...
     try:
-        ef_fecha = fecha_ingreso + timedelta(minutes=random.randint(5, 60))
+        ef_fecha = generate_random_datetime(fecha_ingreso, fecha_ingreso + timedelta(hours=2))
         usuario_ef = random.choice(medicos + enfermeria)
-        # Usando database.encrypt_data
-        ta_enc = database.encrypt_data(f"{random.randint(90, 160)}/{random.randint(50, 100)}")
-        temp_enc = database.encrypt_data(f"{random.uniform(36.0, 38.5):.1f}") # Sin °C para poder parsear luego si es necesario
-        piel_enc = database.encrypt_data(random.choice(["Normohidratada, normocoloreada", "Palidez cutáneo-mucosa leve", "Ictericia escleral", "Térmica conservada"]))
-        resp_enc = database.encrypt_data(random.choice(["MV audible en ACP s/a", "Roncus aislados en bases", "Hipoventilación basal derecha"]))
-        cv_enc = database.encrypt_data(random.choice(["RCR, sin soplos ni galope", "Taquicardia sinusal, SS II/VI foco aórtico", "Ruidos cardíacos velados"]))
-        abd_enc = database.encrypt_data(random.choice(["Blando, depresible, no doloroso RHA+", "Dolor a la palpación profunda en epigastrio", "Timpanismo generalizado, RHA aumentados", "Defensa voluntaria en FID"]))
-        neuro_enc = database.encrypt_data(random.choice(["Vigil, consciente, orientado en TEP", "Somnoliento, responde a llamado", "Glasgow 15/15"]))
-        extrem_enc = database.encrypt_data(random.choice(["Simétricas, móviles, pulsos presentes", "Edema leve en MMII", "Llenado capilar < 2seg"]))
-
+        ta_enc = database.encrypt_data(f"{random.randint(90, 180)}/{random.randint(50, 110)}")
+        temp_enc = database.encrypt_data(f"{random.uniform(36.0, 39.0):.1f}")
+        piel_enc = database.encrypt_data(random.choice(["Normohidratada, normocoloreada, tibia", "Palidez cutáneo-mucosa moderada", "Ictericia leve en escleras", "Térmica, diaforética"]))
+        resp_enc = database.encrypt_data(random.choice(["Murmullo vesicular audible en ambos campos pulmonares, sin agregados.", "Roncus dispersos en bases pulmonares.", "Hipoventilación en base pulmonar derecha, matidez a la percusión."]))
+        cv_enc = database.encrypt_data(random.choice(["Ruidos cardíacos rítmicos, normofonéticos, sin soplos.", "Taquicardia sinusal, no se auscultan soplos.", "Ruidos cardíacos apagados, soplo sistólico II/VI en foco mitral."]))
+        abd_enc = database.encrypt_data(random.choice(["Blando, depresible, no doloroso a la palpación superficial ni profunda, RHA presentes.", "Dolor a la palpación en epigastrio y mesogastrio, sin signos de irritación peritoneal.", "Distendido, timpánico, RHA aumentados en frecuencia y tono.", "Defensa voluntaria en fosa ilíaca derecha, Blumberg dudoso."]))
+        neuro_enc = database.encrypt_data(random.choice(["Vigil, consciente, orientado en tiempo, espacio y persona. Glasgow 15/15.", "Somnoliento, despierta al llamado, responde coherentemente. Pares craneales conservados.", "Confuso, desorientado. No signos de focalización."]))
+        extrem_enc = database.encrypt_data(random.choice(["Simétricas, eutróficas, móviles, pulsos periféricos presentes y simétricos.", "Edema ++ en miembros inferiores hasta rodillas, fóvea presente.", "Llenado capilar < 2 segundos en todos los lechos ungueales."]))
+        otros_hallazgos_ef_enc = database.encrypt_data(fake.sentence(nb_words=random.randint(5,15))) if random.random() < 0.3 else None
         cursor.execute("""
-            INSERT INTO ExamenesFisicos (
-                consulta_id, fecha_hora, ef_ta, ef_fr, ef_fc, ef_sato2, ef_temp,
-                ef_piel, ef_respiratorio, ef_cardiovascular, ef_abdomen, ef_neurologico, ef_extremidades
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            consulta_id, ef_fecha, ta_enc, random.randint(14, 24), random.randint(60, 110), random.randint(92, 100), temp_enc,
-            piel_enc, resp_enc, cv_enc, abd_enc, neuro_enc, extrem_enc
-        ))
+            INSERT INTO ExamenesFisicos (consulta_id, fecha_hora, ef_ta, ef_fr, ef_fc, ef_sato2, ef_temp, ef_piel, ef_respiratorio, ef_cardiovascular, ef_abdomen, ef_neurologico, ef_extremidades, ef_otros_hallazgos)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (consulta_id, ef_fecha, ta_enc, random.randint(12, 28), random.randint(50, 120), random.randint(88, 100), temp_enc, piel_enc, resp_enc, cv_enc, abd_enc, neuro_enc, extrem_enc, otros_hallazgos_ef_enc))
         ef_id = cursor.lastrowid
-        # Usando database.log_action
-        database.log_action(conn, admin_user_id, 'CREAR_EXAMEN_FISICO', f"Examen físico para consulta {consulta_id}", 'ExamenesFisicos', ef_id, {'consulta_id': consulta_id, 'usuario_id': usuario_ef['id']})
-    except sqlite3.IntegrityError:
-         pass # Ya existe EF para esta consulta
-    except Exception as e:
-        print(f"ERROR creando Examen Físico para consulta {consulta_id}: {e}")
+        database.log_action(conn, admin_user_id, 'CREAR_EXAMEN_FISICO', f"Examen físico para consulta {consulta_id}", 'ExamenesFisicos', ef_id)
+    except sqlite3.IntegrityError: print(f"WARN: EF para consulta {consulta_id} ya existe.")
+    except Exception as e: print(f"ERROR creando EF para consulta {consulta_id}: {e}"); traceback.print_exc()
+
 
     # --- Evoluciones ---
+    # ... (tu código de evoluciones, parece estar bien) ...
     num_evoluciones = random.randint(NUM_EVOLUCIONES_MIN, NUM_EVOLUCIONES_MAX)
-    evoluciones_creadas = []
+    evoluciones_creadas_ids = []
     last_ev_fecha = fecha_ingreso
-
-    for j in range(num_evoluciones):
-         ev_fecha = generate_random_datetime(last_ev_fecha, fecha_fin_periodo)
-         last_ev_fecha = ev_fecha # Actualizar para la siguiente evolución
-         usuario_ev = random.choice(medicos + enfermeria)
-         dias_hosp = max(0,(ev_fecha.date() - fecha_ingreso.date()).days)
-
-         # Usando database.encrypt_data
-         subj_enc = database.encrypt_data(f"Refiere {random.choice(['mejoría', 'persistencia de síntomas', 'buena tolerancia a dieta', 'dolor leve'])}")
-         obj_enc = database.encrypt_data(f"Al examen: {random.choice(['estable hemodinámicamente', 'afebril, hidratado', 'abdomen sin cambios', 'mejoría clínica evidente'])}")
-         ta_ev_enc = database.encrypt_data(f"{random.randint(95, 140)}/{random.randint(55, 90)}")
-         temp_ev_enc = database.encrypt_data(f"{random.uniform(36.2, 37.8):.1f}")
-         diag_ev_enc = database.encrypt_data(generate_medical_text(random.randint(1,3)))
-         plan_ev_enc = database.encrypt_data(f"Plan: {random.choice(['Continuar tratamiento indicado', 'Ajustar analgesia', 'Solicitar nuevos paraclínicos', 'Valorar egreso mañana', 'Interconsulta con Cardiología'])}")
-         com_ev_enc = database.encrypt_data(fake.sentence(nb_words=10)) if random.random() > 0.7 else None
-
-         try:
-             cursor.execute("""
-                 INSERT INTO Evoluciones (
-                     consulta_id, usuario_id, fecha_hora, dias_hospitalizacion, ev_subjetivo, ev_objetivo,
-                     ev_ta, ev_fc, ev_fr, ev_sato2, ev_temp, ev_diagnosticos, ev_tratamiento_plan, ev_comentario,
-                     fecha_ultima_mod, usuario_ultima_mod_id
-                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             """, (
-                 consulta_id, usuario_ev['id'], ev_fecha, dias_hosp, subj_enc, obj_enc,
-                 ta_ev_enc, random.randint(65, 100), random.randint(16, 22), random.randint(94, 99), temp_ev_enc,
-                 diag_ev_enc, plan_ev_enc, com_ev_enc, ev_fecha, usuario_ev['id']
-             ))
-             ev_id = cursor.lastrowid
-             evoluciones_creadas.append({'id': ev_id, 'fecha': ev_fecha})
-             # Usando database.log_action
-             database.log_action(conn, admin_user_id, 'CREAR_EVOLUCION', f"Evolución para consulta {consulta_id}", 'Evoluciones', ev_id, {'consulta_id': consulta_id, 'usuario_id': usuario_ev['id']})
-         except Exception as e:
-             print(f"ERROR creando Evolución para consulta {consulta_id}: {e}")
-             
-    # --- Órdenes Médicas ---
-    num_ordenes = random.randint(0, 5)
-    for _ in range(num_ordenes):
-        orden_fecha = generate_random_datetime(fecha_ingreso, fecha_fin_periodo)
-        usuario_orden = random.choice(medicos)
-        evolucion_id = random.choice([e['id'] for e in evoluciones_creadas]) if evoluciones_creadas and random.random() > 0.3 else None
-        tipo_orden = random.choice(['General', 'Laboratorio', 'Imagen', 'Dieta', 'Medicación', 'Procedimiento', 'Interconsulta'])
-        orden_texto = f"Solicito {random.choice(['Hemograma', 'Perfil 20', 'Rx Tórax', 'Eco Abdominal', 'Dieta líquida', 'Omeprazol', 'Endoscopia digestiva', 'Valoración por Cardiología'])}"
-        # ... (más detalles para orden_texto como antes) ...
-        orden_texto_enc = database.encrypt_data(orden_texto) # Usando database.encrypt_data
-        estado_orden = random.choice(['Pendiente', 'Realizada', 'Cancelada']) if fecha_egreso else random.choice(['Pendiente', 'Parcial'])
-        
+    for _ in range(num_evoluciones):
+        ev_fecha = generate_random_datetime(last_ev_fecha + timedelta(hours=1), fecha_fin_periodo - timedelta(hours=1) if fecha_fin_periodo > last_ev_fecha + timedelta(hours=2) else last_ev_fecha + timedelta(hours=2) )
+        if ev_fecha > fecha_fin_periodo : ev_fecha = fecha_fin_periodo
+        last_ev_fecha = ev_fecha
+        usuario_ev = random.choice(medicos + enfermeria)
+        dias_hosp = max(0,(ev_fecha.date() - fecha_ingreso.date()).days)
+        subj_enc = database.encrypt_data(f"Paciente refiere {random.choice(['mejoría progresiva', 'persistencia de dolor leve', 'buena tolerancia oral', 'expectoración escasa', 'mareos ocasionales'])}.")
+        obj_enc = database.encrypt_data(f"Al examen físico: {random.choice(['estable, afebril, hidratado', 'ligera palidez, eupneico', 'abdomen blando, sin dolor significativo', 'herida quirúrgica en buen estado', 'consciente, orientado'])}.")
+        ta_ev_enc = database.encrypt_data(f"{random.randint(90,170)}/{random.randint(50,100)}")
+        temp_ev_enc = database.encrypt_data(f"{random.uniform(36.1,38.0):.1f}")
+        diag_ev_enc = database.encrypt_data(f"Impresión Diagnóstica: {generate_medical_text(random.randint(1,2))}")
+        plan_ev_enc = database.encrypt_data(f"Plan: {random.choice(['Mantener conducta expectante.', 'Ajustar dosis de analgesia.', 'Solicitar control de laboratorio mañana.', 'Valorar alta médica en próximas 24h.', 'Discutir caso con especialista.'])}")
+        com_ev_enc = database.encrypt_data(fake.sentence(nb_words=random.randint(8,20))) if random.random() < 0.4 else None
         try:
             cursor.execute("""
-                INSERT INTO OrdenesMedicas (consulta_id, evolucion_id, usuario_id, fecha_hora, orden_texto, tipo_orden, estado)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (consulta_id, evolucion_id, usuario_orden['id'], orden_fecha, orden_texto_enc, tipo_orden, estado_orden))
-            orden_id = cursor.lastrowid
-            # Usando database.log_action
-            database.log_action(conn, admin_user_id, 'CREAR_ORDEN_MEDICA', f"Orden médica para consulta {consulta_id}", 'OrdenesMedicas', orden_id, {'consulta_id': consulta_id, 'usuario_id': usuario_orden['id'], 'tipo': tipo_orden})
-        except Exception as e:
-            print(f"ERROR creando Orden Médica para consulta {consulta_id}: {e}")
+                INSERT INTO Evoluciones (consulta_id, usuario_id, fecha_hora, dias_hospitalizacion, ev_subjetivo, ev_objetivo, ev_ta, ev_fc, ev_fr, ev_sato2, ev_temp, ev_diagnosticos, ev_tratamiento_plan, ev_comentario, fecha_ultima_mod, usuario_ultima_mod_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (consulta_id, usuario_ev['id'], ev_fecha, dias_hosp, subj_enc, obj_enc, ta_ev_enc, random.randint(55,110), random.randint(14,26), random.randint(90,100), temp_ev_enc, diag_ev_enc, plan_ev_enc, com_ev_enc, ev_fecha, usuario_ev['id']))
+            ev_id = cursor.lastrowid
+            evoluciones_creadas_ids.append(ev_id)
+            database.log_action(conn, admin_user_id, 'CREAR_EVOLUCION', f"Evolución para consulta {consulta_id}", 'Evoluciones', ev_id)
+        except Exception as e: print(f"ERROR creando Evolución para consulta {consulta_id}: {e}"); traceback.print_exc()
+
+
+    # --- Órdenes Médicas (usando JSON Blob) ---
+    # ... (tu código de órdenes médicas, parece estar bien) ...
+    num_ordenes = random.randint(1, 3)
+    ordenes_creadas_ids = []
+    for _ in range(num_ordenes):
+        orden_fecha = generate_random_datetime(fecha_ingreso + timedelta(minutes=30), fecha_fin_periodo)
+        usuario_orden = random.choice(medicos)
+        evolucion_id_orden = random.choice(evoluciones_creadas_ids) if evoluciones_creadas_ids and random.random() > 0.5 else None
+        orden_json_data = {"fecha_creacion_orden": orden_fecha.isoformat()}
+        if random.random() < 0.8: orden_json_data["hospitalizacion"] = { "indicada": True, "lugar": random.choice(["Piso 2 - Hab 201", "UCI - Cama 5", "Emergencia - Observación"])}
+        if random.random() < 0.9: tipo_dieta_actual = random.choice(["Absoluta", "Líquida", "Blanda"]); orden_json_data["dieta"] = {"tipo_inicial": tipo_dieta_actual}; # ... (más detalles dieta)
+        if random.random() < 0.7: orden_json_data["hp"] = {"indicada": True, "soluciones": [], "observaciones_generales": "Vigilar sobrecarga." if random.random() < 0.3 else None}; # ... (añadir soluciones)
+        if random.random() < 0.95: orden_json_data["medicamentos"] = {"indicada": True, "items": []}; # ... (añadir medicamentos)
+        orden_json_blob_enc = database.encrypt_data(json.dumps(orden_json_data))
+        estado_om = random.choice(['Pendiente', 'Realizada']) if fecha_egreso else 'Pendiente'
+        try:
+            cursor.execute("""INSERT INTO OrdenesMedicas (consulta_id, evolucion_id, usuario_id, fecha_hora, orden_json_blob, estado) VALUES (?, ?, ?, ?, ?, ?)""",
+                           (consulta_id, evolucion_id_orden, usuario_orden['id'], orden_fecha, orden_json_blob_enc, estado_om))
+            orden_id = cursor.lastrowid; ordenes_creadas_ids.append(orden_id)
+            database.log_action(conn, admin_user_id, 'CREAR_ORDEN_MEDICA', f"Orden JSON para consulta {consulta_id}", 'OrdenesMedicas', orden_id)
+        except Exception as e: print(f"ERROR creando Orden Médica JSON para consulta {consulta_id}: {e}"); traceback.print_exc()
+
 
     # --- Complementarios ---
-    num_complementarios = random.randint(0, 3)
-    for _ in range(num_complementarios):
-        # ... (lógica como antes) ...
-        nombre_estudio_enc = database.encrypt_data(nombre_estudio) # Usando database.encrypt_data
-        resultado_enc = database.encrypt_data(f"Resultado: {generate_medical_text(4)}") # Usando database.encrypt_data
-        try:
-            cursor.execute("""
-                INSERT INTO Complementarios (paciente_id, consulta_id, usuario_registrador_id, fecha_registro,
-                                             tipo_complementario, nombre_estudio, fecha_realizacion, resultado_informe)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (paciente_id, consulta_id, usuario_reg_comp['id'], fecha_reg_comp,
-                  tipo_comp, nombre_estudio_enc, fecha_realiz_comp, resultado_enc))
-            comp_id = cursor.lastrowid
-            # Usando database.log_action
-            database.log_action(conn, admin_user_id, 'CREAR_COMPLEMENTARIO', f"Complementario ({tipo_comp}) para consulta {consulta_id}", 'Complementarios', comp_id, {'consulta_id': consulta_id, 'paciente_id': paciente_id, 'usuario_id': usuario_reg_comp['id']})
-        except Exception as e:
-            print(f"ERROR creando Complementario para consulta {consulta_id}: {e}")
+    print(f"      Generando complementarios para Consulta ID: {consulta_id}")
+    tipos_complementarios_a_crear = {
+        'Laboratorio': random.randint(2, 4), # Generar más laboratorios
+        'Imagen': random.randint(1, 3),      # Al menos una imagen
+        'Patologia': random.randint(0, 2),
+        'Endoscopia': random.randint(0, 1)
+    }
 
-    # --- Recipes ---
-    if fecha_egreso or (datetime.now() - fecha_ingreso).days < 5 :
-        num_recipes = random.randint(0, 2)
-        for _ in range(num_recipes):
-             # ... (lógica como antes) ...
-             recipe_texto_enc = database.encrypt_data(recipe_texto) # Usando database.encrypt_data
-             try:
-                 cursor.execute("""
-                     INSERT INTO Recipes (paciente_id, consulta_id, evolucion_id, usuario_id, fecha_emision, tipo, recipe_texto)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                 """, (paciente_id, consulta_id, evolucion_id_recipe, usuario_recipe['id'], fecha_emision_recipe, tipo_recipe, recipe_texto_enc))
-                 recipe_id = cursor.lastrowid
-                 # Usando database.log_action
-                 database.log_action(conn, admin_user_id, 'CREAR_RECIPE', f"Recipe ({tipo_recipe}) para consulta {consulta_id}", 'Recipes', recipe_id, {'consulta_id': consulta_id, 'paciente_id': paciente_id, 'usuario_id': usuario_recipe['id']})
-             except Exception as e:
-                 print(f"ERROR creando Recipe para consulta {consulta_id}: {e}")
+    for tipo_comp, cantidad in tipos_complementarios_a_crear.items():
+        for i in range(cantidad): # Asegurar que el bucle se ejecute 'cantidad' veces
+            print(f"        Creando complementario tipo '{tipo_comp}', item {i+1}/{cantidad}")
+            fecha_reg_comp = generate_random_datetime(fecha_ingreso + timedelta(hours=random.randint(1, 24*3)), fecha_fin_periodo) # Que el registro sea después del ingreso
+            fecha_realiz_comp = generate_random_datetime(fecha_ingreso, fecha_reg_comp - timedelta(minutes=30) if fecha_reg_comp > fecha_ingreso + timedelta(minutes=31) else fecha_reg_comp)
+            usuario_reg_comp = random.choice(medicos + enfermeria) # Usuario que registra
+            
+            nombre_estudio_plano = f"Estudio Genérico de {tipo_comp}" # Default
+            if tipo_comp == 'Laboratorio':
+                nombre_estudio_plano = random.choice([
+                    'Hematología Completa con Plaquetas', 'Perfil Bioquímico (Glic, Urea, Creat, Ac. Úrico)', 
+                    'Electrolitos Séricos (Na, K, Cl, Ca, Mg)', 'Perfil Hepático Completo (BT, BD, BI, TGO, TGP, FAL, GGT, Prot. Tot, Alb)', 
+                    'Uroanálisis con Sedimento', 'Perfil Lipídico (Col, Trig, HDL, LDL)', 
+                    'Tiempos de Coagulación (TP, TPT, INR)', 'Gasometría Arterial', 'VSG y PCR'
+                ])
+            elif tipo_comp == 'Imagen':
+                nombre_estudio_plano = random.choice([
+                    'Rayos X de Tórax (PA y Lateral)', 'Ecosonograma Abdominal Completo', 
+                    'TAC de Cráneo Simple', 'TAC de Abdomen con Contraste IV', 'RM de Columna Lumbar', 
+                    'Eco Doppler de Miembros Inferiores (Arterial y Venoso)'
+                ])
+            elif tipo_comp == 'Patologia':
+                nombre_estudio_plano = random.choice([
+                    'Biopsia Gástrica (Antro y Cuerpo) para H. pylori', 'Citología de Líquido Ascítico', 
+                    'Estudio Histopatológico de Pólipo Colónico', 'PAAF de Nódulo Tiroideo'
+                ])
+            elif tipo_comp == 'Endoscopia':
+                nombre_estudio_plano = random.choice([
+                    'Gastroscopia (VEDA) Diagnóstica', 'Colonoscopia Total con Sedación', 
+                    'Rectosigmoidoscopia Flexible', 'CPRE Terapéutica'
+                ])
+            
+            posibles_estados = ['Solicitado', 'Muestra Tomada', 'En Proceso', 'Realizado Completo', 'Informado', 'Cancelado']
+            estado_comp = random.choice(posibles_estados)
 
-    # --- Informe Médico ---
-    if fecha_egreso:
-        crear_informe = random.random() > 0.4
-        if crear_informe:
-            # ... (lógica como antes, pero usando database.decrypt_data y database.encrypt_data) ...
-            # Asegúrate de que hea_enc_consulta y diag_ingreso_enc_consulta se pasaron a la función
-            resumen_hea = database.decrypt_data(hea_enc_consulta)[:100] if hea_enc_consulta else "Motivo referido."
-            resumen_diag = database.decrypt_data(diag_ingreso_enc_consulta) if diag_ingreso_enc_consulta else "Diagnóstico al ingreso."
-            resumen_evol = "Paciente evolucionó satisfactoriamente."
-            if evoluciones_creadas:
-                 try:
-                     # Obtener el diagnóstico encriptado de la última evolución
-                     cursor.execute("SELECT ev_diagnosticos FROM Evoluciones WHERE id = ?", (evoluciones_creadas[-1]['id'],))
-                     last_ev_diag_enc_tuple = cursor.fetchone()
-                     if last_ev_diag_enc_tuple and last_ev_diag_enc_tuple[0]:
-                        last_ev_diag_dec = database.decrypt_data(last_ev_diag_enc_tuple[0]) # Usando database.decrypt_data
-                        resumen_evol += " Diagnóstico final: " + last_ev_diag_dec[:150] + "..."
-                 except Exception as e_dec: 
-                     print(f"WARN: Error al obtener/desencriptar último Dx de evolución: {e_dec}")
+            resultado_texto_plano = None
+            if estado_comp in ['Realizado Completo', 'Informado']:
+                resultado_texto_plano = f"Informe para {nombre_estudio_plano}:\n{generate_medical_text(random.randint(4,10))}\n\nConclusión: {fake.bs()}."
+            
+            archivo_path_texto_plano = None
+            if estado_comp == 'Informado' and random.random() < 0.7: 
+                 archivo_path_texto_plano = f"/uploads/complementarios_test/{paciente_id}/informe_{tipo_comp.lower().replace(' ', '_')}_{fake.uuid4()[:6]}.pdf"
 
-            contenido = f"INFORME DE ALTA\n\nPaciente: [Nombre Paciente]\nHC: {paciente.get('numero_historia', 'N/A')}\n\nResumen Ingreso: {resumen_hea}...\nDiagnóstico Ingreso: {resumen_diag}\n\nEvolución: {resumen_evol}\n\nIndicaciones al Alta:\n- Tratamiento según récipe.\n- Reposo relativo.\n- Control por consulta externa en 1 semana.\n\nFecha Alta: {fecha_egreso.strftime('%Y-%m-%d %H:%M')}"
-            contenido_enc = database.encrypt_data(contenido) # Usando database.encrypt_data
+            nombre_estudio_enc = database.encrypt_data(nombre_estudio_plano)
+            resultado_enc = database.encrypt_data(resultado_texto_plano) if resultado_texto_plano else None
+            archivo_adjunto_path_enc = database.encrypt_data(archivo_path_texto_plano) if archivo_path_texto_plano else None
+            
+            orden_medica_id_para_comp = None
+            if ordenes_creadas_ids and random.random() < 0.65: # 65% de probabilidad de enlazar
+                orden_medica_id_para_comp = random.choice(ordenes_creadas_ids)
+                print(f"          -> Enlazando a Orden ID: {orden_medica_id_para_comp}")
+
 
             try:
                 cursor.execute("""
-                    INSERT INTO InformesMedicos (paciente_id, consulta_id, usuario_id, fecha_creacion, tipo_informe, contenido_texto)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (paciente_id, consulta_id, usuario_inf['id'], fecha_inf, tipo_inf, contenido_enc))
-                informe_id = cursor.lastrowid
-                # Usando database.log_action
-                database.log_action(conn, admin_user_id, 'CREAR_INFORME', f"Informe ({tipo_inf}) para consulta {consulta_id}", 'InformesMedicos', informe_id, {'consulta_id': consulta_id, 'paciente_id': paciente_id, 'usuario_id': usuario_inf['id']})
+                    INSERT INTO Complementarios (
+                        paciente_id, consulta_id, orden_medica_id, usuario_registrador_id, 
+                        fecha_registro, tipo_complementario, nombre_estudio, fecha_realizacion, 
+                        resultado_informe, archivo_adjunto_path, estado,
+                        fecha_ultima_mod, usuario_ultima_mod_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                """, (
+                    paciente_id, consulta_id, orden_medica_id_para_comp, usuario_reg_comp['id'], 
+                    fecha_reg_comp, tipo_comp, nombre_estudio_enc, fecha_realiz_comp, 
+                    resultado_enc, archivo_adjunto_path_enc, estado_comp,
+                    usuario_reg_comp['id'] # Quién lo creó es el primer "último modificador"
+                ))
+                comp_id = cursor.lastrowid
+                print(f"        OK: Complementario ID {comp_id} ({tipo_comp} - {estado_comp}) creado.")
+                database.log_action(conn, admin_user_id, 'CREAR_COMPLEMENTARIO', f"Complementario ID {comp_id} ({tipo_comp}) para consulta {consulta_id}", 'Complementarios', comp_id)
             except Exception as e:
-                print(f"ERROR creando Informe Médico para consulta {consulta_id}: {e}")
+                print(f"ERROR creando Complementario ({tipo_comp}) para consulta {consulta_id}: {e}")
+                traceback.print_exc()
 
+    # --- Recipes ---
+    # ... (tu código de recipes) ...
+    if fecha_egreso or (datetime.now() - fecha_ingreso).days < random.randint(3,10) :
+        num_recipes = random.randint(0, 2)
+        for _ in range(num_recipes):
+            fecha_emision_recipe = generate_random_datetime(last_ev_fecha if evoluciones_creadas_ids else fecha_ingreso, fecha_fin_periodo)
+            usuario_recipe = random.choice(medicos)
+            evolucion_id_recipe = random.choice(evoluciones_creadas_ids) if evoluciones_creadas_ids and random.random() > 0.4 else None
+            tipo_recipe = random.choice(['Alta', 'Tratamiento Ambulatorio', 'Continuación'])
+            recipe_texto_items = [ f"{random.choice(['Amoxicilina', 'Ciprofloxacina', 'Losartan', 'Omeprazol', 'Metformina'])} {random.choice(['500mg', '250mg', '50mg', '20mg', '850mg'])} {random.choice(['VO', 'SL'])} {random.choice(['c/8h', 'c/12h', 'OD', 'BID'])} x {random.randint(5,14)} días.", f"{random.choice(['Paracetamol', 'Ibuprofeno', 'Ketoprofeno'])} {random.choice(['500mg', '1g', '400mg', '100mg'])} {random.choice(['VO', 'IM'])} {random.choice(['c/6h', 'SOS dolor', 'TID'])}.", "Reposo relativo." if random.random() < 0.5 else None, "Control por consulta externa en 1 semana." if tipo_recipe == 'Alta' else None ]
+            recipe_texto = "\n".join(filter(None, recipe_texto_items))
+            recipe_texto_enc = database.encrypt_data(recipe_texto)
+            try:
+                cursor.execute("""INSERT INTO Recipes (paciente_id, consulta_id, evolucion_id, usuario_id, fecha_emision, tipo, recipe_texto) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                               (paciente_id, consulta_id, evolucion_id_recipe, usuario_recipe['id'], fecha_emision_recipe, tipo_recipe, recipe_texto_enc))
+                recipe_id = cursor.lastrowid
+                database.log_action(conn, admin_user_id, 'CREAR_RECIPE', f"Recipe ({tipo_recipe}) para consulta {consulta_id}", 'Recipes', recipe_id)
+            except Exception as e: print(f"ERROR creando Recipe para consulta {consulta_id}: {e}"); traceback.print_exc()
+
+    # --- Informe Médico ---
+    # ... (tu código de informes médicos) ...
+    if fecha_egreso and random.random() < 0.6:
+        fecha_inf = fecha_egreso + timedelta(hours=random.randint(1,5))
+        usuario_inf = random.choice(medicos)
+        tipo_inf = random.choice(['Alta Médica', 'Resumen de Historia', 'Informe para Seguro'])
+        resumen_hea = database.decrypt_data(hea_enc_consulta)[:150] if hea_enc_consulta else "Motivo de consulta referido."
+        resumen_diag_ing = database.decrypt_data(diag_ingreso_enc_consulta) if diag_ingreso_enc_consulta else "Diagnóstico al ingreso."
+        resumen_evol_txt = "Paciente evolucionó satisfactoriamente."
+        if evoluciones_creadas_ids:
+            try:
+                cursor.execute("SELECT ev_diagnosticos, ev_tratamiento_plan FROM Evoluciones WHERE id = ?",(random.choice(evoluciones_creadas_ids),))
+                last_ev_data = cursor.fetchone();_ = database.decrypt_data(last_ev_data[0]) if last_ev_data and last_ev_data[0] else "No especificado";__ = database.decrypt_data(last_ev_data[1]) if last_ev_data and last_ev_data[1] else "Continuar indicaciones.";resumen_evol_txt = f"Durante su hospitalización, paciente cursó con {_}. Plan de tratamiento incluyó {__[:100]}..."
+            except Exception as e_inf_ev: print(f"WARN: Error obteniendo datos de evolución para informe: {e_inf_ev}")
+        paciente_nombre_completo_para_informe = "[Nombre Paciente]" # Idealmente, obtenerlo de la BD o pasarlo
+        cursor.execute("SELECT nombres, apellidos FROM Pacientes WHERE id = ?", (paciente_id,))
+        pac_nombres_row = cursor.fetchone()
+        if pac_nombres_row:
+            n_dec_inf = database.decrypt_data(pac_nombres_row[0])
+            a_dec_inf = database.decrypt_data(pac_nombres_row[1])
+            paciente_nombre_completo_para_informe = f"{n_dec_inf} {a_dec_inf}".strip()
+
+        contenido_informe = f"INFORME MÉDICO - {tipo_inf.upper()}\n\nPaciente: {paciente_nombre_completo_para_informe}\nHC: {paciente.get('numero_historia', 'N/A')}\nFecha Ingreso: {fecha_ingreso.strftime('%d/%m/%Y %H:%M')}\nFecha Egreso: {fecha_egreso.strftime('%d/%m/%Y %H:%M')}\n\nRESUMEN DE INGRESO:\n{resumen_hea}...\n\nDIAGNÓSTICO DE INGRESO:\n{resumen_diag_ing}\n\nEVOLUCIÓN Y TRATAMIENTO:\n{resumen_evol_txt}\n\nCONDICIONES DE EGRESO:\nPaciente egresa en buenas condiciones generales.\n\nINDICACIONES AL ALTA:\n- Cumplir tratamiento según récipe.\n- Control por consulta externa en 1 semana.\n\nMédico Tratante: Dr(a). {database.decrypt_data(usuario_inf['nombre_completo']) if usuario_inf.get('nombre_completo') else usuario_inf['nombre_usuario']}\nMPPS: {usuario_inf.get('mpps', 'N/A')}"
+        contenido_enc = database.encrypt_data(contenido_informe)
+        try:
+            cursor.execute("""INSERT INTO InformesMedicos (paciente_id, consulta_id, usuario_id, fecha_creacion, tipo_informe, contenido_texto) VALUES (?, ?, ?, ?, ?, ?)""",
+                           (paciente_id, consulta_id, usuario_inf['id'], fecha_inf, tipo_inf, contenido_enc))
+            informe_id = cursor.lastrowid
+            database.log_action(conn, admin_user_id, 'CREAR_INFORME', f"Informe ({tipo_inf}) para consulta {consulta_id}", 'InformesMedicos', informe_id)
+        except Exception as e: print(f"ERROR creando Informe Médico para consulta {consulta_id}: {e}"); traceback.print_exc()          
 # --- Función Principal ---
 def main():
     print("Inicializando base de datos (creando tablas si no existen)...")

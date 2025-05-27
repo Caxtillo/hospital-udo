@@ -1,11 +1,20 @@
 # main.py
 import sys
-import os # Necesitas 'os' para 'os.environ'
+import os
 import traceback
 import sqlite3
 import json
 import base64
 import uuid
+import platform
+import subprocess
+from datetime import datetime
+import socket # Para obtener IP local
+import threading # Para el servidor HTTP en segundo plano
+import http.server
+import socketserver
+from urllib.parse import urlparse, parse_qs
+import shutil
 
 
 # --- IMPORTANTE: Configuración de Renderizado QtWebEngine ---
@@ -50,6 +59,277 @@ from medico_acciones import MedicoActions # <-- Importar
 os.environ["QTWEBENGINE_REMOTE_DEBUGGING"] = "9223"
 print("MainWindow: Depuración remota habilitada en http://localhost:9223 (si es soportado y no hay conflictos)")
 
+mobile_upload_sessions = {} 
+UPLOAD_DIR_MOBILE_TEMP = "uploads_mobile_temp"
+
+class MobileUploadHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        # ... (do_GET como lo tenías, no necesita cgi) ...
+        parsed_path = urlparse(self.path)
+        query_params = parse_qs(parsed_path.query)
+        token = query_params.get('token', [None])[0]
+
+        if not token or token not in mobile_upload_sessions:
+            self.send_response(403)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"<h1>Acceso Denegado: Token Invalido o Expirado</h1>")
+            return
+        
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Subir Archivo</title>
+            <style>
+                body {{ font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; margin: 0; background-color: #f4f4f4; }}
+                .container {{ background-color: white; padding: 25px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }}
+                h1 {{ color: #333; margin-bottom: 20px; font-size: 1.5em; }}
+                input[type="file"] {{ display: block; margin: 20px auto; padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: calc(100% - 22px); }}
+                button {{ background-color: #0d9488; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; transition: background-color 0.3s; }}
+                button:hover {{ background-color: #0a7066; }}
+                .message {{ margin-top: 20px; font-size: 0.9em; }}
+                .success {{ color: green; }}
+                .error {{ color: red; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Subir Estudio Complementario</h1>
+                <form id="uploadForm" method="post" action="/upload_file?token={token}" enctype="multipart/form-data">
+                    <input type="file" name="file_to_upload" id="file_to_upload" required>
+                    <button type="submit">Subir Archivo</button>
+                </form>
+                <div id="messageArea" class="message"></div>
+            </div>
+            <script>
+                document.getElementById('uploadForm').addEventListener('submit', function(e) {{
+                    e.preventDefault();
+                    const formData = new FormData(this); // formData ahora incluye el archivo
+                    const messageArea = document.getElementById('messageArea');
+                    const fileInput = document.getElementById('file_to_upload');
+                    
+                    if (!fileInput.files || fileInput.files.length === 0) {{
+                        messageArea.textContent = 'Por favor, seleccione un archivo.';
+                        messageArea.className = 'message error';
+                        return;
+                    }}
+                    
+                    messageArea.textContent = 'Subiendo archivo...';
+                    messageArea.className = 'message';
+
+                    // No es necesario enviar el nombre del archivo por separado si el servidor puede parsear Content-Disposition
+                    // Si el parseo del servidor es limitado, se podría añadir aquí:
+                    // formData.append('original_filename', fileInput.files[0].name);
+
+                    fetch(this.action, {{
+                        method: 'POST',
+                        body: formData // formData ya contiene el archivo y su nombre (en Content-Disposition)
+                    }})
+                    .then(response => response.json())
+                    .then(data => {{
+                        if (data.success) {{
+                            messageArea.textContent = data.message || '¡Archivo subido con éxito!';
+                            messageArea.className = 'message success';
+                            document.getElementById('uploadForm').innerHTML = '<p class="success">Archivo enviado: ' + (data.filename_received || 'Archivo') + '. Puede cerrar esta ventana.</p>';
+                        }} else {{
+                            messageArea.textContent = 'Error: ' + (data.message || 'No se pudo subir el archivo.');
+                            messageArea.className = 'message error';
+                        }}
+                    }})
+                    .catch(error => {{
+                        messageArea.textContent = 'Error de red o servidor: ' + error;
+                        messageArea.className = 'message error';
+                        console.error('Error en subida:', error);
+                    }});
+                }});
+            </script>
+        </body>
+        </html>
+        """
+        self.wfile.write(html_content.encode('utf-8'))
+
+
+    def parse_multipart_form_data(self):
+        """
+        Parsea 'multipart/form-data'. Devuelve un diccionario con campos
+        y un diccionario con archivos {'fieldname': {'filename': '...', 'content': b'...'}}.
+        Esto es una simplificación y puede no ser robusto para todos los casos.
+        """
+        ctype = self.headers.get('Content-Type')
+        if not ctype or not ctype.startswith('multipart/form-data'):
+            return {}, {}
+
+        boundary = None
+        parts = ctype.split(';')
+        for part in parts:
+            part = part.strip()
+            if part.startswith('boundary='):
+                boundary = part.split('=')[1].strip().encode() # Boundary debe ser bytes
+                break
+        
+        if not boundary:
+            return {}, {}
+
+        content_length = int(self.headers.get('Content-Length', 0))
+        if content_length == 0:
+            return {}, {}
+
+        body = self.rfile.read(content_length)
+        
+        form_data = {}
+        file_data = {}
+        
+        # Separar por el boundary
+        # El boundary en el cuerpo está precedido por '--'
+        # El último boundary tiene '--' al final también
+        split_boundary = b'--' + boundary
+        items = body.split(split_boundary)
+        
+        # El primer y último item pueden ser vacíos o '--\r\n' después del split
+        for item_bytes in items:
+            if not item_bytes.strip() or item_bytes.strip() == b'--':
+                continue
+
+            # Cada item tiene headers y luego el contenido, separados por \r\n\r\n
+            try:
+                header_part_bytes, content_bytes = item_bytes.split(b'\r\n\r\n', 1)
+            except ValueError: # No se pudo separar header y contenido
+                continue
+            
+            # Decodificar headers (asumiendo utf-8 o ascii para headers)
+            header_part_str = header_part_bytes.decode('latin-1', errors='ignore').strip() # latin-1 es común para headers http
+            
+            content_disposition = None
+            name_attr = None
+            filename_attr = None
+
+            for header_line in header_part_str.split('\r\n'):
+                if header_line.lower().startswith('content-disposition:'):
+                    content_disposition = header_line.split(':', 1)[1].strip()
+                    # Parsear atributos de Content-Disposition
+                    # Ejemplo: form-data; name="file_to_upload"; filename="example.txt"
+                    disp_parts = content_disposition.split(';')
+                    for disp_part in disp_parts:
+                        disp_part = disp_part.strip()
+                        if disp_part.startswith('name='):
+                            name_attr = disp_part.split('=', 1)[1].strip('"')
+                        elif disp_part.startswith('filename='):
+                            filename_attr = disp_part.split('=', 1)[1].strip('"')
+            
+            if name_attr:
+                # Quitar el \r\n final del contenido si está presente
+                if content_bytes.endswith(b'\r\n'):
+                    content_bytes = content_bytes[:-2]
+
+                if filename_attr: # Es un archivo
+                    file_data[name_attr] = {'filename': filename_attr, 'content': content_bytes}
+                else: # Es un campo de formulario normal
+                    form_data[name_attr] = content_bytes.decode('utf-8', errors='replace') # Decodificar como texto
+
+        return form_data, file_data
+
+
+    def do_POST(self):
+        parsed_path = urlparse(self.path)
+        if parsed_path.path != '/upload_file':
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"Endpoint no encontrado")
+            return
+
+        query_params = parse_qs(parsed_path.query)
+        token = query_params.get('token', [None])[0]
+        
+        response_data = {}
+
+        if not token or token not in mobile_upload_sessions:
+            self.send_response(403, "Forbidden")
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            response_data = {'success': False, 'message': 'Token inválido o sesión expirada.'}
+            self.wfile.write(json.dumps(response_data).encode('utf-8'))
+            return
+
+        form_fields, file_fields = self.parse_multipart_form_data()
+            
+        if 'file_to_upload' not in file_fields or not file_fields['file_to_upload'].get('content'):
+            self.send_response(400, "Bad Request")
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            response_data = {'success': False, 'message': 'No se envió ningún archivo o el archivo está vacío.'}
+            self.wfile.write(json.dumps(response_data).encode('utf-8'))
+            return
+
+        uploaded_file_info = file_fields['file_to_upload']
+        file_content_bytes = uploaded_file_info['content']
+        original_filename_from_mobile = uploaded_file_info.get('filename', f"mobile_upload_{uuid.uuid4().hex}.dat")
+
+        try:
+            # Crear directorio temporal si no existe
+            # Obtener base_path de una forma accesible desde aquí. Si MobileUploadHandler no es anidada
+            # y no tiene acceso directo a `self.get_base_path()` de BackendBridge,
+            # necesitamos una forma de obtenerla.
+            # Una opción es que BackendBridge pase el base_path al crear el handler o el servidor,
+            # pero http.server no lo facilita. Otra es que `get_base_path` sea una función global
+            # o un método estático de BackendBridge.
+            # Por ahora, asumimos que BackendBridge está en el mismo módulo y podemos acceder a su método
+            # a través de una instancia temporal (no ideal) o hacer get_base_path una función independiente.
+            # Para este ejemplo, llamaré a una función get_application_base_path() que definirás globalmente o en BackendBridge.
+            
+            # Solución más simple: el directorio UPLOAD_DIR_MOBILE_TEMP se define relativo al script actual
+            # (donde está main.py)
+            current_script_dir = os.path.dirname(os.path.abspath(__file__))
+            temp_upload_path_base = os.path.join(current_script_dir, UPLOAD_DIR_MOBILE_TEMP)
+            os.makedirs(temp_upload_path_base, exist_ok=True)
+            
+            # Sanear el nombre de archivo original antes de usarlo en el path
+            sane_original_filename = "".join(c for c in original_filename_from_mobile if c.isalnum() or c in ['.', '_', '-']).rstrip()
+            if not sane_original_filename: # Si el nombre se vuelve vacío después de sanear
+                sane_original_filename = f"upload_{uuid.uuid4().hex}.dat"
+
+
+            # Generar un nombre de archivo único en el servidor usando el token y el nombre saneado
+            server_filename_base, server_filename_ext = os.path.splitext(sane_original_filename)
+            server_filename = f"{token}_{server_filename_base.replace('.', '_')}{server_filename_ext}" # Evitar múltiples puntos
+            filepath_on_server = os.path.join(temp_upload_path_base, server_filename)
+
+            with open(filepath_on_server, 'wb') as f:
+                f.write(file_content_bytes)
+            
+            print(f"MobileUploadServer: Archivo '{original_filename_from_mobile}' (guardado como '{server_filename}') subido por token {token} a {filepath_on_server}")
+            
+            session_data = mobile_upload_sessions[token]
+            session_data['status'] = 'uploaded'
+            session_data['file_path'] = filepath_on_server
+            session_data['file_name'] = original_filename_from_mobile # Usar el nombre real del archivo
+
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            response_data = {'success': True, 'message': f'Archivo "{original_filename_from_mobile}" subido.', 'filename_received': original_filename_from_mobile}
+            self.wfile.write(json.dumps(response_data).encode('utf-8'))
+
+        except Exception as e:
+            print(f"MobileUploadServer: Error guardando archivo para token {token}: {e}")
+            traceback.print_exc()
+            if token in mobile_upload_sessions: # Asegurar que el token aún exista
+                mobile_upload_sessions[token]['status'] = 'error'
+                mobile_upload_sessions[token]['error_message'] = str(e)
+            self.send_response(500)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            response_data = {'success': False, 'message': f'Error en el servidor al guardar: {str(e)}'}
+            self.wfile.write(json.dumps(response_data).encode('utf-8'))
+
 # --- Backend Bridge Object ---
 class BackendBridge(QObject):
     # Señales existentes
@@ -80,6 +360,11 @@ class BackendBridge(QObject):
     sendPatientInfoForAddEvolucion = pyqtSignal(str)
     ordenMedicaSaveResult = pyqtSignal(bool, str)
     ordenDetailsResult = pyqtSignal(str)
+    ordenUpdateResult = pyqtSignal(bool, str)
+    complementoDetailsResult = pyqtSignal(str) # (paciente_id, json_string_data_complemento)
+    complementoSaveResult = pyqtSignal(bool, str, int) # (success, message, new_id or updated_id)
+    mobileUploadUrlReady = pyqtSignal(str) # Envía JSON string: {url, token} o {error}
+    mobileUploadStatus = pyqtSignal(str)
 
     def __init__(self, parent_window=None):
         super().__init__()
@@ -98,8 +383,11 @@ class BackendBridge(QObject):
         self.selected_patient_id = None
         self.current_consulta_id = None
         self.db_manager = database
+        self.selected_orden_id_for_view_edit = None
+        self.selected_complemento_id_for_view_edit = None
+        self.selected_orden_id_for_view_edit = None
+        self.active_mobile_server_port = None # Para evitar múltiples servidores en el mismo puerto
 
-        selected_orden_id_for_view_edit = None
     # --- Funciones de utilidad interna ---
     def get_base_path(self):
         # Intenta obtener la ruta del directorio temporal de PyInstaller (_MEIPASS)
@@ -130,6 +418,774 @@ class BackendBridge(QObject):
     def set_selected_orden(self, orden_id: int):
         print(f"BackendBridge: Orden seleccionada para ver/editar ID: {orden_id}")
         self.selected_orden_id_for_view_edit = orden_id
+    @pyqtSlot(int)
+    def set_selected_complemento(self, complemento_id: int):
+        print(f"BackendBridge: Complemento seleccionado para ver/editar ID: {complemento_id}")
+        self.selected_complemento_id_for_view_edit = complemento_id
+
+    @pyqtSlot(str)
+    def abrir_archivo_sistema(self, path_relativo_o_absoluto_archivo: str):
+        print(f"BackendBridge: Solicitud para abrir archivo en sistema: '{path_relativo_o_absoluto_archivo}'")
+
+        if not path_relativo_o_absoluto_archivo:
+            print("WARN: abrir_archivo_sistema recibió un path vacío.")
+            return
+
+        try:
+            path_a_abrir = None
+            if os.path.isabs(path_relativo_o_absoluto_archivo):
+                path_a_abrir = path_relativo_o_absoluto_archivo
+                print(f"BackendBridge: Ruta recibida ya es absoluta: '{path_a_abrir}'")
+            else:
+                # Convertir ruta relativa (ej: 'uploads/complementarios/...') a absoluta
+                path_a_abrir = self.get_absolute_path(path_relativo_o_absoluto_archivo)
+                print(f"BackendBridge: Ruta relativa convertida a absoluta: '{path_a_abrir}'")
+
+
+            if not os.path.exists(path_a_abrir) or not os.path.isfile(path_a_abrir):
+                print(f"ERROR: Archivo no encontrado en el sistema: {path_a_abrir}")
+                # Podrías emitir una señal de error al frontend si es necesario
+                # self.parent_window.web_view.page().runJavaScript(f"showUserAlert('error', 'El archivo adjunto no se encontró en el servidor.');")
+                return
+
+            current_os = platform.system()
+            if current_os == "Windows":
+                os.startfile(path_a_abrir)
+                print(f"BackendBridge: os.startfile('{path_a_abrir}') llamado en Windows.")
+            elif current_os == "Darwin": # macOS
+                subprocess.call(["open", path_a_abrir])
+                print(f"BackendBridge: subprocess.call(['open', '{path_a_abrir}']) llamado en macOS.")
+            else: # Linux y otros Unix-like
+                subprocess.call(["xdg-open", path_a_abrir])
+                print(f"BackendBridge: subprocess.call(['xdg-open', '{path_a_abrir}']) llamado en Linux/Unix.")
+            
+        except Exception as e:
+            print(f"ERROR al intentar abrir archivo '{path_a_abrir if 'path_a_abrir' in locals() else path_relativo_o_absoluto_archivo}' con aplicación del sistema: {e}")
+            traceback.print_exc()
+            # self.parent_window.web_view.page().runJavaScript(f"showUserAlert('error', 'No se pudo abrir el archivo adjunto con la aplicación del sistema.');")
+
+    def get_local_ip_address(self):
+        # Prioridad 1: Conexión a host externo para determinar la interfaz principal
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0.1) 
+            s.connect(('8.8.8.8', 1)) 
+            ip = s.getsockname()[0]
+            s.close()
+            # Si devuelve 127.0.0.1, intentar el siguiente bloque para encontrar una IP de LAN
+            if ip != '127.0.0.1':
+                print(f"INFO: IP detectada (método socket connect): {ip}")
+                return ip
+        except Exception:
+            pass # Continuar con otros métodos si este falla
+
+        # Prioridad 2: Iterar sobre IPs de gethostbyname_ex y buscar IPs de LAN comunes
+        try:
+            hostname = socket.gethostname()
+            all_ips_info = socket.gethostbyname_ex(hostname)
+            # all_ips_info es una tupla: (hostname, aliaslist, ipaddrlist)
+            # Iteramos sobre ipaddrlist
+            for item_ip in all_ips_info[2]:
+                if item_ip.startswith('192.168.') or \
+                   item_ip.startswith('10.') or \
+                   (item_ip.startswith('172.') and 16 <= int(item_ip.split('.')[1]) <= 31):
+                    print(f"INFO: IP de LAN detectada (método gethostbyname_ex): {item_ip}")
+                    return item_ip
+        except Exception:
+            pass
+
+        # Prioridad 3: Usar comandos del sistema operativo (puede ser más lento)
+        # Esta parte puede ser extensa y variar, la omito por brevedad pero la tienes de la respuesta anterior
+        # Si usas esta parte, asegúrate que el parseo sea correcto y priorice IPs de LAN.
+        # Ejemplo simplificado (solo para ilustrar el concepto):
+        system_ips = []
+        if platform.system() == "Windows":
+            try:
+                output = subprocess.check_output("ipconfig", universal_newlines=True, timeout=2)
+                for line in output.split('\n'):
+                    if 'IPv4 Address' in line or 'Dirección IPv4' in line :
+                        parts = line.split(':')
+                        if len(parts) > 1:
+                            ip_candidate = parts[1].strip()
+                            if ip_candidate and not ip_candidate.startswith('169.254') and not ip_candidate == '127.0.0.1':
+                                system_ips.append(ip_candidate)
+            except Exception: pass
+        elif platform.system() == "Linux" or platform.system() == "Darwin":
+            try: # hostname -I es bastante bueno en Linux
+                output = subprocess.check_output(["hostname", "-I"], universal_newlines=True, timeout=2)
+                candidates = output.strip().split()
+                for candidate in candidates:
+                    if not candidate == '127.0.0.1':
+                        system_ips.append(candidate)
+            except Exception: pass
+        
+        for sys_ip in system_ips:
+             if sys_ip.startswith('192.168.') or \
+                sys_ip.startswith('10.') or \
+                (sys_ip.startswith('172.') and 16 <= int(sys_ip.split('.')[1]) <= 31):
+                print(f"INFO: IP de LAN detectada (método OS command): {sys_ip}")
+                return sys_ip
+
+
+        # Último recurso si todo lo demás falla
+        try:
+            # Esto a menudo devuelve 127.0.0.1
+            final_fallback_ip = socket.gethostbyname(socket.gethostname())
+            print(f"WARN: Todos los métodos fallaron o no encontraron IP de LAN. Usando fallback final: {final_fallback_ip}")
+            return final_fallback_ip
+        except Exception:
+            print(f"CRITICAL WARN: Falló incluso el último fallback para IP. Usando 127.0.0.1.")
+            return "127.0.0.1"
+
+    def find_available_port(self, start_port=8080, max_tries=100):
+        for i in range(max_tries):
+            port = start_port + i
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.bind(("0.0.0.0", port)) # Intentar bindear
+                return port
+            except OSError: # Puerto en uso
+                continue
+        return None # No se encontró puerto disponible
+
+    @pyqtSlot()
+    def start_mobile_upload_session(self):
+        print("BackendBridge: Solicitud para iniciar sesión de subida móvil.")
+        try:
+            # Detener cualquier servidor anterior si aún está activo (por si acaso)
+            # Esta lógica necesitaría mejor gestión de hilos/servidores si hubiera múltiples sesiones concurrentes.
+            # Por ahora, asumimos una sesión QR activa a la vez por instancia de la app.
+            for token, session in list(mobile_upload_sessions.items()): # Iterar sobre copia para modificar
+                if session.get('http_server'):
+                    print(f"Cerrando servidor HTTP anterior para token {token} en puerto {session.get('port')}")
+                    session['http_server'].shutdown()
+                    session['http_server'].server_close()
+                    if session.get('server_thread') and session['server_thread'].is_alive():
+                        session['server_thread'].join(timeout=1)
+                    del mobile_upload_sessions[token]
+
+
+            ip_address = self.get_local_ip_address()
+            if ip_address == "127.0.0.1" and platform.system() != "Linux": # En Linux 127.0.0.1 puede ser accesible en LAN a veces
+                print("WARN: No se pudo obtener una IP local válida, usando 127.0.0.1. Puede no funcionar desde el móvil.")
+                # Considerar emitir error al frontend o dar opción al usuario de ingresar IP
+            
+            port = self.find_available_port(start_port=8081) # Empezar desde 8081
+            if port is None:
+                self.mobileUploadUrlReady.emit(json.dumps({'error': 'No hay puertos disponibles para el servidor móvil.'}))
+                return
+
+            token = uuid.uuid4().hex
+            # La URL que el móvil visitará para la página de subida
+            # El endpoint del handler GET servirá la página.
+            upload_page_url = f"http://{ip_address}:{port}/?token={token}" 
+
+            # Directorio temporal global
+            temp_dir = os.path.join(self.get_base_path(), UPLOAD_DIR_MOBILE_TEMP)
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            Handler = MobileUploadHandler
+            # No podemos pasar `token` directamente a MobileUploadHandler de forma estándar.
+            # El token se valida desde la URL en do_GET y do_POST.
+            httpd = socketserver.TCPServer(("", port), Handler)
+            
+            print(f"MobileUploadServer: Iniciando servidor HTTP para subida móvil en {ip_address}:{port} con token {token}")
+            print(f"MobileUploadServer: URL para QR: {upload_page_url}")
+
+            # Guardar información de la sesión
+            session_info = {
+                'status': 'pending_qr_scan', 
+                'file_path': None, 
+                'file_name': None,
+                'server_thread': None, 
+                'http_server': httpd,
+                'ip': ip_address,
+                'port': port
+            }
+            mobile_upload_sessions[token] = session_info
+
+            # Iniciar el servidor en un hilo separado para no bloquear la app Qt
+            server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+            session_info['server_thread'] = server_thread
+            server_thread.start()
+            
+            self.active_mobile_server_port = port
+            self.mobileUploadUrlReady.emit(json.dumps({'url': upload_page_url, 'token': token}))
+
+        except Exception as e:
+            print(f"Error en start_mobile_upload_session: {e}")
+            traceback.print_exc()
+            self.mobileUploadUrlReady.emit(json.dumps({'error': str(e)}))
+
+    @pyqtSlot(str)
+    def check_mobile_upload_status(self, token):
+        # print(f"BackendBridge: Verificando estado para token {token}")
+        if token in mobile_upload_sessions:
+            session = mobile_upload_sessions[token]
+            if session['status'] == 'uploaded':
+                self.mobileUploadStatus.emit(json.dumps({
+                    'token': token,
+                    'uploaded': True,
+                    'filePath': session['file_path'], # Enviar la ruta del servidor
+                    'fileName': session['file_name']  # Enviar el nombre original (si se tiene)
+                }))
+                # Considerar limpiar la sesión aquí o después de que el formulario principal se guarde
+                # self.cleanup_mobile_session(token) # Ejemplo
+            elif session['status'] == 'error':
+                 self.mobileUploadStatus.emit(json.dumps({
+                    'token': token,
+                    'uploaded': False,
+                    'error': session.get('error_message', 'Error desconocido durante la subida.')
+                }))
+                 self.cleanup_mobile_session(token) # Limpiar en error
+            else: # pending, qr_scanned_page_loaded, etc.
+                self.mobileUploadStatus.emit(json.dumps({'token': token, 'uploaded': False, 'message': 'Esperando subida...'}))
+        else:
+            self.mobileUploadStatus.emit(json.dumps({'token': token, 'uploaded': False, 'error': 'Token no encontrado o sesión expirada.'}))
+
+    def cleanup_mobile_session(self, token):
+        if token in mobile_upload_sessions:
+            session = mobile_upload_sessions.pop(token) # Eliminar de sesiones activas
+            if session.get('http_server'):
+                print(f"BackendBridge: Limpiando sesión y cerrando servidor para token {token} en puerto {session.get('port')}")
+                try:
+                    session['http_server'].shutdown() # Señal al servidor para que se detenga
+                    session['http_server'].server_close() # Cierra el socket
+                except Exception as e_shutdown:
+                    print(f"Error al intentar shutdown/close del servidor HTTP para token {token}: {e_shutdown}")
+
+            if session.get('server_thread') and session['server_thread'].is_alive():
+                session['server_thread'].join(timeout=1) # Esperar a que el hilo termine
+
+            # Eliminar archivo temporal si existe y si la política es borrarlo inmediatamente
+            # file_to_delete = session.get('file_path')
+            # if file_to_delete and os.path.exists(file_to_delete):
+            #     try:
+            #         os.remove(file_to_delete)
+            #         print(f"Archivo temporal {file_to_delete} eliminado.")
+            #     except Exception as e_del:
+            #         print(f"Error eliminando archivo temporal {file_to_delete}: {e_del}")
+            if self.active_mobile_server_port == session.get('port'):
+                self.active_mobile_server_port = None
+            print(f"Sesión para token {token} limpiada.")
+
+
+    # Modificar save_new_complemento para manejar archivo de móvil
+    @pyqtSlot(QVariant)
+    def save_new_complemento(self, datos_complemento_qvariant):
+        print("BackendBridge: Solicitud save_new_complemento")
+        # ... (verificación de usuario como antes) ...
+        if not self.current_user_data or 'id' not in self.current_user_data:
+            self.complementoSaveResult.emit(False, "Error: Sesión no válida.", 0)
+            return
+        current_user_id = self.current_user_data['id']
+
+        try:
+            datos_comp = self._convert_qvariant_to_dict(datos_complemento_qvariant, "datos de nuevo complemento")
+            
+            paciente_id = datos_comp.get('paciente_id')
+            # ... (validación de paciente_id como antes) ...
+
+            archivo_path_guardado_enc = None # Path encriptado final para la BD
+            
+            # Priorizar archivo subido desde el móvil si existe la referencia
+            if datos_comp.get('archivo_adjunto_movil_ref'):
+                temp_server_path = datos_comp['archivo_adjunto_movil_ref']
+                original_filename = datos_comp.get('archivo_adjunto_original_filename', 'archivo_movil.dat')
+                
+                print(f"Procesando archivo desde móvil: {temp_server_path}, nombre original: {original_filename}")
+
+                if os.path.exists(temp_server_path) and os.path.isfile(temp_server_path):
+                    # Mover/Copiar el archivo temporal a la ubicación final de 'uploads/complementarios'
+                    # y luego encriptar esta nueva ruta relativa final.
+                    
+                    # Validar extensión (basado en el nombre original que debería venir del móvil)
+                    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt']
+                    file_name_lower = original_filename.lower()
+                    if not any(file_name_lower.endswith(ext) for ext in allowed_extensions):
+                        # Si el tipo no es permitido, no lo procesamos. Informamos error.
+                        # También deberíamos limpiar el archivo temporal.
+                        self.complementoSaveResult.emit(False, "Error: Tipo de archivo móvil no permitido.", 0)
+                        if os.path.exists(temp_server_path): os.remove(temp_server_path) # Limpiar
+                        # También limpiar la sesión del token si aún existe
+                        # (Necesitaríamos el token aquí o una forma de buscarlo por temp_server_path)
+                        return
+
+                    final_upload_dir = self.get_absolute_path(os.path.join('uploads', 'complementarios', str(paciente_id)))
+                    os.makedirs(final_upload_dir, exist_ok=True)
+                    
+                    # Usar nombre original para el archivo final, pero hacerlo único
+                    safe_filename_base = "".join(c for c in os.path.splitext(original_filename)[0] if c.isalnum() or c in [' ', '_', '-']).rstrip()
+                    safe_filename_ext = os.path.splitext(original_filename)[1]
+                    unique_final_filename = f"{uuid.uuid4().hex}_{safe_filename_base}{safe_filename_ext}"
+                    
+                    final_filepath_abs = os.path.join(final_upload_dir, unique_final_filename)
+                    
+                    try:
+                        # Mover el archivo desde la ubicación temporal del servidor móvil
+                        shutil.move(temp_server_path, final_filepath_abs) # O shutil.copy si quieres mantener el temporal por un tiempo
+                        print(f"Archivo móvil movido de '{temp_server_path}' a '{final_filepath_abs}'")
+                    except Exception as e_move:
+                        print(f"Error moviendo archivo de móvil de temp a final: {e_move}. Intentando copiar...")
+                        try:
+                            shutil.copy(temp_server_path, final_filepath_abs)
+                            os.remove(temp_server_path) # Eliminar el original si la copia fue exitosa
+                            print(f"Archivo móvil copiado y original eliminado.")
+                        except Exception as e_copy_del:
+                            self.complementoSaveResult.emit(False, f"Error crítico al manejar archivo móvil: {e_copy_del}", 0)
+                            return
+
+                    final_archivo_path_relativo = os.path.join('uploads', 'complementarios', str(paciente_id), unique_final_filename).replace('\\', '/')
+                    archivo_path_guardado_enc = self.db_manager.encrypt_data(final_archivo_path_relativo)
+
+                    # Limpiar la sesión del token asociado a este temp_server_path
+                    # Esto es un poco indirecto. Idealmente, el token viajaría con la data.
+                    token_to_cleanup = None
+                    for t, s_data in mobile_upload_sessions.items():
+                        if s_data.get('file_path') == temp_server_path:
+                            token_to_cleanup = t
+                            break
+                    if token_to_cleanup:
+                        self.cleanup_mobile_session(token_to_cleanup)
+                    else: # Si no se encontró, el archivo ya pudo haber sido limpiado o es un path antiguo
+                        # Si el archivo temporal aún existe y no se encontró token, borrarlo igual.
+                        if os.path.exists(temp_server_path): 
+                            try: os.remove(temp_server_path)
+                            except: pass 
+                            
+                else:
+                    print(f"WARN: Referencia de archivo móvil '{temp_server_path}' no encontrada en el servidor. Se ignorará.")
+                    # Podría emitirse un error o simplemente continuar sin adjunto.
+
+            # Si no hay archivo móvil, o falló, intentar con el de PC (base64)
+            elif datos_comp.get('archivo_adjunto_nuevo'):
+                file_data = datos_comp['archivo_adjunto_nuevo'] # Este es el objeto con {name, base64, ...}
+                # ... (lógica existente para procesar archivo_adjunto_nuevo - base64 de PC) ...
+                try:
+                    # ... (validación de extensión, decodificación, guardado) ...
+                    # Esto es lo que ya tenías
+                    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt']
+                    file_name_lower = file_data['name'].lower()
+                    if not any(file_name_lower.endswith(ext) for ext in allowed_extensions):
+                        self.complementoSaveResult.emit(False, "Error: Tipo de archivo (PC) no permitido.", 0)
+                        return
+                    decoded_content = base64.b64decode(file_data['base64'])
+                    upload_dir = self.get_absolute_path(os.path.join('uploads', 'complementarios', str(paciente_id)))
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    safe_filename_base = "".join(c for c in os.path.splitext(file_data['name'])[0] if c.isalnum() or c in [' ', '_', '-']).rstrip()
+                    safe_filename_ext = os.path.splitext(file_data['name'])[1]
+                    unique_filename = f"{uuid.uuid4().hex}_{safe_filename_base}{safe_filename_ext}"
+                    
+                    file_path_abs = os.path.join(upload_dir, unique_filename)
+                    with open(file_path_abs, "wb") as f:
+                        f.write(decoded_content)
+                    
+                    archivo_path_relativo = os.path.join('uploads', 'complementarios', str(paciente_id), unique_filename).replace('\\', '/')
+                    archivo_path_guardado_enc = self.db_manager.encrypt_data(archivo_path_relativo)
+                except Exception as e_file_pc:
+                    self.complementoSaveResult.emit(False, f"Error al procesar archivo de PC: {e_file_pc}", 0); return
+
+
+            # ... (resto de la lógica para insertar en BD con archivo_path_guardado_enc) ...
+            conn = self.db_manager.connect_db()
+            with conn:
+                # ... (SQL INSERT y ejecución como antes, usando archivo_path_guardado_enc)
+                # ...
+                cursor = conn.cursor()
+                sql = """INSERT INTO Complementarios (
+                            paciente_id, consulta_id, orden_medica_id, 
+                            usuario_registrador_id, fecha_registro, 
+                            tipo_complementario, nombre_estudio, 
+                            fecha_realizacion, resultado_informe, 
+                            archivo_adjunto_path, estado, 
+                            usuario_ultima_mod_id 
+                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                
+                fecha_reg_str = datos_comp.get('fecha_registro')
+                fecha_reg = datetime.fromisoformat(fecha_reg_str).isoformat() if fecha_reg_str else datetime.now().isoformat()
+                fecha_realiz_str = datos_comp.get('fecha_realizacion')
+                fecha_realiz = datetime.fromisoformat(fecha_realiz_str).isoformat() if fecha_realiz_str else None
+                estado_comp_form = datos_comp.get('estado', 'Solicitado')
+
+                valores_insert = (
+                    paciente_id,
+                    datos_comp.get('consulta_id') or None,
+                    datos_comp.get('orden_medica_id') or None,
+                    current_user_id,
+                    fecha_reg,
+                    datos_comp.get('tipo_complementario'),
+                    self.db_manager.encrypt_data(datos_comp.get('nombre_estudio')),
+                    fecha_realiz,
+                    self.db_manager.encrypt_data(datos_comp.get('resultado_informe')) if datos_comp.get('resultado_informe') else None,
+                    archivo_path_guardado_enc, # Este es el path encriptado del archivo final (móvil o PC)
+                    estado_comp_form,
+                    current_user_id
+                )
+                cursor.execute(sql, valores_insert)
+                new_id = cursor.lastrowid
+                self.db_manager.log_action(conn, current_user_id, 'CREAR_COMPLEMENTARIO', f"Complementario ID {new_id} creado.", 'Complementarios', new_id)
+
+            self.complementoSaveResult.emit(True, "Estudio complementario guardado exitosamente.", new_id)
+
+        except Exception as e:
+            print(f"Error general en save_new_complemento: {e}"); traceback.print_exc()
+            self.complementoSaveResult.emit(False, f"Error al guardar: {e}", 0)
+
+    @pyqtSlot(int, QVariant)
+    def update_complemento_data(self, complemento_id: int, datos_complemento_qvariant):
+        print(f"BackendBridge: Solicitud update_complemento_data para ID: {complemento_id}")
+        if not self.current_user_data or 'id' not in self.current_user_data:
+            self.complementoSaveResult.emit(False, "Error: Sesión no válida.", complemento_id)
+            return
+        current_user_id = self.current_user_data['id']
+
+        try:
+            datos_comp = self._convert_qvariant_to_dict(datos_complemento_qvariant, "datos de complemento a actualizar")
+            
+            paciente_id_update = datos_comp.get('paciente_id')
+            if not paciente_id_update: # paciente_id es NOT NULL en la tabla
+                try:
+                    paciente_id_update = int(paciente_id_update)
+                except (ValueError, TypeError): # Si no se puede convertir, algo anda mal con los datos del form
+                    self.complementoSaveResult.emit(False, "Error: ID de paciente inválido para actualizar.", complemento_id); return
+            elif not paciente_id_update:
+                 self.complementoSaveResult.emit(False, "Error: ID de paciente es requerido para actualizar.", complemento_id); return
+
+
+            archivo_path_final_enc = None # Se determinará a continuación
+            # Obtener path actual de la BD
+            conn_check = self.db_manager.connect_db()
+            cursor_check = conn_check.cursor()
+            cursor_check.execute("SELECT archivo_adjunto_path FROM Complementarios WHERE id = ?", (complemento_id,))
+            row_actual = cursor_check.fetchone()
+            path_actual_enc_db = row_actual[0] if row_actual else None
+            conn_check.close()
+
+            if datos_comp.get('remove_current_attachment') and path_actual_enc_db:
+                try:
+                    path_actual_dec = self.db_manager.decrypt_data(path_actual_enc_db)
+                    if path_actual_dec:
+                        path_abs_borrar = self.get_absolute_path(path_actual_dec)
+                        if os.path.exists(path_abs_borrar): os.remove(path_abs_borrar)
+                except Exception as e_del: print(f"Error borrando adjunto (remove_current): {e_del}")
+                archivo_path_final_enc = None # Se eliminó
+            elif datos_comp.get('archivo_adjunto_nuevo'): # Hay nuevo archivo
+                if path_actual_enc_db: # Borrar el viejo si existe, ya que se está subiendo uno nuevo
+                    try:
+                        path_actual_dec = self.db_manager.decrypt_data(path_actual_enc_db)
+                        if path_actual_dec:
+                            path_abs_borrar = self.get_absolute_path(path_actual_dec)
+                            if os.path.exists(path_abs_borrar): os.remove(path_abs_borrar)
+                    except Exception as e_del_old: print(f"Error borrando adjunto anterior (reemplazo): {e_del_old}")
+                
+                file_data = datos_comp['archivo_adjunto_nuevo']
+                try:
+                    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt']
+                    file_name_lower = file_data['name'].lower()
+                    if not any(file_name_lower.endswith(ext) for ext in allowed_extensions):
+                        self.complementoSaveResult.emit(False, "Error: Tipo de archivo no permitido. Solo imágenes o documentos.", 0 if is_new else complemento_id)
+                        return
+                    decoded_content = base64.b64decode(file_data['base64'])
+                    upload_dir = self.get_absolute_path(os.path.join('uploads', 'complementarios', str(paciente_id_update)))
+                    os.makedirs(upload_dir, exist_ok=True)
+                    safe_filename_base = "".join(c for c in os.path.splitext(file_data['name'])[0] if c.isalnum() or c in [' ', '_', '-']).rstrip()
+                    safe_filename_ext = os.path.splitext(file_data['name'])[1]
+                    unique_filename = f"{uuid.uuid4().hex}_{safe_filename_base}{safe_filename_ext}"
+                    file_path_abs = os.path.join(upload_dir, unique_filename)
+                    with open(file_path_abs, "wb") as f: f.write(decoded_content)
+                    archivo_path_relativo = os.path.join('uploads', 'complementarios', str(paciente_id_update), unique_filename).replace('\\', '/')
+                    archivo_path_final_enc = self.db_manager.encrypt_data(archivo_path_relativo)
+                except Exception as e_file:
+                    self.complementoSaveResult.emit(False, f"Error al procesar nuevo archivo: {e_file}", complemento_id); return
+            elif path_actual_enc_db: # No se borró y no hay nuevo, mantener el actual
+                archivo_path_final_enc = path_actual_enc_db
+            # Si no había, no se borró y no hay nuevo, archivo_path_final_enc sigue siendo None
+
+            conn = self.db_manager.connect_db()
+            with conn:
+                cursor = conn.cursor()
+                # fecha_ultima_mod se actualizará por DEFAULT CURRENT_TIMESTAMP
+                # usuario_ultima_mod_id se actualizará al current_user_id
+                sql = """UPDATE Complementarios SET
+                            paciente_id = ?, consulta_id = ?, orden_medica_id = ?, 
+                            tipo_complementario = ?, nombre_estudio = ?, 
+                            fecha_realizacion = ?, fecha_registro = ?, 
+                            resultado_informe = ?, archivo_adjunto_path = ?,
+                            estado = ?, 
+                            usuario_ultima_mod_id = ?,
+                            fecha_ultima_mod = CURRENT_TIMESTAMP 
+                         WHERE id = ?""" # 11 columnas a actualizar + id en WHERE
+                
+                fecha_reg_upd_str = datos_comp.get('fecha_registro')
+                fecha_reg_upd = datetime.fromisoformat(fecha_reg_upd_str).isoformat() if fecha_reg_upd_str else datetime.now().isoformat()
+                
+                fecha_realiz_upd_str = datos_comp.get('fecha_realizacion')
+                fecha_realiz_upd = datetime.fromisoformat(fecha_realiz_upd_str).isoformat() if fecha_realiz_upd_str else None
+
+                valores_update = (
+                    paciente_id_update,
+                    datos_comp.get('consulta_id') or None,
+                    datos_comp.get('orden_medica_id') or None,
+                    datos_comp.get('tipo_complementario'),
+                    self.db_manager.encrypt_data(datos_comp.get('nombre_estudio')),
+                    fecha_realiz_upd,
+                    fecha_reg_upd,
+                    self.db_manager.encrypt_data(datos_comp.get('resultado_informe')) if datos_comp.get('resultado_informe') else None,
+                    archivo_path_final_enc, # El path determinado arriba
+                    datos_comp.get('estado'),
+                    current_user_id, # usuario_ultima_mod_id
+                    complemento_id
+                )
+                
+                print(f"DEBUG: SQL para UPDATE Complemento: {sql}")
+                print(f"DEBUG: Valores para UPDATE Complemento (longitud {len(valores_update)}): {valores_update}")
+                
+                cursor.execute(sql, valores_update)
+                if cursor.rowcount == 0:
+                     self.complementoSaveResult.emit(False, "Error: Estudio no encontrado o datos sin cambios.", complemento_id); return
+                
+                self.db_manager.log_action(conn, current_user_id, 'ACTUALIZAR_COMPLEMENTARIO', f"Complementario ID {complemento_id} actualizado.", 'Complementarios', complemento_id)
+            
+            self.complementoSaveResult.emit(True, "Estudio complementario actualizado exitosamente.", complemento_id)
+
+        except sqlite3.ProgrammingError as prog_err:
+            print(f"ERROR DE PROGRAMACIÓN SQL en update_complemento_data: {prog_err}"); traceback.print_exc()
+            self.complementoSaveResult.emit(False, f"Error de BD (bindings): {prog_err}", complemento_id)
+        except Exception as e:
+            print(f"Error general en update_complemento_data: {e}"); traceback.print_exc()
+            self.complementoSaveResult.emit(False, f"Error al actualizar: {e}", complemento_id)
+
+    # request_complemento_details (como lo tenías, asegurando que las claves devueltas coincidan con lo que JS espera)
+    @pyqtSlot()
+    def request_complemento_details(self):
+        # ... (tu código para request_complemento_details sin cambios significativos,
+        # solo asegúrate que incluya 'estado' y que los campos desencriptados
+        # tengan sufijos _dec si el JS los espera así) ...
+        print(f"BackendBridge: Solicitud detalles para Complemento ID: {self.selected_complemento_id_for_view_edit}")
+        if self.selected_complemento_id_for_view_edit is None:
+            self.complementoDetailsResult.emit(json.dumps({'error_fetch': 'No se seleccionó ningún complemento para ver.'}))
+            return
+
+        conn = None
+        try:
+            conn = self.db_manager.connect_db()
+            cursor = conn.cursor()
+            sql_query = """
+                SELECT 
+                    comp.id AS id_complemento, comp.paciente_id AS paciente_id_real, comp.consulta_id, comp.orden_medica_id,
+                    comp.tipo_complementario, comp.nombre_estudio, comp.fecha_realizacion, comp.fecha_registro,
+                    comp.estado, comp.resultado_informe, comp.archivo_adjunto_path,
+                    p.nombres AS paciente_nombres_enc, p.apellidos AS paciente_apellidos_enc, p.numero_historia AS numero_historia_paciente,
+                    u_reg.nombre_completo AS usuario_registrador_nombre_enc, u_reg.nombre_usuario AS usuario_registrador_username
+                FROM Complementarios comp
+                JOIN Pacientes p ON comp.paciente_id = p.id
+                JOIN Usuarios u_reg ON comp.usuario_registrador_id = u_reg.id
+                WHERE comp.id = ?
+            """
+            cursor.execute(sql_query, (self.selected_complemento_id_for_view_edit,))
+            row = cursor.fetchone()
+
+            if not row:
+                self.complementoDetailsResult.emit(json.dumps({'error_fetch': f'Complemento con ID {self.selected_complemento_id_for_view_edit} no encontrado.'}))
+                return
+
+            colnames = [desc[0] for desc in cursor.description]
+            data_from_db = dict(zip(colnames, row))
+            
+            processed_data = {
+                # ... (copiar otros campos como id_complemento, tipo_complementario, etc.)
+                'id_complemento': data_from_db.get('id_complemento'),
+                'paciente_id_real': data_from_db.get('paciente_id_real'),
+                'consulta_id': data_from_db.get('consulta_id'),
+                'orden_medica_id': data_from_db.get('orden_medica_id'),
+                'tipo_complementario': data_from_db.get('tipo_complementario'),
+                'fecha_realizacion': data_from_db.get('fecha_realizacion'),
+                'fecha_registro': data_from_db.get('fecha_registro'),
+                'numero_historia_paciente': data_from_db.get('numero_historia_paciente'),
+                'estado' : data_from_db.get('estado')
+            }
+
+            # --- Desencriptación de Campos BLOB ---
+            # Nombre Estudio
+            nombre_estudio_blob = data_from_db.get('nombre_estudio')
+            processed_data['nombre_estudio_dec'] = self.db_manager.decrypt_data(nombre_estudio_blob) if nombre_estudio_blob and isinstance(nombre_estudio_blob, bytes) else (str(nombre_estudio_blob) if nombre_estudio_blob else '')
+            if "[Error" in processed_data['nombre_estudio_dec']: print(f"WARN: Error desencriptando nombre_estudio para complemento ID {processed_data['id_complemento']}")
+
+            # Resultado Informe
+            resultado_blob = data_from_db.get('resultado_informe')
+            processed_data['resultado_informe_dec'] = self.db_manager.decrypt_data(resultado_blob) if resultado_blob and isinstance(resultado_blob, bytes) else (str(resultado_blob) if resultado_blob else '')
+            if "[Error" in processed_data['resultado_informe_dec']: print(f"WARN: Error desencriptando resultado_informe para complemento ID {processed_data['id_complemento']}")
+
+            # --- MANEJO DEL PATH DEL ARCHIVO ADJUNTO ---
+            adjunto_path_blob = data_from_db.get('archivo_adjunto_path')
+            path_para_webview_src = None # Este será el src final para la imagen
+            ruta_relativa_desencriptada_original = None # Para el enlace de descarga
+            if adjunto_path_blob and isinstance(adjunto_path_blob, bytes):
+                try:
+                    ruta_relativa_desencriptada_original = self.db_manager.decrypt_data(adjunto_path_blob)
+                    if ruta_relativa_desencriptada_original:
+                        path_absoluto_servidor = self.get_absolute_path(ruta_relativa_desencriptada_original)
+                        
+                        if os.path.exists(path_absoluto_servidor) and os.path.isfile(path_absoluto_servidor):
+                            # Generar URL file:/// principalmente si es imagen, 
+                            # aunque QWebEngine puede abrir PDFs con file:/// también.
+                            # Para otros documentos (doc, docx), el navegador podría intentar descargarlos.
+                            path_para_webview_src = QUrl.fromLocalFile(path_absoluto_servidor).toString()
+                        else:
+                            path_para_webview_src = "[Archivo No Encontrado en Servidor]"
+                except Exception as e_decrypt_path:
+                    path_para_webview_src = "[Error Procesando Path Adjunto]"
+            
+            processed_data['archivo_adjunto_path_para_src'] = path_para_webview_src 
+            processed_data['archivo_adjunto_path_dec'] = ruta_relativa_desencriptada_original # La ruta original para el enlace
+
+
+            # ... (desencriptar nombres de paciente y registrador como lo tenías)
+            try:
+                n_pac = self.db_manager.decrypt_data(data_from_db.get('paciente_nombres_enc')) if data_from_db.get('paciente_nombres_enc') else ''
+                a_pac = self.db_manager.decrypt_data(data_from_db.get('paciente_apellidos_enc')) if data_from_db.get('paciente_apellidos_enc') else ''
+                processed_data['paciente_nombre_completo_dec'] = f"{n_pac} {a_pac}".strip()
+            except: processed_data['paciente_nombre_completo_dec'] = "[Error Nombre Paciente]"
+            
+            try:
+                nombre_reg_enc = data_from_db.get('usuario_registrador_nombre_enc')
+                processed_data['usuario_registrador_nombre_dec'] = self.db_manager.decrypt_data(nombre_reg_enc) if nombre_reg_enc else data_from_db.get('usuario_registrador_username', 'N/D')
+            except: processed_data['usuario_registrador_nombre_dec'] = data_from_db.get('usuario_registrador_username', '[Err Usuario]')
+
+            self.complementoDetailsResult.emit(json.dumps(processed_data, default=str))
+        except Exception as e:
+            print(f"Error en request_complemento_details: {e}"); traceback.print_exc()
+            self.complementoDetailsResult.emit(json.dumps({'error_fetch': f'Error: {e}'}))
+        finally:
+            if conn: conn.close()
+
+    @pyqtSlot(int, QVariant) # orden_id, datos_actualizados_qvariant
+    def update_orden_data(self, orden_id: int, orden_data_qvariant):
+        print(f"BackendBridge: Solicitud update_orden_data para Orden ID: {orden_id}")
+
+        if not self.current_user_data or 'id' not in self.current_user_data:
+            self.ordenUpdateResult.emit(False, "Error: Sesión no válida o usuario no identificado.")
+            return
+        current_user_id = self.current_user_data['id']
+
+        if not orden_id or orden_id <= 0:
+            self.ordenUpdateResult.emit(False, "Error: ID de orden inválido para actualizar.")
+            return
+
+        try:
+            # Convertir QVariant a diccionario Python
+            orden_actualizada_dict = self._convert_qvariant_to_dict(orden_data_qvariant, "datos de orden actualizados")
+            print(f"BackendBridge: Datos de orden actualizados recibidos (primeras claves): {list(orden_actualizada_dict.keys())[:5]}")
+
+            # Encriptar el objeto JSON completo
+            # El diccionario ya debería tener el campo fecha_modificacion_orden actualizado por el JS
+            json_string_to_encrypt = json.dumps(orden_actualizada_dict)
+            encrypted_new_orden_json_blob = self.db_manager.encrypt_data(json_string_to_encrypt)
+
+            # También actualizaremos la fecha_hora principal de la OrdenMedica para reflejar la edición
+            fecha_modificacion_registro = datetime.now().isoformat()
+
+            conn = self.db_manager.connect_db()
+            with conn:
+                cursor = conn.cursor()
+                sql_update = """
+                    UPDATE OrdenesMedicas
+                    SET orden_json_blob = ?,
+                        fecha_hora = ?, /* Actualizar la fecha principal de la orden */
+                        usuario_id = ?  /* Quién está haciendo la modificación */
+                    WHERE id = ?
+                """
+                # Nota: usuario_id aquí es quién realiza la MODIFICACIÓN.
+                # Si quieres mantener el usuario_id original que CREÓ la orden,
+                # no incluyas usuario_id en el SET. La práctica común es registrar
+                # quién modificó, lo cual se puede hacer en el log o añadiendo
+                # un campo usuario_ultima_mod_id a OrdenesMedicas si es necesario.
+                # Por simplicidad y para coincidir con tu estructura de agregar,
+                # actualizaremos el usuario_id al que edita.
+                
+                cursor.execute(sql_update, (
+                    encrypted_new_orden_json_blob,
+                    fecha_modificacion_registro,
+                    current_user_id,
+                    orden_id
+                ))
+
+                if cursor.rowcount == 0:
+                    # Esto podría pasar si la orden fue borrada mientras se editaba,
+                    # o si el orden_id es incorrecto.
+                    self.ordenUpdateResult.emit(False, f"Error: No se encontró la orden ID {orden_id} para actualizar o no hubo cambios.")
+                    print(f"BackendBridge: No se actualizó ninguna fila para Orden ID {orden_id}.")
+                    return # Salir si no se actualizó nada
+
+                # Registrar la acción
+                # Necesitamos el patient_id para el log, lo obtenemos de la orden
+                # (o lo pasas como argumento extra si es más fácil desde el JS)
+                cursor.execute("SELECT c.paciente_id FROM OrdenesMedicas om JOIN Consultas c ON om.consulta_id = c.id WHERE om.id = ?", (orden_id,))
+                paciente_id_row = cursor.fetchone()
+                paciente_id_para_log = paciente_id_row[0] if paciente_id_row else "Desconocido"
+
+
+                self.db_manager.log_action(
+                    conn, current_user_id, 'ACTUALIZAR_ORDEN_MEDICA',
+                    f"Orden médica ID {orden_id} actualizada para Paciente ID {paciente_id_para_log}.",
+                    tabla='OrdenesMedicas', registro_id=orden_id,
+                    detalles={'paciente_id': paciente_id_para_log, 'orden_id': orden_id}
+                )
+            
+            self.ordenUpdateResult.emit(True, f'Orden médica ID {orden_id} actualizada exitosamente.')
+            print(f"BackendBridge: Orden médica ID {orden_id} actualizada.")
+
+        except TypeError as te:
+            print(f"BackendBridge ERROR (update_orden_data - TypeError): {te}")
+            traceback.print_exc()
+            self.ordenUpdateResult.emit(False, f"Error interno procesando datos de orden para actualizar: {te}")
+        except sqlite3.Error as db_err:
+            print(f"DB Error en update_orden_data: {db_err}")
+            traceback.print_exc()
+            self.ordenUpdateResult.emit(False, f'Error de base de datos al actualizar la orden: {db_err}')
+        except Exception as e:
+            print(f"BackendBridge ERROR al actualizar orden médica: {e}")
+            traceback.print_exc()
+            self.ordenUpdateResult.emit(False, f'Error inesperado al actualizar la orden: {str(e)}')
+        finally:
+            if conn:
+                conn.close()
+
+    @pyqtSlot(QVariant, int) 
+    def request_action_log_with_filters(self, filters_qvariant, page_number=1): # page_number con default
+        filters = {}
+        if isinstance(filters_qvariant, QVariant):
+            filters_dict_candidate = filters_qvariant.toVariant()
+            if isinstance(filters_dict_candidate, dict):
+                filters = filters_dict_candidate
+            else: # Si toVariant() no dio un dict, intentar con toJsonObject
+                try:
+                    filters = filters_qvariant.toJsonObject().toVariantMap()
+                    if not isinstance(filters, dict): # Si aún no es dict, algo raro pasó
+                        filters = {} 
+                except AttributeError:
+                    filters = {} # Fallback si no tiene los métodos JSON
+        elif isinstance(filters_qvariant, dict): # Si ya se pasó como dict desde JS (menos probable con QVariant)
+            filters = filters_qvariant
+        
+        # Asegurarse de que page_number sea un entero válido
+        try:
+            page = int(page_number)
+            if page < 1: page = 1
+        except (ValueError, TypeError):
+            page = 1
+
+        print(f"BackendBridge: Solicitud historial con filtros: {filters}, página: {page}")
+        try:
+            # Asegúrate que self.historial_manager.get_log espera 'page' y 'filters'
+            logs, total_count = self.historial_manager.get_log(page=page, filters=filters)
+            # La señal actionLogResult ya está definida para (list, int)
+            self.actionLogResult.emit(logs or [], total_count or 0) 
+        except Exception as e:
+            print(f"BackendBridge Error: Excepción al obtener historial con filtros: {e}")
+            traceback.print_exc()
+            self.actionLogResult.emit([], 0)
 
     @pyqtSlot()
     def request_orden_details(self):
@@ -509,76 +1565,72 @@ class BackendBridge(QObject):
         self.request_view_content("dashboard")
 
     @pyqtSlot(str)
-    def request_view_content(self, view_name_with_separator): # Renombrado para claridad
-        print(f"BackendBridge: Solicitud recibida para vista: '{view_name_with_separator}'")
+    def request_view_content(self, view_name_with_separator_and_params): # Cambiado el nombre del parámetro
+        print(f"BackendBridge: Solicitud recibida para vista: '{view_name_with_separator_and_params}'")
 
-        # Usaremos '__' como separador para indicar subdirectorios.
-        # Ejemplo: 'historial__historial_acciones' se convertirá en la ruta 'historial/historial_acciones.html'
-        # Ejemplo: 'dashboard' se convertirá en 'dashboard.html' (en la raíz de html_files)
+        # ***** SEPARAR EL NOMBRE BASE DE LA VISTA DE LOS PARÁMETROS *****
+        view_name_base = view_name_with_separator_and_params
+        if '?' in view_name_with_separator_and_params:
+            view_name_base = view_name_with_separator_and_params.split('?', 1)[0]
+        
+        print(f"BackendBridge: Nombre base de la vista extraído: '{view_name_base}'")
 
-        path_parts_from_view_name = view_name_with_separator.split('__')
+        # Ahora usa view_name_base para el resto de la lógica
+        path_parts_from_view_name = view_name_base.split('__')
         
         sane_path_components = []
         for part in path_parts_from_view_name:
-            # Sanear cada parte: permitir alfanuméricos y guion bajo.
-            # Esta sanitización es por cada componente del path, no para el string completo.
             sane_component = "".join(c for c in part if c.isalnum() or c == '_')
             if not sane_component or sane_component != part:
-                error_message = f"Componente de nombre de vista inválido ('{part}') en '{view_name_with_separator}'."
+                # Usar view_name_base aquí para el mensaje de error, ya que 'part' podría ser de una vista con params
+                error_message = f"Componente de nombre de vista inválido ('{part}') en '{view_name_base}'."
                 print(f"BackendBridge Error: {error_message}")
                 error_html = f"<p style='color:red;'>Error: {error_message}</p>"
-                self.viewContentLoaded.emit(error_html, "error") # Emitir 'error' como segundo argumento
+                # Emitir con el nombre original completo para que el JS sepa qué falló
+                self.viewContentLoaded.emit(error_html, view_name_with_separator_and_params + "_error") 
                 return
             sane_path_components.append(sane_component)
 
         if not sane_path_components:
-            error_message = f"Nombre de vista inválido o vacío después del procesamiento: '{view_name_with_separator}'."
+            # Usar view_name_base para el mensaje
+            error_message = f"Nombre de vista inválido o vacío después del procesamiento: '{view_name_base}'."
             print(f"BackendBridge Error: {error_message}")
             error_html = f"<p style='color:red;'>Error: {error_message}</p>"
-            self.viewContentLoaded.emit(error_html, "error")
+            self.viewContentLoaded.emit(error_html, view_name_with_separator_and_params + "_error")
             return
 
-        # Construir la ruta relativa del fragmento dentro de 'html_files'
-        # Ejemplo: ['historial', 'historial_acciones'] -> 'historial/historial_acciones.html'
-        # Ejemplo: ['dashboard'] -> 'dashboard.html'
         relative_fragment_path = os.path.join(*sane_path_components) + ".html"
         
         try:
-            # get_absolute_path ya espera una ruta relativa a la raíz del proyecto.
-            # os.path.join("html_files", ...) construye la ruta relativa completa desde la raíz del proyecto.
             target_file_path = self.get_absolute_path(os.path.join("html_files", relative_fragment_path))
+            # ... (resto de la lógica como antes, pero usando view_name_base para logs y errores si es relevante) ...
             
-            print(f"BackendBridge: Intentando leer archivo fragmento: {target_file_path}")
+            print(f"BackendBridge: Intentando leer archivo fragmento: {target_file_path} (de vista base: {view_name_base})")
 
-            # Verificación de seguridad adicional (aunque get_absolute_path y os.path.join deberían manejarlo bien
-            # si get_base_path es seguro y los componentes son saneados).
-            # Nos aseguramos de que el path resuelto esté dentro del directorio 'html_files' esperado.
             base_html_dir_abs = os.path.abspath(self.get_absolute_path("html_files"))
             target_file_path_abs = os.path.abspath(target_file_path)
 
-            if not target_file_path_abs.startswith(base_html_dir_abs + os.sep) and target_file_path_abs != base_html_dir_abs : # os.sep para el separador correcto. Añadida condición por si base_html_dir_abs es el archivo mismo (poco probable aqui)
-                print(f"BackendBridge Error: Intento de Path Traversal o ruta fuera de 'html_files' para '{view_name_with_separator}'. Path resuelto: '{target_file_path_abs}', Base esperada: '{base_html_dir_abs}'")
-                error_html = f"<p style='color:red;'>Error de seguridad al cargar la vista.</p>"
-                self.viewContentLoaded.emit(error_html, "error_security") # Usar un tipo de error específico
+            if not target_file_path_abs.startswith(base_html_dir_abs + os.sep) and target_file_path_abs != base_html_dir_abs :
+                print(f"BackendBridge Error: Path Traversal o fuera de 'html_files' para '{view_name_base}'. Path: '{target_file_path_abs}'")
+                # ... emitir error ...
+                self.viewContentLoaded.emit("<p style='color:red;'>Error de seguridad.</p>", view_name_with_separator_and_params + "_error_security")
                 return
 
             if os.path.exists(target_file_path) and os.path.isfile(target_file_path):
                 with open(target_file_path, 'r', encoding='utf-8') as f:
                     html_content = f.read()
                 print(f"BackendBridge: Contenido de '{relative_fragment_path}' leído. Enviando a JS...")
-                # Usar el view_name_with_separator original para la señal,
-                # ya que JS podría usarlo para identificar la vista cargada.
-                self.viewContentLoaded.emit(html_content, view_name_with_separator)
+                # Emitir con el nombre original COMPLETO para que JS lo use para inicializar (JS leerá los params del hash)
+                self.viewContentLoaded.emit(html_content, view_name_with_separator_and_params)
             else:
-                error_message = f"Archivo fragmento NO encontrado o no es un archivo: {target_file_path}"
+                error_message = f"Archivo fragmento NO encontrado para vista base '{view_name_base}': {target_file_path}"
                 print(f"BackendBridge Error: {error_message}")
-                error_html = f"<p style='color:red;'>Error: No se pudo cargar la vista '{view_name_with_separator}'. Archivo no encontrado.</p>"
-                self.viewContentLoaded.emit(error_html, "error_not_found") # Usar un tipo de error específico
+                # ... emitir error ...
+                self.viewContentLoaded.emit(f"<p style='color:red;'>Vista '{view_name_base}' no encontrada.</p>", view_name_with_separator_and_params + "_error_not_found")
         except Exception as e:
-            print(f"BackendBridge Error: Excepción al leer '{relative_fragment_path}':")
-            traceback.print_exc()
-            error_html = f"<p style='color:red;'>Error interno al cargar la vista '{view_name_with_separator}'.</p>"
-            self.viewContentLoaded.emit(error_html, "error_internal") # Usar un tipo de error específico
+            # ... emitir error ...
+            self.viewContentLoaded.emit(f"<p style='color:red;'>Error interno cargando '{view_name_base}'.</p>", view_name_with_separator_and_params + "_error_internal")
+
 
     @pyqtSlot(QVariant)
     def save_new_patient(self, patient_data_qvariant):

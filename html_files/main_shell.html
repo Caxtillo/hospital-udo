@@ -8,6 +8,7 @@
     <script src="js/tailwind.js"></script>
     <link rel="stylesheet" href="fa/css/all.min.css">
     <script src="js/qwebchannel.js"></script>
+    <script src="js/qrcode.min.js"></script>
     <style>
         body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -104,58 +105,86 @@
             });
         }
 
-        function loadContent(viewName, clickedElement) {
-            console.log(`Shell: loadContent solicitado para vista: ${viewName}`);
-            if (typeof setActiveNav !== 'function' || typeof displayErrorInContent !== 'function') {
-                 console.error("Shell Error: Funciones UI críticas no definidas."); return;
-            }
-            const contentArea = document.getElementById('content-area');
-            if (!contentArea) {
-                console.error("Shell Error: No se encontró #content-area."); return;
-            }
+function loadContent(viewTargetWithPossibleParams, clickedElement) {
+    console.log(`Shell: loadContent solicitado para: ${viewTargetWithPossibleParams}`);
+    const contentArea = document.getElementById('content-area');
+    if (!contentArea) { console.error("Shell Error: No se encontró #content-area."); return; }
 
-            contentArea.innerHTML = '<p class="italic text-gray-500">Cargando...</p>';
-            currentView = viewName; 
-            setActiveNav(viewName); 
+    contentArea.innerHTML = '<p class="italic text-gray-500">Cargando...</p>';
+    
+    let viewNameBase = viewTargetWithPossibleParams;
+    if (viewTargetWithPossibleParams.includes('?')) {
+        viewNameBase = viewTargetWithPossibleParams.split('?', 1)[0];
+    }
 
-            if (backend && backend.request_view_content) {
-                try {
-                    backend.request_view_content(viewName);
-                    if (viewName === 'paciente_registro' && backend.get_next_historia_number) {
-                         setTimeout(() => { if(backend && backend.get_next_historia_number) { backend.get_next_historia_number(); } }, 50);
-                     }
-                } catch (e) {
-                     console.error(`Shell Error: Al llamar a backend.request_view_content(${viewName})`, e);
-                     displayErrorInContent('<p class="text-red-600">Error interno al solicitar vista.</p>');
-                }
-            } else {
-                 console.error("Shell Error: Backend o backend.request_view_content no disponible (posiblemente llamado antes de 'backendReady').");
-                 // No mostramos error aquí directamente, la vista que intenta cargar se quejará si el backend no está listo.
-            }
+    currentView = viewNameBase; 
+    
+    let navKey = viewNameBase;
+    if (viewNameBase.startsWith('pacientes__evolucion__') || 
+        viewNameBase.startsWith('pacientes__ordenes__') ||
+        viewNameBase.startsWith('pacientes__complementarios__') || // <--- AÑADIR ESTO
+        viewNameBase === 'pacientes__paciente_detalle') {
+        navKey = 'listado_pacientes'; 
+    } else if (viewNameBase.startsWith('medicos__')) {
+        navKey = 'medicos';
+    }
+    setActiveNav(navKey); 
+
+    // ***** ESTA LÍNEA ACTUALIZA EL HASH DE LA URL *****
+    window.location.hash = viewTargetWithPossibleParams; 
+    console.log("Shell: Hash de URL actualizado a:", window.location.hash);
+
+    if (window.backend && window.backend.request_view_content) {
+        try {
+            // El backend SOLO necesita el nombre base del archivo HTML para cargar su contenido.
+            // El script de la vista (ej. agregar_complementario.js) leerá los params del hash.
+            window.backend.request_view_content(viewNameBase); 
+            
+            if (viewNameBase === 'pacientes__paciente_registro' && window.backend.get_next_historia_number) {
+                 setTimeout(() => { if(window.backend && window.backend.get_next_historia_number) { window.backend.get_next_historia_number(); } }, 50);
+             }
+        } catch (e) {
+             console.error(`Shell Error: Al llamar a backend.request_view_content(${viewNameBase})`, e);
+             displayErrorInContent('<p class="text-red-600">Error interno al solicitar vista.</p>');
         }
+    } else {
+         console.error("Shell Error: Backend o backend.request_view_content no disponible.");
+         // displayErrorInContent(...); // No es necesario si el chequeo está en tryLoad
+    }
+}
 
-        function injectHtmlContent(htmlContent, viewName) {
-             const injectedViewName = viewName; 
-             console.log(`Shell: Injecting content for view: ${injectedViewName}`);
-             const contentArea = document.getElementById('content-area');
-             if (!contentArea) { console.error("Shell Error: #content-area no encontrado para inyección."); return; }
 
-             contentArea.innerHTML = htmlContent;
-             executeScriptsInElement(contentArea); 
-             contentArea.scrollTop = 0;
+ function injectHtmlContent(htmlContent, viewNameReceivedWithParams) { // viewNameReceivedWithParams es lo que Python emite
+     console.log(`Shell: Injecting content for view (con params si los hay): ${viewNameReceivedWithParams}`);
+     const contentArea = document.getElementById('content-area');
+     if (!contentArea) { /* ... */ return; }
 
-             setTimeout(() => {
-                 const initFuncName = `initialize_${injectedViewName.replace(/__/g, '_')}`;
-                 if (typeof window.viewInitializationFunctions[initFuncName] === 'function') {
-                     console.log(`Shell: Llamando a inicializador registrado: ${initFuncName}`);
-                     try {
-                         window.viewInitializationFunctions[initFuncName]();
-                     } catch (e) { console.error(`Shell Error: Al ejecutar ${initFuncName}:`, e); }
-                 } else {
-                     console.log(`Shell: No se encontró inicializador (${initFuncName}) para la vista ${injectedViewName}.`);
-                 }
-             }, 10); 
-        }
+     contentArea.innerHTML = htmlContent;
+     executeScriptsInElement(contentArea); 
+     contentArea.scrollTop = 0;
+
+     // El inicializador se busca por el nombre base de la vista (sin params)
+     let viewNameBaseForInit = viewNameReceivedWithParams;
+     if (viewNameReceivedWithParams.includes('?')) {
+         viewNameBaseForInit = viewNameReceivedWithParams.split('?', 1)[0];
+     }
+     // Si la señal de Python emite un sufijo de error, quitarlo también
+     viewNameBaseForInit = viewNameBaseForInit.replace(/_error(?:_security|_not_found|_internal)?$/, '');
+
+
+     setTimeout(() => {
+         const initFuncName = `initialize_${viewNameBaseForInit.replace(/__/g, '_')}`;
+         if (typeof window.viewInitializationFunctions[initFuncName] === 'function') {
+             console.log(`Shell: Llamando a inicializador registrado: ${initFuncName}`);
+             try {
+                 // La función de inicialización de la vista leerá los params de window.location.hash
+                 window.viewInitializationFunctions[initFuncName]();
+             } catch (e) { console.error(`Shell Error: Al ejecutar ${initFuncName}:`, e); }
+         } else {
+             console.log(`Shell: No se encontró inicializador (${initFuncName}) para la vista ${viewNameBaseForInit}.`);
+         }
+     }, 10); 
+}
 
         function executeScriptsInElement(element) {
              const scripts = element.querySelectorAll("script");
@@ -304,7 +333,19 @@
                             } else {
                                 console.warn("Shell: Señal evolucionDetailsResult no encontrada en el backend.");
                             }
+                            if (backend.complementoDetailsResult) {
+                                backend.complementoDetailsResult.connect((jsonStringData) => {
+                                    routeBackendSignal('handleComplementoDetailsResult', jsonStringData);
+                                });
+                            } else { console.warn("Shell: Señal complementoDetailsResult no encontrada."); }
 
+                            if (backend.complementoSaveResult) {
+                                backend.complementoSaveResult.connect((success, msg, idComplemento) => {
+                                    // ***** ESTE LOG ES CRUCIAL *****
+                                    console.log(`[Shell] Señal complementoSaveResult RECIBIDA. Success: ${success}, Msg: ${msg}, ID: ${idComplemento}. Vista actual (currentView): ${currentView}`);
+                                    routeBackendSignal('handleComplementoSaveResult', success, msg, idComplemento);
+                                });
+                            } else { console.warn("Shell: Señal complementoSaveResult no encontrada."); }
                             if (backend.evolucionUpdateResult) {
                                 backend.evolucionUpdateResult.connect((success, msg) => {
                                     routeBackendSignal('handleEvolucionUpdateResult', success, msg);
@@ -327,6 +368,15 @@
                                 });
                             } else {
                                 console.warn("Shell: Señal ordenDetailsResult no encontrada en el backend.");
+                            }
+                            if (backend.ordenUpdateResult) { // Nombre de la señal en Python
+                                backend.ordenUpdateResult.connect((success, msg) => {
+                                    // El primer argumento de routeBackendSignal es el prefijo del handler global
+                                    // El handler en editar_orden.js se llamará handleOrdenUpdateResult_pacientes__ordenes__editar_orden
+                                    routeBackendSignal('handleOrdenUpdateResult', success, msg);
+                                });
+                            } else {
+                                console.warn("Shell: Señal ordenUpdateResult no encontrada en el backend.");
                             }
                             // No hay señal usernameLoaded, userDataLoaded ya cumple esa función
                             console.log("Shell: Señales conectadas.");

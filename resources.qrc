@@ -1,0 +1,9 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+    <file alias="js/qrcode.min.js">html_files/js/qrcode.min.js</file>
+    <!-- Puedes añadir otros assets aquí, como CSS, imágenes, etc. -->
+    <!-- Asegúrate que la ruta DENTRO de <file> sea relativa al archivo .qrc -->
+    <!-- Si resources.qrc está en la raíz: html_files/js/qrcode.min.js -->
+    <!-- Si resources.qrc está en, digamos, una carpeta "resources": ../html_files/js/qrcode.min.js -->
+</qresource>
+</RCC>

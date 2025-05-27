@@ -1,0 +1,940 @@
+<!-- html_files/pacientes/ordenes/editar_orden.html -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera con Título y Botones Superiores -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Editar Orden Médica
+            <span id="edit-orden-subheader" class="block text-sm font-normal text-gray-500 mt-1">Cargando datos de la orden...</span>
+        </h2>
+        <div id="edit-orden-actions-top" class="flex space-x-3 mt-3 md:mt-0">
+            <button type="button" id="cancel-edit-orden-top"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium transition duration-150 h-[42px]">
+                    Cancelar
+            </button>
+            <button type="submit" id="submit-edit-orden-top" form="edit-orden-form"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium transition duration-150 disabled:opacity-60 h-[42px]">
+                <span id="edit-orden-btn-text-top">Guardar Cambios</span>
+                <svg id="edit-orden-spinner-top" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="edit-orden-loading" class="text-center py-10">
+        <p class="text-gray-500 italic">Cargando datos de la orden para editar...</p>
+    </div>
+
+    <div id="edit-orden-feedback" class="my-6 text-center text-sm h-5"></div>
+
+    <form id="edit-orden-form" class="space-y-8 hidden"> <!-- Oculto inicialmente hasta cargar datos -->
+        <input type="hidden" id="orden-id-hidden" name="orden_id"> <!-- Para enviar el ID de la orden que se edita -->
+
+        <!-- SECCIÓN: HOSPITALIZACIÓN -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Hospitalización</legend>
+            <div class="space-y-4">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="orden_hospitalizar_check" name="orden_hospitalizar_check" class="form-checkbox h-5 w-5 text-teal-600 rounded border-gray-300 focus:ring-teal-500">
+                    <span class="text-gray-700 font-medium">Hospitalizar Paciente</span>
+                </label>
+                <div id="hospitalizacion_detalles_content" class="ml-8 space-y-3 hidden transition-all duration-300 ease-in-out">
+                    <div>
+                        <label for="orden_hospitalizacion_lugar" class="block text-sm font-medium text-gray-700 mb-1">Lugar de Hospitalización</label>
+                        <input type="text" id="orden_hospitalizacion_lugar" name="hospitalizacion_lugar" placeholder="Ej: Piso 3, UCI" class="form-input">
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: DIETA -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Dieta</legend>
+            <div class="space-y-4">
+                <div>
+                    <label for="orden_dieta_inicial_tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Dieta</label>
+                    <select id="orden_dieta_inicial_tipo" name="dieta_tipo_inicial" class="form-select md:w-1/2">
+                        <option value="">Ninguna / Mantener actual</option>
+                        <option value="Absoluta">Absoluta</option>
+                        <option value="Líquida">Líquida</option> <!-- Simplificado como en tu agregar_orden -->
+                        <option value="Blanda">Blanda</option>
+                        <!-- Quité General y Específica para coincidir con tu último agregar_orden.html -->
+                    </select>
+                </div>
+                <div id="dieta_absoluta_content" class="ml-8 space-y-3 hidden transition-all duration-300 ease-in-out">
+                    <label class="block text-sm font-medium text-gray-700">Detalles Dieta Absoluta</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" name="dieta_absoluta_duracion_valor" placeholder="Valor" min="0" class="form-input w-24">
+                        <select name="dieta_absoluta_duracion_unidad" class="form-select">
+                            <option value="horas">horas</option>
+                            <option value="días">días</option>
+                            <option value="hasta nueva orden">hasta nueva orden</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- dieta_especifica_content y dieta_progresion_content removidos para coincidir con tu último agregar_orden.html -->
+                 <!-- Si necesitas progresión, debes añadir de nuevo el checkbox y el div correspondiente aquí -->
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: HIDRATACIÓN PARENTERAL -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Hidratación Parenteral (Fluidos IV)</legend>
+            <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                <input type="checkbox" id="orden_hp_check" name="hp_check" class="form-checkbox h-5 w-5 text-teal-600">
+                <span class="text-gray-700 font-medium">Indicar Hidratación Parenteral</span>
+            </label>
+            <div id="hp_content" class="hidden space-y-4">
+                 <!-- Los items de HP se añadirán aquí -->
+                <div id="hp-lista-soluciones" class="space-y-4"></div>
+                <button type="button" id="add-hp-solucion-btn" class="text-sm text-teal-600 hover:text-teal-800 font-medium"><i class="fas fa-plus-circle mr-1"></i> Añadir Solución</button>
+                <div>
+                    <label for="orden_hp_observaciones_generales" class="block text-sm font-medium text-gray-700 mb-1">Observaciones Generales de Hidratación</label>
+                    <textarea id="orden_hp_observaciones_generales" name="hp_observaciones_generales" rows="2" class="form-textarea"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: MEDICAMENTOS -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Medicamentos</legend>
+             <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                <input type="checkbox" id="orden_medicamentos_check" name="medicamentos_check" class="form-checkbox h-5 w-5 text-teal-600">
+                <span class="text-gray-700 font-medium">Indicar Medicamentos</span>
+            </label>
+            <div id="medicamentos_content" class="hidden space-y-4">
+                <div id="medicamentos-lista-items" class="space-y-6">
+                    <!-- Medicamentos se añadirán aquí dinámicamente -->
+                </div>
+                <button type="button" id="add-medicamento-btn" class="text-sm text-teal-600 hover:text-teal-800 font-medium">
+                    <i class="fas fa-plus-circle mr-1"></i> Añadir Medicamento
+                </button>
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: LABORATORIO -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Laboratorio</legend>
+            <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                <input type="checkbox" id="orden_labs_check" name="labs_check" class="form-checkbox h-5 w-5 text-teal-600">
+                <span class="text-gray-700 font-medium">Solicitar Laboratorios</span>
+            </label>
+            <div id="labs_content" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <label class="flex items-center"><input type="checkbox" name="lab_hc" class="form-checkbox-sm"> <span class="ml-2">Hemograma Completo</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_glicemia" class="form-checkbox-sm"> <span class="ml-2">Glicemia</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_urea" class="form-checkbox-sm"> <span class="ml-2">Urea</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_creatinina" class="form-checkbox-sm"> <span class="ml-2">Creatinina</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_electrolitos_sericos" class="form-checkbox-sm"> <span class="ml-2">Electrolitos Séricos (Na, K, Cl)</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_perfil_hepatico" class="form-checkbox-sm"> <span class="ml-2">Perfil Hepático</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_perfil_lipidico" class="form-checkbox-sm"> <span class="ml-2">Perfil Lipídico</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_tiempos_coag" class="form-checkbox-sm"> <span class="ml-2">Tiempos de Coagulación</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_hiv" class="form-checkbox-sm"> <span class="ml-2">HIV</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_vdrl" class="form-checkbox-sm"> <span class="ml-2">VDRL</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_uroanalisis" class="form-checkbox-sm"> <span class="ml-2">Uroanálisis</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_coprocultivo" class="form-checkbox-sm"> <span class="ml-2">Coprocultivo</span></label>
+                <label class="flex items-center"><input type="checkbox" name="lab_hemocultivos" class="form-checkbox-sm"> <span class="ml-2">Hemocultivos</span></label>
+                <div class="md:col-span-2 lg:col-span-3 mt-2">
+                    <label for="orden_labs_otros" class="block text-sm font-medium text-gray-700 mb-1">Otros Laboratorios</label>
+                    <textarea id="orden_labs_otros" name="labs_otros" rows="2" class="form-textarea" placeholder="Ej: PCR, VSG, Perfil tiroideo"></textarea>
+                </div>
+                <div class="md:col-span-2 lg:col-span-3">
+                    <label for="orden_labs_observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones de Laboratorio</label>
+                    <textarea id="orden_labs_observaciones" name="labs_observaciones" rows="2" class="form-textarea" placeholder="Ej: Tomar en ayunas, Urgente"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: ESTUDIOS DE IMAGEN -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Estudios de Imagen</legend>
+             <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                <input type="checkbox" id="orden_imagenes_check" name="imagenes_check" class="form-checkbox h-5 w-5 text-teal-600">
+                <span class="text-gray-700 font-medium">Solicitar Estudios de Imagen</span>
+            </label>
+            <div id="imagenes_content" class="hidden space-y-4">
+                <div id="imagenes-lista-items" class="space-y-6"></div>
+                <button type="button" id="add-imagen-btn" class="text-sm text-teal-600 hover:text-teal-800 font-medium"><i class="fas fa-plus-circle mr-1"></i> Añadir Estudio</button>
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: INTERCONSULTAS Y OTROS PROCEDIMIENTOS -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Interconsultas y Otros Procedimientos</legend>
+             <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                <input type="checkbox" id="orden_otros_proc_check" name="otros_proc_check" class="form-checkbox h-5 w-5 text-teal-600">
+                <span class="text-gray-700 font-medium">Solicitar Interconsultas / Procedimientos</span>
+            </label>
+            <div id="otros_proc_content" class="hidden space-y-4">
+                <div id="otros-proc-lista-items" class="space-y-6"></div>
+                <button type="button" id="add-otro-proc-btn" class="text-sm text-teal-600 hover:text-teal-800 font-medium"><i class="fas fa-plus-circle mr-1"></i> Añadir Solicitud</button>
+            </div>
+        </fieldset>
+
+        <!-- SECCIÓN: MONITOREO Y CUIDADOS -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Monitoreo y Cuidados</legend>
+            <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                <input type="checkbox" id="orden_cuidados_check" name="cuidados_check" class="form-checkbox h-5 w-5 text-teal-600">
+                <span class="text-gray-700 font-medium">Indicar Monitoreo / Cuidados Específicos</span>
+            </label>
+            <div id="cuidados_content" class="hidden grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                <div>
+                    <label class="flex items-center"><input type="checkbox" name="cuidado_sv" class="form-checkbox-sm"> <span class="ml-2">Control de Signos Vitales (SV)</span></label>
+                    <input type="text" name="cuidado_sv_frecuencia" placeholder="Frecuencia, ej: c/4h" class="form-input-sm mt-1 ml-6 w-auto">
+                </div>
+                <label class="flex items-center"><input type="checkbox" name="cuidado_diuresis" class="form-checkbox-sm"> <span class="ml-2">Control de Diuresis</span></label>
+                <div>
+                    <label class="flex items-center"><input type="checkbox" name="cuidado_drenajes_check" class="form-checkbox-sm"> <span class="ml-2">Control de Drenajes</span></label>
+                    <input type="text" name="cuidado_drenajes_esp" placeholder="Especificar" class="form-input-sm mt-1 ml-6 w-auto">
+                </div>
+                <label class="flex items-center"><input type="checkbox" name="cuidado_satO2_continua" class="form-checkbox-sm"> <span class="ml-2">Saturación O2 Continua</span></label>
+                <label class="flex items-center"><input type="checkbox" name="cuidado_monitoreo_cardiaco" class="form-checkbox-sm"> <span class="ml-2">Monitoreo Cardíaco Continuo</span></label>
+                <label class="flex items-center"><input type="checkbox" name="cuidado_cabecera_elevada" class="form-checkbox-sm"> <span class="ml-2">Cabecera Elevada (ej: 30°)</span></label>
+                <label class="flex items-center"><input type="checkbox" name="cuidado_reposo_absoluto" class="form-checkbox-sm"> <span class="ml-2">Reposo Absoluto</span></label>
+                <label class="flex items-center"><input type="checkbox" name="cuidado_movilizacion_asistida" class="form-checkbox-sm"> <span class="ml-2">Movilización Asistida</span></label>
+                <div class="md:col-span-2">
+                    <label for="orden_cuidados_otros" class="block text-sm font-medium text-gray-700 mb-1">Otros Cuidados / Monitoreo</label>
+                    <textarea id="orden_cuidados_otros" name="cuidados_otros" rows="3" class="form-textarea"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Botones Inferiores -->
+        <div class="flex justify-end space-x-3 pt-5 border-t border-gray-200 mt-8">
+            <button type="button" id="cancel-edit-orden-bottom"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium h-[42px]">
+                    Cancelar
+            </button>
+            <button type="submit" id="submit-edit-orden-bottom"
+                    class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium disabled:opacity-60 h-[42px]">
+                <span id="edit-orden-btn-text-bottom">Guardar Cambios</span>
+                <svg id="edit-orden-spinner-bottom" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Templates para items dinámicos (idénticos a agregar_orden.html) -->
+<template id="hp-solucion-template">
+    <div class="hp-solucion-item border rounded-md p-3 mb-3 bg-gray-50">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700">Solución IV</span>
+            <button type="button" class="remove-hp-solucion-btn text-xs text-red-500 hover:text-red-700">× Quitar</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+            <div><label class="block text-xs font-medium text-gray-600">Tipo de Solución</label><select name="hp_tipo_solucion[]" class="form-select-sm mt-1"><option value="Sol. Salina 0.9%">Sol. Salina 0.9%</option><option value="Sol. Salina 0.45%">Sol. Salina 0.45%</option><option value="Ringer Lactato">Ringer Lactato</option><option value="Dextrosa 5%">Dextrosa 5%</option><option value="Dextrosa 10%">Dextrosa 10%</option><option value="Otra">Otra...</option></select><input type="text" name="hp_tipo_solucion_otra[]" placeholder="Otra solución" class="form-input-sm mt-1 hidden"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Volumen (cc)</label><input type="number" name="hp_volumen[]" placeholder="Ej: 1000" class="form-input-sm mt-1"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Vía</label><select name="hp_via[]" class="form-select-sm mt-1"><option value="IV">IV</option><option value="SC">SC</option></select></div>
+            <div><label class="block text-xs font-medium text-gray-600">Velocidad/Frecuencia</label><div class="flex items-center space-x-1 mt-1"><input type="text" name="hp_velocidad_valor[]" placeholder="Valor" class="form-input-sm w-20"><select name="hp_velocidad_unidad[]" class="form-select-sm"><option value="gtt/min">gtt/min</option><option value="horas">pasar en horas</option><option value="minutos">pasar en minutos</option><option value="cc/hr">cc/hr</option><option value="KVO">KVO</option></select></div></div>
+        </div>
+        <div class="mt-2"><label class="block text-xs font-medium text-gray-600">Indicaciones de la Solución</label><input type="text" name="hp_solucion_indicaciones[]" class="form-input-sm mt-1"></div>
+    </div>
+</template>
+<template id="medicamento-item-template">
+    <div class="medicamento-item border rounded-md p-3 mb-3 bg-gray-50">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-gray-700">Medicamento</span><button type="button" class="remove-medicamento-btn text-xs text-red-500 hover:text-red-700">× Quitar</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+            <div><label class="block text-xs font-medium text-gray-600">Nombre</label><input type="text" name="med_nombre[]" class="form-input-sm mt-1"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Dosis</label><input type="text" name="med_dosis[]" class="form-input-sm mt-1"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Unidad Dosis</label><select name="med_unidad[]" class="form-select-sm mt-1"><option value="mg">mg</option><option value="g">g</option><option value="UI">UI</option><option value="mcg">mcg</option><option value="cc">cc</option><option value="ml">ml</option><option value="ampolla">ampolla(s)</option><option value="comprimido">comprimido(s)</option><option value="otro">Otro...</option></select><input type="text" name="med_unidad_otra[]" placeholder="Otra unidad" class="form-input-sm mt-1 hidden"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Vía</label><select name="med_via[]" class="form-select-sm mt-1"><option value="IV">IV</option><option value="IM">IM</option><option value="SC">SC</option><option value="VO">VO</option><option value="SL">SL</option><option value="Tópica">Tópica</option><option value="Rectal">Rectal</option><option value="Inhalatoria">Inhalatoria</option><option value="Otra">Otra...</option></select><input type="text" name="med_via_otra[]" placeholder="Otra vía" class="form-input-sm mt-1 hidden"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Frecuencia</label><input type="text" name="med_frecuencia[]" placeholder="Ej: c/8h, BID, SOS" class="form-input-sm mt-1"></div>
+        </div>
+        <div class="mt-2"><label class="block text-xs font-medium text-gray-600">Observaciones del Medicamento</label><input type="text" name="med_observaciones[]" class="form-input-sm mt-1"></div>
+    </div>
+</template>
+<template id="imagen-item-template">
+    <div class="imagen-item border rounded-md p-3 mb-3 bg-gray-50">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-gray-700">Estudio de Imagen</span><button type="button" class="remove-imagen-btn text-xs text-red-500 hover:text-red-700">× Quitar</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+            <div><label class="block text-xs font-medium text-gray-600">Tipo de Estudio</label><select name="img_tipo[]" class="form-select-sm mt-1"><option value="Rayos X">Rayos X</option><option value="Ecosonograma">Ecosonograma</option><option value="TAC">Tomografía (TAC)</option><option value="RM">Resonancia (RM)</option><option value="Endoscopia">Endoscopia</option><option value="Otro">Otro...</option></select><input type="text" name="img_tipo_otro[]" placeholder="Otro estudio" class="form-input-sm mt-1 hidden"></div>
+            <div><label class="block text-xs font-medium text-gray-600">Región/Especificación</label><input type="text" name="img_region[]" placeholder="Ej: Tórax AP, Abdominal" class="form-input-sm mt-1"></div>
+        </div>
+    </div>
+</template>
+<template id="otro-proc-item-template">
+    <div class="otro-proc-item border rounded-md p-3 mb-3 bg-gray-50">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-gray-700">Interconsulta / Procedimiento</span><button type="button" class="remove-otro-proc-btn text-xs text-red-500 hover:text-red-700">× Quitar</button></div>
+        <div><label class="block text-xs font-medium text-gray-600">Tipo de Solicitud (Interconsulta a..., Procedimiento, Evaluación)</label><input type="text" name="otro_proc_tipo_solicitud[]" placeholder="Ej: Interconsulta a Cardiología, Curación de Herida" class="form-input-sm mt-1"></div>
+        <div class="mt-2"><label class="block text-xs font-medium text-gray-600">Detalle/Especificación</label><input type="text" name="otro_proc_detalle[]" placeholder="Ej: Por HTA descompensada, Técnica estéril" class="form-input-sm mt-1"></div>
+    </div>
+</template>
+
+<!-- El script JS será diferente para manejar la carga y actualización -->
+<script>
+    // Script para pacientes/ordenes/editar_orden.js
+    (function() {
+        const VIEW_ID_FOR_SHELL_INIT = 'pacientes_ordenes_editar_orden';
+        const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__ordenes__editar_orden';
+        const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+        
+        // Handlers para esta vista específica
+        const HANDLER_ORDEN_DETAILS_RESULT = `handleOrdenDetailsResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+        const HANDLER_ORDEN_UPDATE_RESULT = `handleOrdenUpdateResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+
+        console.log(`Script EDITAR ORDEN: Handler detalles: ${HANDLER_ORDEN_DETAILS_RESULT}, Handler update: ${HANDLER_ORDEN_UPDATE_RESULT}`);
+
+        let form, subheaderElement, feedbackDiv, loadingDiv;
+        let cancelButtons = [], submitButtons = [], submitButtonTexts = [], submitSpinners = [];
+        let isSubmitting = false;
+        let currentOrdenId = null; // Para saber qué orden estamos editando
+
+        // Referencias a elementos del formulario (similar a agregar_orden.js)
+        let hospitalizarCheckbox, hospitalizacionDetallesDiv;
+        let dietaInicialSelect, dietaAbsolutaDetallesDiv, dietaEspecificaDetallesDiv;
+        let ordenHpCheck, hpContentDiv, addHpSolucionBtn, hpListaSolucionesDiv;
+        let ordenMedicamentosCheck, medicamentosContentDiv, addMedicamentoBtn, medicamentosListaItemsDiv;
+        let ordenLabsCheck, labsContentDiv;
+        let ordenImagenesCheck, imagenesContentDiv, addImagenBtn, imagenesListaItemsDiv;
+        let ordenOtrosProcCheck, otrosProcContentDiv, addOtroProcBtn, otrosProcListaItemsDiv;
+        let ordenCuidadosCheck, cuidadosContentDiv;
+        let hiddenOrdenIdInput;
+
+
+        // IDs de los templates (deben ser los mismos que en agregar_orden)
+        const hpTemplateId = 'hp-solucion-template';
+        const medicamentoTemplateId = 'medicamento-item-template';
+        const imagenTemplateId = 'imagen-item-template';
+        const otroProcTemplateId = 'otro-proc-item-template';
+
+        // --- UTILITIES (copiadas de agregar_orden.js, pueden ir a un utils.js global) ---
+        function applyCommonInputStyles(element) {
+            if (!element) return;
+            const baseClasses = "block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm";
+            const padding = element.tagName === 'TEXTAREA' ? "p-2" : "px-3 py-2 h-[42px]"; // Asumiendo que form-input ya tiene esto por Tailwind
+            element.classList.add(...baseClasses.split(' '), ...padding.split(' ')); // Añadir clases
+        }
+        function applySmallInputStyles(element) {
+            if (!element) return;
+            const baseClasses = "block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 text-xs";
+            const padding = element.tagName === 'TEXTAREA' ? "p-1.5" : "px-2 py-1.5 h-[34px]"; // Asumiendo form-input-sm
+            element.classList.add(...baseClasses.split(' '), ...padding.split(' '));
+        }
+        function applySmallCheckboxStyles(element) {
+            if (!element) return;
+            // Asumiendo que form-checkbox-sm ya tiene las clases necesarias o las defines en Tailwind
+            element.classList.add("form-checkbox", "h-4", "w-4", "text-teal-600", "rounded", "border-gray-300", "focus:ring-teal-500");
+        }
+
+        function addItemFromTemplate(templateId, containerDiv) {
+            const template = document.getElementById(templateId);
+            if (!template || !template.content) { console.error(`Template ${templateId} no encontrado o inválido.`); return null; } // Devolver null si falla
+            const clone = template.content.cloneNode(true);
+            const newItem = clone.querySelector(`.${templateId.replace('-template', '')}`);
+            
+            if (!newItem) { console.error(`Elemento principal no encontrado en template ${templateId}`); return null; }
+
+            newItem.querySelectorAll('input[type="text"], input[type="number"], select, textarea').forEach(el => {
+                // No aplicar applySmallInputStyles aquí si los templates ya tienen las clases 'form-input-sm' / 'form-select-sm'
+                // Si no las tienen, entonces sí: applySmallInputStyles(el);
+                // O mejor, asegurar que los templates usen las clases correctas de Tailwind directamente.
+            });
+            newItem.querySelectorAll('.form-checkbox-sm').forEach(applySmallCheckboxStyles);
+
+            newItem.querySelectorAll('select[name$="_tipo_solucion[]"], select[name$="_unidad[]"], select[name$="_via[]"], select[name$="_diluyente[]"], select[name$="_tipo[]"]').forEach(select => {
+                select.addEventListener('change', function() {
+                    const otraInput = this.closest('.grid, div').querySelector('input[type="text"][name$="_otra[]"]');
+                    if (otraInput) otraInput.classList.toggle('hidden', this.value.toLowerCase() !== 'otra'  && this.value.toLowerCase() !== 'otro');
+                });
+                // Estado inicial
+                const otraInput = select.closest('.grid, div').querySelector('input[type="text"][name$="_otra[]"]');
+                if (otraInput) otraInput.classList.toggle('hidden', select.value.toLowerCase() !== 'otra' && select.value.toLowerCase() !== 'otro');
+            });
+            
+            const removeBtn = newItem.querySelector('button[class*="remove-"]');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() { 
+                    const itemToRemove = this.closest(`.${templateId.replace('-template', '')}`);
+                    if (itemToRemove) itemToRemove.remove();
+                });
+            }
+            containerDiv.appendChild(clone);
+            return newItem; // Devolver el elemento añadido para poder manipularlo después
+        }
+        // Pegar aquí las implementaciones de applyCommonInputStyles, applySmallInputStyles, applySmallCheckboxStyles
+
+        function getDOMElements() {
+            loadingDiv = document.getElementById('edit-orden-loading');
+            form = document.getElementById('edit-orden-form');
+            subheaderElement = document.getElementById('edit-orden-subheader');
+            feedbackDiv = document.getElementById('edit-orden-feedback');
+            hiddenOrdenIdInput = document.getElementById('orden-id-hidden');
+
+            cancelButtons = [document.getElementById('cancel-edit-orden-top'), document.getElementById('cancel-edit-orden-bottom')];
+            submitButtons = [document.getElementById('submit-edit-orden-top'), document.getElementById('submit-edit-orden-bottom')];
+            submitButtonTexts = [document.getElementById('edit-orden-btn-text-top'), document.getElementById('edit-orden-btn-text-bottom')];
+            submitSpinners = [document.getElementById('edit-orden-spinner-top'), document.getElementById('edit-orden-spinner-bottom')];
+            
+            // Obtener referencias a los elementos de las secciones
+            hospitalizarCheckbox = document.getElementById('orden_hospitalizar_check');
+            hospitalizacionDetallesDiv = document.getElementById('hospitalizacion_detalles_content');
+            dietaInicialSelect = document.getElementById('orden_dieta_inicial_tipo');
+            dietaAbsolutaDetallesDiv = document.getElementById('dieta_absoluta_content');
+            dietaEspecificaDetallesDiv = document.getElementById('dieta_especifica_content'); // Asegúrate que este ID exista si usas "Específica"
+
+            ordenHpCheck = document.getElementById('orden_hp_check');
+            hpContentDiv = document.getElementById('hp_content');
+            addHpSolucionBtn = document.getElementById('add-hp-solucion-btn');
+            hpListaSolucionesDiv = document.getElementById('hp-lista-soluciones');
+
+            ordenMedicamentosCheck = document.getElementById('orden_medicamentos_check');
+            medicamentosContentDiv = document.getElementById('medicamentos_content');
+            addMedicamentoBtn = document.getElementById('add-medicamento-btn');
+            medicamentosListaItemsDiv = document.getElementById('medicamentos-lista-items');
+
+            ordenLabsCheck = document.getElementById('orden_labs_check');
+            labsContentDiv = document.getElementById('labs_content');
+
+            ordenImagenesCheck = document.getElementById('orden_imagenes_check');
+            imagenesContentDiv = document.getElementById('imagenes_content');
+            addImagenBtn = document.getElementById('add-imagen-btn');
+            imagenesListaItemsDiv = document.getElementById('imagenes-lista-items');
+
+            ordenOtrosProcCheck = document.getElementById('orden_otros_proc_check');
+            otrosProcContentDiv = document.getElementById('otros_proc_content');
+            addOtroProcBtn = document.getElementById('add-otro-proc-btn');
+            otrosProcListaItemsDiv = document.getElementById('otros-proc-lista-items');
+
+            ordenCuidadosCheck = document.getElementById('orden_cuidados_check');
+            cuidadosContentDiv = document.getElementById('cuidados_content');
+
+            // Aplicar estilos (si no se hace globalmente)
+             document.querySelectorAll('#edit-orden-form input[type="text"]:not([class*="-sm"]), #edit-orden-form input[type="number"]:not([class*="-sm"]), #edit-orden-form select:not([class*="-sm"]), #edit-orden-form textarea:not([class*="-sm"])').forEach(el => {
+                if (!el.closest('.hp-solucion-item, .medicamento-item, .imagen-item, .otro-proc-item')) {
+                    applyCommonInputStyles(el); // Reutiliza tu función de estilo
+                }
+            });
+            document.querySelectorAll('.form-checkbox-sm').forEach(applySmallCheckboxStyles); // Reutiliza
+
+        }
+        
+        // --- Llenar Formulario con Datos Existentes ---
+        // En el script de editar_orden.js
+
+        function populateFormWithData(ordenDetails) {
+            // console.log("Populating form with data:", ordenDetails); // Log útil para depurar datos entrantes
+            if (!ordenDetails || !ordenDetails.orden_json_blob) {
+                if (feedbackDiv) {
+                    feedbackDiv.textContent = "Error: No se recibieron detalles válidos de la orden.";
+                    feedbackDiv.className = "my-6 text-center text-sm h-5 text-red-600 font-medium";
+                }
+                return;
+            }
+            
+            currentOrdenId = ordenDetails.id_orden;
+            if (hiddenOrdenIdInput) hiddenOrdenIdInput.value = currentOrdenId;
+
+            let ordenJson;
+            try {
+                if (typeof ordenDetails.orden_json_blob === 'string') {
+                    ordenJson = JSON.parse(ordenDetails.orden_json_blob);
+                } else if (typeof ordenDetails.orden_json_blob === 'object') {
+                    ordenJson = ordenDetails.orden_json_blob;
+                } else {
+                    throw new Error("orden_json_blob no es ni string ni objeto válido.");
+                }
+            } catch (e) {
+                console.error("Error parseando orden_json_blob en populateForm:", e, ordenDetails.orden_json_blob);
+                if (feedbackDiv) {
+                    feedbackDiv.textContent = "Error al procesar los detalles de la orden.";
+                    feedbackDiv.className = "my-6 text-center text-sm h-5 text-red-600 font-medium";
+                }
+                return;
+            }
+
+            if (subheaderElement && ordenDetails.paciente_nombre_completo) {
+                subheaderElement.textContent = `Editando Orden para Paciente: ${ordenDetails.paciente_nombre_completo} (H.C: ${ordenDetails.numero_historia_paciente || 'N/A'}) - Orden ID: ${currentOrdenId}`;
+            }
+
+            // Hospitalización
+            if (hospitalizarCheckbox) { // Verificar que el elemento exista
+                const lugarInput = document.getElementById('orden_hospitalizacion_lugar');
+                if (ordenJson.hospitalizacion && ordenJson.hospitalizacion.indicada) {
+                    hospitalizarCheckbox.checked = true;
+                    if (lugarInput) lugarInput.value = ordenJson.hospitalizacion.lugar || '';
+                    if (hospitalizacionDetallesDiv) hospitalizacionDetallesDiv.classList.remove('hidden');
+                } else {
+                    hospitalizarCheckbox.checked = false;
+                    if (hospitalizacionDetallesDiv) hospitalizacionDetallesDiv.classList.add('hidden');
+                }
+            }
+
+            // Dieta
+            if (ordenJson.dieta && dietaInicialSelect) {
+                dietaInicialSelect.value = ordenJson.dieta.tipo_inicial || '';
+                // Disparar evento change para actualizar la visibilidad de secciones dependientes
+                dietaInicialSelect.dispatchEvent(new Event('change')); 
+
+                if (ordenJson.dieta.tipo_inicial === 'Absoluta') {
+                    const duracionValorInput = document.querySelector('[name="dieta_absoluta_duracion_valor"]');
+                    const duracionUnidadSelect = document.querySelector('[name="dieta_absoluta_duracion_unidad"]');
+                    if (duracionValorInput) duracionValorInput.value = ordenJson.dieta.absoluta_duracion_valor || '';
+                    if (duracionUnidadSelect) duracionUnidadSelect.value = ordenJson.dieta.absoluta_duracion_unidad || 'horas';
+                }
+            } else if (dietaInicialSelect) { // Si no hay datos de dieta en JSON, resetear
+                dietaInicialSelect.value = '';
+                dietaInicialSelect.dispatchEvent(new Event('change'));
+            }
+
+
+            // Hidratación Parenteral
+            if (hpListaSolucionesDiv) hpListaSolucionesDiv.innerHTML = '';
+            if (ordenJson.hp && ordenJson.hp.indicada && ordenHpCheck && hpContentDiv) {
+                ordenHpCheck.checked = true;
+                hpContentDiv.classList.remove('hidden');
+                const obsGeneralesHP = document.getElementById('orden_hp_observaciones_generales');
+                if (obsGeneralesHP) obsGeneralesHP.value = ordenJson.hp.observaciones_generales || '';
+                
+                if (ordenJson.hp.soluciones && ordenJson.hp.soluciones.length > 0) {
+                    ordenJson.hp.soluciones.forEach(sol => {
+                        addItemFromTemplate(hpTemplateId, hpListaSolucionesDiv);
+                        const lastItem = hpListaSolucionesDiv.lastElementChild;
+                        if (lastItem) {
+                            const tipoSelect = lastItem.querySelector('[name="hp_tipo_solucion[]"]');
+                            const otraInput = lastItem.querySelector('[name="hp_tipo_solucion_otra[]"]');
+                            if (tipoSelect) {
+                                if (sol.tipo && !Array.from(tipoSelect.options).some(opt => opt.value === sol.tipo)) {
+                                    tipoSelect.value = 'Otra';
+                                    if (otraInput) { otraInput.value = sol.tipo; otraInput.classList.remove('hidden'); }
+                                } else {
+                                    tipoSelect.value = sol.tipo || (tipoSelect.options.length > 0 ? tipoSelect.options[0].value : '');
+                                    if (otraInput) otraInput.classList.add('hidden');
+                                }
+                            }
+                            const volInput = lastItem.querySelector('[name="hp_volumen[]"]');
+                            if (volInput) volInput.value = sol.volumen || '';
+                            const viaSelect = lastItem.querySelector('[name="hp_via[]"]');
+                            if (viaSelect) viaSelect.value = sol.via || 'IV';
+                            const velValInput = lastItem.querySelector('[name="hp_velocidad_valor[]"]');
+                            if (velValInput) velValInput.value = sol.velocidad_valor || '';
+                            const velUniSelect = lastItem.querySelector('[name="hp_velocidad_unidad[]"]');
+                            if (velUniSelect) velUniSelect.value = sol.velocidad_unidad || 'cc/hr';
+                            const indInput = lastItem.querySelector('[name="hp_solucion_indicaciones[]"]');
+                            if (indInput) indInput.value = sol.indicaciones || '';
+                        }
+                    });
+                }
+            } else if (ordenHpCheck && hpContentDiv) {
+                 ordenHpCheck.checked = false;
+                 hpContentDiv.classList.add('hidden');
+            }
+
+            // Medicamentos
+            if (medicamentosListaItemsDiv) medicamentosListaItemsDiv.innerHTML = '';
+            if (ordenJson.medicamentos && ordenJson.medicamentos.indicada && ordenMedicamentosCheck && medicamentosContentDiv) {
+                ordenMedicamentosCheck.checked = true;
+                medicamentosContentDiv.classList.remove('hidden');
+                if (ordenJson.medicamentos.items && ordenJson.medicamentos.items.length > 0) {
+                    ordenJson.medicamentos.items.forEach(med => {
+                        addItemFromTemplate(medicamentoTemplateId, medicamentosListaItemsDiv);
+                        const lastItem = medicamentosListaItemsDiv.lastElementChild;
+                        if (lastItem) {
+                            const nombreInput = lastItem.querySelector('[name="med_nombre[]"]');
+                            if (nombreInput) nombreInput.value = med.nombre || '';
+                            const dosisInput = lastItem.querySelector('[name="med_dosis[]"]');
+                            if (dosisInput) dosisInput.value = med.dosis || '';
+                            
+                            const unidadSelect = lastItem.querySelector('[name="med_unidad[]"]');
+                            const unidadOtraInput = lastItem.querySelector('[name="med_unidad_otra[]"]');
+                            if (unidadSelect) {
+                                if (med.unidad_otra) {
+                                    unidadSelect.value = 'otro';
+                                    if (unidadOtraInput) { unidadOtraInput.value = med.unidad_otra; unidadOtraInput.classList.remove('hidden');}
+                                } else {
+                                    unidadSelect.value = med.unidad || 'mg';
+                                    if (unidadOtraInput) unidadOtraInput.classList.add('hidden');
+                                }
+                            }
+                            
+                            const viaSelect = lastItem.querySelector('[name="med_via[]"]');
+                            const viaOtraInput = lastItem.querySelector('[name="med_via_otra[]"]');
+                            if (viaSelect) {
+                                 if (med.via_otra) {
+                                    viaSelect.value = 'Otra';
+                                    if (viaOtraInput) { viaOtraInput.value = med.via_otra; viaOtraInput.classList.remove('hidden');}
+                                } else {
+                                    viaSelect.value = med.via || 'IV';
+                                    if (viaOtraInput) viaOtraInput.classList.add('hidden');
+                                }
+                            }
+                            const freqInput = lastItem.querySelector('[name="med_frecuencia[]"]');
+                            if (freqInput) freqInput.value = med.frecuencia || '';
+                            const obsInput = lastItem.querySelector('[name="med_observaciones[]"]');
+                            if (obsInput) obsInput.value = med.observaciones || '';
+                        }
+                    });
+                }
+            } else if(ordenMedicamentosCheck && medicamentosContentDiv) {
+                ordenMedicamentosCheck.checked = false;
+                medicamentosContentDiv.classList.add('hidden');
+            }
+
+            // Laboratorios
+            if (ordenJson.laboratorios && ordenJson.laboratorios.indicada && ordenLabsCheck && labsContentDiv) {
+                ordenLabsCheck.checked = true;
+                labsContentDiv.classList.remove('hidden');
+                const labsOtrosTextarea = document.getElementById('orden_labs_otros');
+                if (labsOtrosTextarea) labsOtrosTextarea.value = ordenJson.laboratorios.otros || '';
+                const labsObsTextarea = document.getElementById('orden_labs_observaciones');
+                if (labsObsTextarea) labsObsTextarea.value = ordenJson.laboratorios.observaciones || '';
+                
+                labsContentDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    if (cb.name !== 'labs_check') { // No afectar el checkbox principal de la sección
+                        cb.checked = ordenJson.laboratorios.solicitados && ordenJson.laboratorios.solicitados.includes(cb.name.replace('lab_', ''));
+                    }
+                });
+            } else if (ordenLabsCheck && labsContentDiv) {
+                ordenLabsCheck.checked = false;
+                labsContentDiv.classList.add('hidden');
+            }
+
+            // Imágenes
+            if (imagenesListaItemsDiv) imagenesListaItemsDiv.innerHTML = '';
+            if (ordenJson.imagenes && ordenJson.imagenes.indicada && ordenImagenesCheck && imagenesContentDiv) {
+                ordenImagenesCheck.checked = true;
+                imagenesContentDiv.classList.remove('hidden');
+                if(ordenJson.imagenes.items && ordenJson.imagenes.items.length > 0) {
+                    ordenJson.imagenes.items.forEach(img => {
+                        addItemFromTemplate(imagenTemplateId, imagenesListaItemsDiv);
+                        const lastItem = imagenesListaItemsDiv.lastElementChild;
+                        if (lastItem) {
+                            const tipoSelect = lastItem.querySelector('[name="img_tipo[]"]');
+                            const tipoOtraInput = lastItem.querySelector('[name="img_tipo_otro[]"]');
+                            if (tipoSelect) {
+                                if (img.tipo_otra) {
+                                    tipoSelect.value = 'Otro';
+                                    if (tipoOtraInput) { tipoOtraInput.value = img.tipo_otra; tipoOtraInput.classList.remove('hidden'); }
+                                } else {
+                                    tipoSelect.value = img.tipo || 'Rayos X';
+                                     if (tipoOtraInput) tipoOtraInput.classList.add('hidden');
+                                }
+                            }
+                            const regionInput = lastItem.querySelector('[name="img_region[]"]');
+                            if (regionInput) regionInput.value = img.region || '';
+                        }
+                    });
+                }
+            } else if (ordenImagenesCheck && imagenesContentDiv) {
+                ordenImagenesCheck.checked = false;
+                imagenesContentDiv.classList.add('hidden');
+            }
+            
+            // Otros Procedimientos
+            if (otrosProcListaItemsDiv) otrosProcListaItemsDiv.innerHTML = '';
+            if (ordenJson.otros_procedimientos_interconsultas && ordenJson.otros_procedimientos_interconsultas.indicada && ordenOtrosProcCheck && otrosProcContentDiv) {
+                ordenOtrosProcCheck.checked = true;
+                otrosProcContentDiv.classList.remove('hidden');
+                if(ordenJson.otros_procedimientos_interconsultas.items && ordenJson.otros_procedimientos_interconsultas.items.length > 0) {
+                    ordenJson.otros_procedimientos_interconsultas.items.forEach(proc => {
+                        addItemFromTemplate(otroProcTemplateId, otrosProcListaItemsDiv);
+                        const lastItem = otrosProcListaItemsDiv.lastElementChild;
+                        if (lastItem) {
+                            const tipoSolInput = lastItem.querySelector('[name="otro_proc_tipo_solicitud[]"]');
+                            if (tipoSolInput) tipoSolInput.value = proc.tipo_solicitud || '';
+                            const detalleInput = lastItem.querySelector('[name="otro_proc_detalle[]"]');
+                            if (detalleInput) detalleInput.value = proc.detalle || '';
+                        }
+                    });
+                }
+            } else if (ordenOtrosProcCheck && otrosProcContentDiv) {
+                ordenOtrosProcCheck.checked = false;
+                otrosProcContentDiv.classList.add('hidden');
+            }
+
+            // Monitoreo y Cuidados
+            if (ordenJson.monitoreo_cuidados && ordenJson.monitoreo_cuidados.indicada && ordenCuidadosCheck && cuidadosContentDiv) {
+                ordenCuidadosCheck.checked = true;
+                cuidadosContentDiv.classList.remove('hidden');
+                const cuidadosOtrosTextarea = document.getElementById('orden_cuidados_otros');
+                if (cuidadosOtrosTextarea) cuidadosOtrosTextarea.value = ordenJson.monitoreo_cuidados.otros_detalles || '';
+                
+                cuidadosContentDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    if (cb.name !== 'cuidados_check') {
+                        const cuidadoKey = cb.name.replace('cuidado_', '');
+                        const itemCuidado = ordenJson.monitoreo_cuidados.items ? ordenJson.monitoreo_cuidados.items.find(item => item.cuidado === cuidadoKey) : null;
+                        cb.checked = !!itemCuidado;
+                        
+                        if (itemCuidado) {
+                            if (cb.name === 'cuidado_sv') {
+                                const freqInput = cuidadosContentDiv.querySelector('[name="cuidado_sv_frecuencia"]');
+                                if (freqInput) freqInput.value = itemCuidado.detalle ? itemCuidado.detalle.replace('Frecuencia: ', '') : '';
+                            } else if (cb.name === 'cuidado_drenajes_check') { // Nombre del checkbox
+                                const espInput = cuidadosContentDiv.querySelector('[name="cuidado_drenajes_esp"]'); // Nombre del input de texto
+                                if (espInput) espInput.value = itemCuidado.detalle ? itemCuidado.detalle.replace('Especificar: ', '') : '';
+                            }
+                        }
+                    }
+                });
+            } else if (ordenCuidadosCheck && cuidadosContentDiv) {
+                ordenCuidadosCheck.checked = false;
+                cuidadosContentDiv.classList.add('hidden');
+            }
+
+            if(form) form.classList.remove('hidden');
+            if(loadingDiv) loadingDiv.style.display = 'none';
+        }
+
+        // --- Event Listeners y Lógica de Templates (copiada de agregar_orden.js) ---
+        function setupToggleableSection(checkbox, contentDiv) {
+    if (checkbox && contentDiv) {
+        checkbox.addEventListener('change', function() {
+            contentDiv.classList.toggle('hidden', !this.checked);
+        });
+        // Establecer el estado inicial basado en si el checkbox está marcado al cargar (esto es importante para editar)
+        contentDiv.classList.toggle('hidden', !checkbox.checked); 
+    } else {
+        // console.warn("setupToggleableSection: Checkbox o contentDiv no encontrado(s).", checkbox, contentDiv);
+    }
+}
+        function addItemFromTemplate(templateId, containerDiv) {
+    const template = document.getElementById(templateId);
+    if (!template || !template.content) {
+        console.error(`Template ${templateId} no encontrado o inválido.`);
+        return null; // Devolver null para que el código que lo llama pueda verificar
+    }
+    const clone = template.content.cloneNode(true);
+    // querySelector en el DocumentFragment (clone)
+    const newItem = clone.querySelector(`.${templateId.replace('-template', '')}`); 
+
+    if (!newItem) {
+        console.error(`Elemento principal con clase .${templateId.replace('-template', '')} no encontrado dentro del template ${templateId}.`);
+        return null;
+    }
+
+    // Aplicar estilos a los inputs dentro del template clonado
+    // Es mejor si los templates ya tienen las clases correctas (form-input-sm, form-select-sm)
+    // Pero si no, puedes aplicarlas aquí:
+    newItem.querySelectorAll('input[type="text"], input[type="number"], select, textarea').forEach(el => {
+        applySmallInputStyles(el); // Asegúrate que esta función esté definida y funcione
+    });
+    newItem.querySelectorAll('input[type="checkbox"].form-checkbox-sm').forEach(el => { // Más específico
+        applySmallCheckboxStyles(el); // Asegúrate que esta función esté definida y funcione
+    });
+
+    // Event listener para selects con opción "Otra..."
+    newItem.querySelectorAll('select').forEach(select => {
+        const name = select.getAttribute('name');
+        if (name && (name.endsWith("_tipo_solucion[]") || name.endsWith("_unidad[]") || name.endsWith("_via[]") || name.endsWith("_tipo[]"))) {
+            select.addEventListener('change', function() {
+                // Buscar el input "otra" asociado, que podría estar en el mismo div o en un div hermano/padre cercano.
+                // Este selector es un ejemplo, ajústalo a tu estructura HTML si es necesario.
+                const otraInput = this.closest('div').querySelector('input[type="text"][name="' + name.replace('[]', '_otra[]') + '"]');
+                if (otraInput) {
+                    otraInput.classList.toggle('hidden', this.value.toLowerCase() !== 'otra' && this.value.toLowerCase() !== 'otro');
+                }
+            });
+            // Disparar el change inicial para que se oculte/muestre el campo "otra" al cargar
+            // select.dispatchEvent(new Event('change')); // Se hará al setear el valor en populateForm
+        }
+    });
+    
+    const removeBtn = newItem.querySelector('button[class*="remove-"]');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function() { 
+            const itemToRemove = this.closest(`.${templateId.replace('-template', '')}`);
+            if (itemToRemove) itemToRemove.remove();
+        });
+    }
+    containerDiv.appendChild(newItem); // Añadir el elemento real, no el fragmento clonado directamente
+    return newItem; // Devolver el elemento raíz del template añadido al DOM
+}
+
+        function setupEventListeners() {
+            // ... (event listeners para botones de cancelar, submit, y checkboxes de sección)
+            // ... (event listener para dietaInicialSelect)
+            // ... (event listeners para botones "Añadir item" de HP, Medicamentos, etc.)
+            // Idéntico a agregar_orden.js, pero con los IDs de editar_orden para submit y cancel
+            form.addEventListener('submit', handleFormSubmit);
+            cancelButtons.forEach(btn => { if(btn) btn.addEventListener('click', handleCancel); });
+    
+            setupToggleableSection(hospitalizarCheckbox, hospitalizacionDetallesDiv);
+            setupToggleableSection(ordenHpCheck, hpContentDiv);
+            setupToggleableSection(ordenMedicamentosCheck, medicamentosContentDiv);
+            setupToggleableSection(ordenLabsCheck, labsContentDiv);
+            setupToggleableSection(ordenImagenesCheck, imagenesContentDiv);
+            setupToggleableSection(ordenOtrosProcCheck, otrosProcContentDiv);
+            setupToggleableSection(ordenCuidadosCheck, cuidadosContentDiv);
+    
+            if (dietaInicialSelect) {
+                dietaInicialSelect.addEventListener('change', function() {
+                    if(dietaAbsolutaDetallesDiv) dietaAbsolutaDetallesDiv.classList.toggle('hidden', this.value !== 'Absoluta');
+                    if(dietaEspecificaDetallesDiv) dietaEspecificaDetallesDiv.classList.toggle('hidden', this.value === 'Específica'); // Ojo: "Específica" es el value que usaste
+                });
+            }
+    
+            if (addHpSolucionBtn) addHpSolucionBtn.addEventListener('click', () => addItemFromTemplate(hpTemplateId, hpListaSolucionesDiv));
+            if (addMedicamentoBtn) addMedicamentoBtn.addEventListener('click', () => addItemFromTemplate(medicamentoTemplateId, medicamentosListaItemsDiv));
+            if (addImagenBtn) addImagenBtn.addEventListener('click', () => addItemFromTemplate(imagenTemplateId, imagenesListaItemsDiv));
+            if (addOtroProcBtn) addOtroProcBtn.addEventListener('click', () => addItemFromTemplate(otroProcTemplateId, otrosProcListaItemsDiv));
+        }
+
+        // --- Recolección de Datos del Formulario (idéntica a agregar_orden.js) ---
+        function collectFormData() {
+            const formData = new FormData(form);
+            const ordenesJson = {
+                fecha_modificacion_orden: new Date().toISOString(), // Marcar fecha de modificación
+            };
+            // ... (copiar toda la lógica de recolección de datos de agregar_orden.js handleFormSubmit) ...
+            // ... (hasta antes de la llamada a window.backend.guardar_nueva_orden_medica) ...
+            // Asegúrate de que los nombres de los campos coincidan con tu HTML de editar_orden
+             // Hospitalización
+            if (formData.get('orden_hospitalizar_check') === 'on') {
+                ordenesJson.hospitalizacion = { indicada: true, lugar: formData.get('hospitalizacion_lugar') || null };
+            }
+            // Dieta (adaptado a la versión simplificada de tu agregar_orden)
+            const dietaTipoInicial = formData.get('dieta_tipo_inicial');
+            if (dietaTipoInicial) {
+                ordenesJson.dieta = { tipo_inicial: dietaTipoInicial };
+                if (dietaTipoInicial === 'Absoluta') {
+                    ordenesJson.dieta.absoluta_duracion_valor = formData.get('dieta_absoluta_duracion_valor') || null;
+                    ordenesJson.dieta.absoluta_duracion_unidad = formData.get('dieta_absoluta_duracion_unidad') || null;
+                }
+                // Si vuelves a añadir 'Específica' o 'Progresión', debes recolectar esos datos aquí
+            }
+            // HP
+            if (formData.get('hp_check') === 'on') {
+                ordenesJson.hp = { indicada: true, soluciones: [], observaciones_generales: formData.get('hp_observaciones_generales') || null };
+                formData.getAll('hp_tipo_solucion[]').forEach((tipo, index) => {
+                    if (tipo) { ordenesJson.hp.soluciones.push({ tipo: tipo === 'Otra' ? formData.getAll('hp_tipo_solucion_otra[]')[index] : tipo, volumen: formData.getAll('hp_volumen[]')[index], via: formData.getAll('hp_via[]')[index], velocidad_valor: formData.getAll('hp_velocidad_valor[]')[index], velocidad_unidad: formData.getAll('hp_velocidad_unidad[]')[index], indicaciones: formData.getAll('hp_solucion_indicaciones[]')[index] }); }
+                });
+            }
+            // Medicamentos
+            if (formData.get('medicamentos_check') === 'on') {
+                ordenesJson.medicamentos = { indicada: true, items: [] };
+                formData.getAll('med_nombre[]').forEach((nombre, index) => {
+                    if (nombre.trim()) { let item = { nombre, dosis: formData.getAll('med_dosis[]')[index], unidad: formData.getAll('med_unidad[]')[index], via: formData.getAll('med_via[]')[index], frecuencia: formData.getAll('med_frecuencia[]')[index], observaciones: formData.getAll('med_observaciones[]')[index] }; if(item.unidad==='otro') item.unidad_otra = formData.getAll('med_unidad_otra[]')[index]; if(item.via==='Otra') item.via_otra = formData.getAll('med_via_otra[]')[index]; ordenesJson.medicamentos.items.push(item); }
+                });
+            }
+            // Laboratorios
+            if (formData.get('labs_check') === 'on') {
+                ordenesJson.laboratorios = { indicada: true, solicitados: [], otros: formData.get('labs_otros') || null, observaciones: formData.get('labs_observaciones') || null };
+                form.querySelectorAll('#labs_content input[type="checkbox"]:checked:not([name="labs_check"])').forEach(cb => ordenesJson.laboratorios.solicitados.push(cb.name.replace('lab_', '')));
+            }
+            // Imágenes
+            if (formData.get('imagenes_check') === 'on') {
+                ordenesJson.imagenes = { indicada: true, items: [] };
+                formData.getAll('img_tipo[]').forEach((tipo, index) => { if(tipo) ordenesJson.imagenes.items.push({ tipo: tipo === 'Otro' ? formData.getAll('img_tipo_otro[]')[index] : tipo, region: formData.getAll('img_region[]')[index] }); });
+            }
+            // Otros Procedimientos
+            if (formData.get('otros_proc_check') === 'on') {
+                ordenesJson.otros_procedimientos_interconsultas = { indicada: true, items: [] };
+                formData.getAll('otro_proc_tipo_solicitud[]').forEach((tipoSolicitud, index) => { if(tipoSolicitud.trim()) ordenesJson.otros_procedimientos_interconsultas.items.push({ tipo_solicitud: tipoSolicitud, detalle: formData.getAll('otro_proc_detalle[]')[index] }); });
+            }
+            // Monitoreo y Cuidados
+            if (formData.get('cuidados_check') === 'on') {
+                ordenesJson.monitoreo_cuidados = { indicada: true, items: [], otros_detalles: formData.get('cuidados_otros') || null };
+                form.querySelectorAll('#cuidados_content input[type="checkbox"]:checked:not([name="cuidados_check"])').forEach(cb => { let item = { cuidado: cb.name.replace('cuidado_',''), detalle: null }; if(cb.name==='cuidado_sv') item.detalle=`Frecuencia: ${formData.get('cuidado_sv_frecuencia')}`; else if(cb.name==='cuidado_drenajes_check') item.detalle=`Especificar: ${formData.get('cuidado_drenajes_esp')}`; ordenesJson.monitoreo_cuidados.items.push(item); });
+            }
+
+            return ordenesJson;
+        }
+
+        // --- MANEJO DEL FORMULARIO ---
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            if (isSubmitting || !currentOrdenId) {
+                if(!currentOrdenId) console.error("No hay ID de orden para actualizar.");
+                return;
+            }
+            isSubmitting = true;
+            submitButtons.forEach(btn => btn.disabled = true);
+            submitButtonTexts.forEach(txt => txt.textContent = 'Guardando...');
+            submitSpinners.forEach(spn => spn.classList.remove('hidden'));
+            if (feedbackDiv) feedbackDiv.textContent = '';
+
+            const ordenesActualizadasJson = collectFormData();
+            console.log("Datos de Órdenes ACTUALIZADOS Recopilados:", ordenesActualizadasJson);
+
+            if (window.backend && typeof window.backend.update_orden_data === 'function') {
+                // Enviar el ID de la orden y los datos actualizados
+                window.backend.update_orden_data(currentOrdenId, ordenesActualizadasJson);
+            } else {
+                console.error("Función de actualización de órdenes no disponible en backend.");
+                setTimeout(() => {
+                    handleOrdenUpdateResult(false, "Error: Función de actualización no conectada (simulado).");
+                }, 1000);
+            }
+        }
+
+        window[HANDLER_ORDEN_UPDATE_RESULT] = function(success, message) {
+            isSubmitting = false;
+            submitButtons.forEach(btn => btn.disabled = false);
+            submitButtonTexts.forEach(txt => txt.textContent = 'Guardar Cambios');
+            submitSpinners.forEach(spn => spn.classList.add('hidden'));
+
+            if (feedbackDiv) {
+                feedbackDiv.textContent = message;
+                feedbackDiv.className = `my-6 text-center text-sm h-5 font-medium ${success ? 'text-green-600' : 'text-red-600'}`;
+            }
+            if (success) {
+                // No reseteamos el form, simplemente redirigimos después de un momento
+                setTimeout(() => {
+                    handleCancel(true); // Pasar true para indicar que fue un guardado exitoso
+                }, 1500);
+            }
+        };
+        console.log(`Handler ${HANDLER_ORDEN_UPDATE_RESULT} registrado.`);
+
+        function handleCancel(fueGuardadoExitoso = false) {
+            console.log("Editar Orden: Operación cancelada o finalizada.");
+            // Volver a la vista de detalle del paciente, pestaña de órdenes
+            if (window.currentPatientIdForContext && typeof loadContent === 'function') {
+                 if (window.backend && window.backend.set_selected_patient) {
+                    window.backend.set_selected_patient(window.currentPatientIdForContext);
+                }
+                window.targetTabAfterLoad = 'panel-ordenes';
+                loadContent('pacientes__paciente_detalle');
+            } else {
+                // Fallback si no hay contexto de paciente
+                if (typeof loadContent === 'function') loadContent('dashboard');
+            }
+        }
+
+        // Handler para recibir los detalles iniciales de la orden
+        window[HANDLER_ORDEN_DETAILS_RESULT] = function(jsonString) {
+            console.log(`>>> EJECUTANDO HANDLER (EDITAR ORDEN - OBTENER DETALLES): ${HANDLER_ORDEN_DETAILS_RESULT} <<<`);
+            let data;
+            try { data = JSON.parse(jsonString); }
+            catch (e) {
+                if(loadingDiv) loadingDiv.innerHTML = '<p class="text-red-600">Error al procesar datos de la orden.</p>';
+                console.error("Error parseando JSON en handler de detalles de orden:", e, jsonString);
+                return;
+            }
+
+            if (data.error_fetch) {
+                if(loadingDiv) loadingDiv.innerHTML = `<p class="text-red-600">${data.error_fetch}</p>`;
+            } else {
+                populateFormWithData(data); // 'data' aquí es el objeto que Python envió (ej. data.id_orden, data.orden_json_blob, etc.)
+                if(form) form.classList.remove('hidden');
+                if(loadingDiv) loadingDiv.style.display = 'none';
+            }
+        };
+        console.log(`Handler ${HANDLER_ORDEN_DETAILS_RESULT} registrado.`);
+
+        // Inicialización de la vista
+        function initializeView() {
+            console.log(`*** INICIALIZADOR (Editar Orden): ${INIT_FUNCTION_NAME} EJECUTADO ***`);
+            getDOMElements(); // Obtener referencias a todos los elementos
+            if (!form) { console.error("Error Crítico: Formulario 'edit-orden-form' no encontrado."); return; }
+            
+            // Inicializar estado de carga
+            if (loadingDiv) loadingDiv.style.display = 'block';
+            if (form) form.classList.add('hidden');
+            if (feedbackDiv) feedbackDiv.textContent = '';
+
+            setupEventListeners(); // Configurar listeners para toggles, añadir items, etc.
+
+            // Solicitar los detalles de la orden al backend
+            // (Python usará self.selected_orden_id_for_view_edit que se seteó al navegar aquí)
+            if (window.backend && typeof window.backend.request_orden_details === 'function') {
+                console.log("Solicitando detalles de la orden para edición...");
+                window.backend.request_orden_details();
+            } else {
+                console.error("Error: window.backend.request_orden_details no está disponible.");
+                if(loadingDiv) loadingDiv.innerHTML = '<p class="text-red-600">Error de comunicación al cargar la orden.</p>';
+            }
+        }
+
+        // Registrar el inicializador
+        if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+        window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+    })();
+</script>

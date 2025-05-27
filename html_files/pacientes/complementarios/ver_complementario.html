@@ -1,0 +1,360 @@
+<div class="p-6 md:p-8 bg-gray-50 min-h-screen">
+    <!-- Cabecera (sin cambios) -->
+    <div class="flex flex-wrap justify-between items-center mb-8 pb-4 border-b border-gray-300">
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800">Detalle de Estudio Complementario</h2>
+            <p id="ver-complemento-subheader" class="text-sm text-gray-500 mt-1">Cargando datos...</p>
+        </div>
+        <div class="flex items-center space-x-3 mt-3 md:mt-0">
+            <button type="button" id="ver-complemento-back-btn" class="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 rounded-md shadow-sm text-sm font-medium transition"><i class="fas fa-arrow-left fa-fw mr-2"></i>Volver</button>
+            <button type="button" id="ver-complemento-print-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm text-sm font-medium transition"><i class="fas fa-print fa-fw mr-2"></i>Imprimir</button>
+            <button type="button" id="ver-complemento-edit-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow-sm text-sm font-medium transition"><i class="fas fa-pencil-alt fa-fw mr-2"></i>Editar Estudio</button>
+        </div>
+    </div>
+
+    <div id="ver-complemento-loading" class="text-center py-10"><p class="text-gray-500 italic">Cargando detalles...</p></div>
+
+    <div id="ver-complemento-content" class="hidden bg-white p-6 md:p-8 rounded-lg shadow-lg border border-gray-200 space-y-6">
+        <!-- Información del Estudio (como estaba) -->
+        <div class="pb-4 border-b border-gray-200">
+            <h3 class="text-xl font-semibold text-teal-700 mb-3">Información del Estudio</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                <div><strong class="text-gray-600">Tipo:</strong> <span id="view-comp-tipo" class="text-gray-800 ml-1"></span></div>
+                <div><strong class="text-gray-600">Nombre Estudio:</strong> <span id="view-comp-nombre" class="text-gray-800 ml-1"></span></div>
+                <div><strong class="text-gray-600">Fecha Realización:</strong> <span id="view-comp-fecha-realizacion" class="text-gray-800 ml-1"></span></div>
+                <div><strong class="text-gray-600">Fecha Registro:</strong> <span id="view-comp-fecha-registro" class="text-gray-800 ml-1"></span></div>
+                <div><strong class="text-gray-600">Estado:</strong> <span id="view-comp-estado" class="text-gray-800 ml-1 px-2 py-0.5 rounded-full text-xs font-semibold"></span></div>
+                <div><strong class="text-gray-600">Registrado por:</strong> <span id="view-comp-registrador" class="text-gray-800 ml-1"></span></div>
+                <div id="view-comp-orden-medica-container" class="md:col-span-2 hidden"><strong class="text-gray-600">Asociado a Orden ID:</strong> <span id="view-comp-orden-medica-id" class="text-gray-800 ml-1"></span></div>
+            </div>
+        </div>
+        
+        <!-- Resultado / Informe (como estaba) -->
+        <div>
+            <h3 class="text-xl font-semibold text-teal-700 mb-2">Resultado / Informe</h3>
+            <pre id="view-comp-resultado" class="text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 border rounded-md min-h-[150px]"></pre>
+        </div>
+
+        <!-- Archivo Adjunto y Vista Previa de Imagen -->
+        <div id="view-comp-adjunto-container" class="hidden">
+            <h3 class="text-xl font-semibold text-teal-700 mb-2">Archivo Adjunto</h3>
+            
+            <!-- Contenedor para la imagen miniatura (si es imagen) -->
+            <div id="view-comp-adjunto-preview-container" class="mb-3 hidden">
+                <img id="view-comp-adjunto-preview-img" src="#" alt="Vista previa del adjunto" 
+                     class="max-w-xs md:max-w-sm max-h-64 border rounded-md shadow-sm cursor-pointer hover:opacity-80 transition-opacity">
+            </div>
+
+            <!-- Enlace para descargar/ver cualquier tipo de archivo -->
+            <p><a id="view-comp-adjunto-link" href="#" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-paperclip mr-1"></i> Ver/Descargar Archivo</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para la Imagen en Grande -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden transition-opacity duration-300 ease-in-out">
+    <div class="bg-white p-4 rounded-lg shadow-xl max-w-4xl max-h-[90vh] relative">
+        <img id="modalImage" src="#" alt="Imagen Ampliada" class="max-w-full max-h-[80vh] object-contain">
+        <button id="closeModal" class="absolute top-2 right-2 text-gray-600 hover:text-red-600 bg-white bg-opacity-70 rounded-full p-1 text-2xl leading-none">
+            ×
+        </button>
+    </div>
+</div>
+
+
+<script>
+(function() {
+    const VIEW_ID_FOR_SHELL_INIT = 'pacientes_complementarios_ver_complementario';
+    const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__complementarios__ver_complementario';
+    const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+    const HANDLER_DETAILS_RESULT = `handleComplementoDetailsResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+
+    console.log(`SCRIPT VER COMPLEMENTARIO: Init: ${INIT_FUNCTION_NAME}, Handler: ${HANDLER_DETAILS_RESULT}`);
+
+    let loadingDiv, contentDiv, subheader;
+    // Elementos específicos para los datos
+    let tipoSpan, nombreSpan, fechaRealizacionSpan, fechaRegistroSpan, estadoSpan, registradorSpan;
+    let ordenMedicaContainer, ordenMedicaIdSpan;
+    let resultadoPre, adjuntoContainer, adjuntoLink;
+
+    let adjuntoPreviewContainer, adjuntoPreviewImg;
+    let imageModal, modalImage, closeModalBtn;
+
+    let currentComplementoData = null;
+    let currentContextPatientId = null;
+
+    function getEstadoColor(estado) { // Definir o asegurar que esté accesible
+        if (!estado) return 'bg-gray-100 text-gray-800';
+        switch (String(estado).toLowerCase()) { // Convertir a string por si acaso
+            case 'solicitado': return 'bg-blue-100 text-blue-800';
+            case 'muestra tomada': return 'bg-indigo-100 text-indigo-800';
+            case 'en proceso': return 'bg-yellow-100 text-yellow-800';
+            case 'realizado completo':
+            case 'informado': return 'bg-green-100 text-green-800';
+            case 'realizado parcial': return 'bg-orange-100 text-orange-800';
+            case 'cancelado': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    function formatDateLocal(dateString, includeTime = false) { 
+        if (!dateString) return 'N/D';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) { console.warn("Invalid date for formatting:", dateString); return dateString; }
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            if (includeTime) { options.hour = '2-digit'; options.minute = '2-digit'; options.hour12 = true; }
+            return date.toLocaleString('es-VE', options);
+        } catch (e) { console.error("Error formatting date:", dateString, e); return dateString; }
+    }
+    function escapeHtml(unsafe) { 
+         if (unsafe === null || unsafe === undefined) return '';
+        return String(unsafe).replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, "'").replace(/'/g, "'");
+    }
+
+    function getDOMElements() { // Definir esta función para obtener los elementos
+        loadingDiv = document.getElementById('ver-complemento-loading');
+        contentDiv = document.getElementById('ver-complemento-content');
+        subheader = document.getElementById('ver-complemento-subheader');
+
+        tipoSpan = document.getElementById('view-comp-tipo');
+        nombreSpan = document.getElementById('view-comp-nombre');
+        fechaRealizacionSpan = document.getElementById('view-comp-fecha-realizacion');
+        fechaRegistroSpan = document.getElementById('view-comp-fecha-registro');
+        estadoSpan = document.getElementById('view-comp-estado'); // El span, no el select
+        registradorSpan = document.getElementById('view-comp-registrador');
+        ordenMedicaContainer = document.getElementById('view-comp-orden-medica-container');
+        ordenMedicaIdSpan = document.getElementById('view-comp-orden-medica-id');
+        resultadoPre = document.getElementById('view-comp-resultado');
+        adjuntoContainer = document.getElementById('view-comp-adjunto-container');
+        adjuntoLink = document.getElementById('view-comp-adjunto-link');
+        adjuntoPreviewContainer = document.getElementById('view-comp-adjunto-preview-container');
+        adjuntoPreviewImg = document.getElementById('view-comp-adjunto-preview-img');
+        imageModal = document.getElementById('imageModal');
+        modalImage = document.getElementById('modalImage');
+        closeModalBtn = document.getElementById('closeModal');
+    }
+
+        function isImagePath(path) {
+        if (!path || typeof path !== 'string') return false;
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+        const lowerPath = path.toLowerCase();
+        return imageExtensions.some(ext => lowerPath.endsWith(ext));
+    }
+
+    function openImageModal(src) {
+        if (modalImage && imageModal && src) {
+            modalImage.src = src;
+            imageModal.classList.remove('hidden');
+            imageModal.classList.add('opacity-100'); // Para transición si la tienes
+        }
+    }
+
+    function closeImageModalListener() {
+        if (imageModal) {
+            imageModal.classList.add('hidden');
+            imageModal.classList.remove('opacity-100');
+            if(modalImage) modalImage.src = "#"; // Limpiar src
+        }
+    }
+
+    function setupModalEventListeners() {
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeImageModalListener);
+        }
+        if (imageModal) {
+            // Cerrar modal si se hace clic fuera de la imagen (en el fondo)
+            imageModal.addEventListener('click', function(event) {
+                if (event.target === imageModal) {
+                    closeImageModalListener();
+                }
+            });
+        }
+    }
+
+ // En el script de html_files/pacientes/complementarios/ver_complementario.html
+
+    function populateView(data) {
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (!contentDiv) {
+            console.error("PopulateView: Contenedor principal de contenido (#ver-complemento-content) no encontrado.");
+            return;
+        }
+
+        if (!data || data.error_fetch) {
+            contentDiv.innerHTML = `<p class="text-red-500 p-4">Error: ${data && data.error_fetch ? escapeHtml(data.error_fetch) : "No se pudo cargar el estudio."}</p>`;
+            contentDiv.classList.remove('hidden');
+            if(subheader) subheader.textContent = "Error al cargar estudio";
+            return;
+        }
+
+        currentComplementoData = data;
+        currentContextPatientId = data.paciente_id_real;
+
+        if(subheader) {
+            const nombreEstudioDisplay = escapeHtml(data.nombre_estudio_dec || data.nombre_estudio || "N/A");
+            const pacienteNombreDisplay = escapeHtml(data.paciente_nombre_completo_dec || "N/A");
+            const pacienteHCDisplay = escapeHtml(data.numero_historia_paciente || "N/A");
+            subheader.textContent = `Estudio: ${nombreEstudioDisplay} - Paciente: ${pacienteNombreDisplay} (H.C: ${pacienteHCDisplay})`;
+        }
+
+        if(tipoSpan) tipoSpan.textContent = escapeHtml(data.tipo_complementario) || 'N/D';
+
+        let nombreEstudioTexto = data.nombre_estudio_dec;
+        if (nombreEstudioTexto === "[Error de Desencriptación]") nombreEstudioTexto = "Error al cargar nombre";
+        if(nombreSpan) nombreSpan.textContent = escapeHtml(nombreEstudioTexto) || 'N/D';
+
+        if(fechaRealizacionSpan) fechaRealizacionSpan.textContent = data.fecha_realizacion ? formatDateLocal(data.fecha_realizacion, true) : 'N/D';
+        if(fechaRegistroSpan) fechaRegistroSpan.textContent = data.fecha_registro ? formatDateLocal(data.fecha_registro, true) : 'N/D';
+
+        if (estadoSpan) {
+            estadoSpan.textContent = escapeHtml(data.estado) || 'N/A';
+            estadoSpan.className = `text-gray-800 ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${getEstadoColor(data.estado)}`;
+        }
+
+        let registradorNombre = data.usuario_registrador_nombre_dec;
+        if (registradorNombre === "[Error de Desencriptación]") registradorNombre = "Error al cargar registrador";
+        if(registradorSpan) registradorSpan.textContent = escapeHtml(registradorNombre) || 'N/D';
+
+        if (data.orden_medica_id) {
+            if(ordenMedicaIdSpan) ordenMedicaIdSpan.textContent = data.orden_medica_id;
+            if(ordenMedicaContainer) ordenMedicaContainer.classList.remove('hidden');
+        } else {
+            if(ordenMedicaContainer) ordenMedicaContainer.classList.add('hidden');
+        }
+
+        let resultadoTexto = data.resultado_informe_dec;
+        if (resultadoTexto === "[Error de Desencriptación]") resultadoTexto = "Error al cargar el informe.";
+        if(resultadoPre) resultadoPre.textContent = escapeHtml(resultadoTexto) || 'No registrado.';
+
+        // --- MANEJO DEL ADJUNTO ---
+        const pathParaSrcImagenView = data.archivo_adjunto_path_para_src; // URL file:/// o http para <img>
+        const pathOriginalParaAccion = data.archivo_adjunto_path_dec;   // Ruta relativa/absoluta que Python entiende
+        const nombreArchivoDisplay = pathOriginalParaAccion ? pathOriginalParaAccion.split(/[\\/]/).pop() : "archivo";
+
+        // Ocultar todo por defecto y limpiar onclicks/hrefs
+        if (adjuntoContainer) adjuntoContainer.classList.add('hidden');
+        if (adjuntoPreviewContainer) adjuntoPreviewContainer.classList.add('hidden');
+        if (adjuntoLink) {
+            adjuntoLink.classList.add('hidden');
+            adjuntoLink.href = "#";
+            adjuntoLink.onclick = null;
+            adjuntoLink.removeAttribute('download');
+            adjuntoLink.removeAttribute('target');
+        }
+        if (adjuntoPreviewImg) adjuntoPreviewImg.onclick = null;
+
+
+        if (pathOriginalParaAccion && !pathOriginalParaAccion.startsWith("[")) {
+            if(adjuntoContainer) adjuntoContainer.classList.remove('hidden');
+            
+            const esRealmenteImagen = isImagePath(pathOriginalParaAccion);
+
+            // Configurar Vista Previa si es Imagen
+            if (esRealmenteImagen) {
+                if (adjuntoPreviewContainer && pathParaSrcImagenView && !pathParaSrcImagenView.startsWith("[")) {
+                    adjuntoPreviewContainer.classList.remove('hidden');
+                    if (adjuntoPreviewImg) {
+                        adjuntoPreviewImg.src = pathParaSrcImagenView;
+                        adjuntoPreviewImg.alt = `Vista previa de ${escapeHtml(data.nombre_estudio_dec || data.nombre_estudio)}`;
+                        adjuntoPreviewImg.onclick = () => openImageModal(pathParaSrcImagenView);
+                    }
+                } else if (adjuntoPreviewContainer) { // Error en path para vista previa pero es imagen
+                     adjuntoPreviewContainer.classList.remove('hidden');
+                     adjuntoPreviewContainer.innerHTML = '<p class="text-xs text-red-500 italic">No se pudo cargar la vista previa de la imagen.</p>';
+                }
+            } else { // No es imagen, asegurarse que el preview de imagen esté oculto
+                if (adjuntoPreviewContainer) adjuntoPreviewContainer.classList.add('hidden');
+            }
+
+            // Configurar Enlace "Ver Archivo/Imagen"
+            if (adjuntoLink) {
+                adjuntoLink.classList.remove('hidden');
+                const linkText = esRealmenteImagen ? "Ver Imagen" : "Ver Documento";
+                adjuntoLink.innerHTML = `<i class="fas fa-external-link-alt mr-1"></i> ${linkText} (${escapeHtml(nombreArchivoDisplay)})`;
+                adjuntoLink.href = "#"; // Prevenir navegación
+                adjuntoLink.removeAttribute('download'); // No es descarga directa desde este enlace
+                adjuntoLink.onclick = function(event) {
+                    event.preventDefault();
+                    if (window.backend && typeof window.backend.abrir_archivo_sistema === 'function') {
+                        console.log(`Solicitando al backend abrir ${esRealmenteImagen ? 'imagen' : 'documento'}:`, pathOriginalParaAccion);
+                        window.backend.abrir_archivo_sistema(pathOriginalParaAccion);
+                    } else {
+                        console.error("Error: window.backend.abrir_archivo_sistema no está disponible.");
+                        alert("No se pudo abrir el archivo: función no disponible.");
+                    }
+                };
+            }
+        } else if (pathOriginalParaAccion && pathOriginalParaAccion.startsWith("[")) { // pathOriginalParaAccion indica un error
+            if(adjuntoContainer) adjuntoContainer.classList.remove('hidden');
+            if (adjuntoLink) {
+                 adjuntoLink.classList.remove('hidden');
+                 adjuntoLink.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> Error al cargar adjunto: ${escapeHtml(pathOriginalParaAccion)}`;
+                 adjuntoLink.href = "#";
+            }
+             if (adjuntoPreviewContainer) adjuntoPreviewContainer.classList.add('hidden');
+        } else { // No hay adjunto
+             if (adjuntoContainer) adjuntoContainer.classList.add('hidden');
+             console.log("No hay información de adjunto para mostrar.");
+        }
+
+        if(contentDiv) contentDiv.classList.remove('hidden');
+
+        // Configuración de Botones
+        const backBtn = document.getElementById('ver-complemento-back-btn');
+        if (backBtn && currentContextPatientId) {
+            backBtn.onclick = () => {
+                if (window.backend && typeof window.backend.set_selected_patient === 'function') { window.backend.set_selected_patient(currentContextPatientId); }
+                window.targetTabAfterLoad = 'panel-estudios'; loadContent('pacientes__paciente_detalle');
+            };
+        }
+        const editBtn = document.getElementById('ver-complemento-edit-btn');
+        if (editBtn && data.id_complemento && currentContextPatientId) {
+            editBtn.onclick = () => {
+                window.currentPatientIdForContext = currentContextPatientId;
+                window.navigateToPage('pacientes/complementarios/editar_complementario', {
+                    complemento_id: data.id_complemento,
+                    patient_id: currentContextPatientId,
+                    tipo: data.tipo_complementario
+                });
+            };
+        }
+        const printBtn = document.getElementById('ver-complemento-print-btn');
+        if(printBtn) printBtn.onclick = () => { alert("Imprimir complementario individual no implementado."); };
+    }
+
+    window[HANDLER_DETAILS_RESULT] = function(jsonString) {
+        console.log(`Handler ${HANDLER_DETAILS_RESULT} llamado.`);
+        let parsedData;
+        try {
+            parsedData = JSON.parse(jsonString);
+        } catch (e) {
+            console.error("Error parseando JSON en handler:", e, "String recibido:", jsonString);
+            populateView({ error_fetch: "Error al procesar datos del estudio (JSON inválido)." });
+            return;
+        }
+        populateView(parsedData);
+    };
+
+    function initializeView() {
+        console.log(`*** Inicializador VER COMPLEMENTARIO: ${INIT_FUNCTION_NAME} ***`);
+        getDOMElements();
+        setupModalEventListeners();
+
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        if (contentDiv) contentDiv.classList.add('hidden');
+        if (adjuntoPreviewContainer) adjuntoPreviewContainer.classList.add('hidden');
+
+        if (window.backend && typeof window.backend.request_complemento_details === 'function') {
+            console.log("Llamando a window.backend.request_complemento_details()");
+            window.backend.request_complemento_details();
+        } else {
+            console.error("Error: window.backend.request_complemento_details no está disponible.");
+            if(loadingDiv) { loadingDiv.textContent = 'Error de comunicación con el backend.'; loadingDiv.classList.add('text-red-500');}
+        }
+    }
+
+    if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+    window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+})();
+</script>

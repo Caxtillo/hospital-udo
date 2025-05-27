@@ -199,11 +199,9 @@
 
                 <!-- Otros paneles (Órdenes, Estudios, etc. - Ocultos) -->
                 <div id="panel-ordenes" role="tabpanel" aria-labelledby="tab-ordenes" class="tab-panel p-5 hidden">
-                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Órdenes Médicas</h3>
                      <div id="ordenes-content" class="space-y-4">Contenido de órdenes médicas...</div>
                 </div>
                 <div id="panel-estudios" role="tabpanel" aria-labelledby="tab-estudios" class="tab-panel p-5 hidden">
-                     <h3 class="text-lg font-semibold text-teal-700 mb-4">Estudios Complementarios</h3>
                      <div id="estudios-content" class="space-y-4">Contenido de estudios...</div>
                 </div>
                  <div id="panel-interconsultas" role="tabpanel" aria-labelledby="tab-interconsultas" class="tab-panel p-5 hidden">
@@ -598,7 +596,7 @@ function generatePrintContent(sections, patientData) {
     }
 
     if (sections.includes('estudios_comp')) {
-        printHtml += `<div class="section-block"><h2>Estudios Complementarios</h2>`;
+        printHtml += `<div class="section-block"><h2>Complementarios</h2>`;
         if (patientData.complementarios_todos && patientData.complementarios_todos.length > 0) {
             const estudiosOrdenados = [...patientData.complementarios_todos].sort((a,b) => new Date(a.fecha_registro) - new Date(b.fecha_registro));
             estudiosOrdenados.forEach(comp => {
@@ -609,7 +607,7 @@ function generatePrintContent(sections, patientData) {
                                 ${comp.archivo_adjunto_path ? `<p class="text-xs">Adjunto: ${getText(comp.archivo_adjunto_path)}</p>`:''}
                               </div>`;
             });
-        } else { printHtml += `<p>No hay estudios complementarios registrados.</p>`; }
+        } else { printHtml += `<p>No hay complementarios registrados.</p>`; }
         printHtml += `</div>`;
     }
     
@@ -809,9 +807,15 @@ function generatePrintContent(sections, patientData) {
                  case 'panel-ordenes':
                      renderOrdenesMedicasPanel(data.ordenes_medicas_todas || [], 'ordenes-content', data.info.id);
                      break;
-                 case 'panel-estudios':
-                      renderComplementariosPanel(data.complementarios_todos || [], 'estudios-content');
-                      break;
+                case 'panel-estudios': // O como hayas llamado al panel de complementarios
+                    const complementosContainer = document.getElementById('estudios-content'); // O el ID correcto
+                    if (complementosContainer) {
+                        console.log("[renderPanelContent] Llamando a renderComplementariosPanel. data.info.id:", data && data.info ? data.info.id : "data.info o data.info.id es undefined");
+                        renderComplementariosPanel(data.complementarios_todos || [], 'estudios-content', data.info.id); 
+                    } else {
+                        console.error("Contenedor para complementarios (ej. #estudios-content) no encontrado.");
+                    }
+                    break;
                  case 'panel-interconsultas':
                       renderInterconsultasPanel(data.interconsultas_todas || [], 'interconsultas-content');
                       break;
@@ -1164,7 +1168,33 @@ function generatePrintContent(sections, patientData) {
         }
     }
     // --- FIN FUNCIÓN DE NAVEGACIÓN ---
+        window.switchComplementosSubPanel = function(subPanelNameToActivate) {
+        console.log(`Cambiando a sub-panel de complementos: ${subPanelNameToActivate}`);
     
+        document.querySelectorAll('.complemento-subpanel-item').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+        const panelToShow = document.getElementById(`subcontent-${subPanelNameToActivate}`);
+        if (panelToShow) {
+            panelToShow.classList.remove('hidden');
+        } else {
+            console.warn(`Sub-panel de contenido para '${subPanelNameToActivate}' (ID: subcontent-${subPanelNameToActivate}) no encontrado.`);
+        }
+
+        document.querySelectorAll('.complementos-subtab-button').forEach(tabButton => {
+            tabButton.classList.remove('border-teal-500', 'text-teal-600', 'font-semibold');
+            tabButton.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            tabButton.setAttribute('aria-current', 'false');
+        });
+        const selectedButton = document.getElementById(`subtab-btn-${subPanelNameToActivate}`);
+        if (selectedButton) {
+            selectedButton.classList.add('border-teal-500', 'text-teal-600', 'font-semibold');
+            selectedButton.classList.remove('border-transparent', 'text-gray-500');
+            selectedButton.setAttribute('aria-current', 'page');
+        } else {
+            console.warn(`Botón de sub-pestaña para '${subPanelNameToActivate}' (ID: subtab-btn-${subPanelNameToActivate}) no encontrado.`);
+        }
+    };
     function calculateDaysElapsed(startDateString, endDateString) {
     if (!startDateString || !endDateString) return null;
     try {
@@ -1403,80 +1433,97 @@ function renderEvolucionesPanel(evoluciones, containerId, patientId, fechaIngres
     container.innerHTML = panelHtml;
     console.log(`${INIT_FUNCTION_NAME}: Panel de Evoluciones renderizado completamente.`);
 }
+// En el script donde tengas window.navigateToPage
+
 window.navigateToPage = function(viewName, params = {}) {
-    // viewName ejemplo: 'paciente/evolucion/agregar_evolucion'
-    // params ejemplo: { patient_id: 123, evolucion_id: 45 }
+    console.log(`[navigateToPage] Vista: ${viewName}, Params:`, JSON.stringify(params));
 
-    console.log(`navigateToPage: Vista: ${viewName}, Params:`, params);
-
-    // ***** INICIO DE LA MODIFICACIÓN IMPORTANTE *****
-    if (viewName.includes('agregar_evolucion') && params && params.patient_id) {
-        console.log(`navigateToPage (para agregar_evolucion): Estableciendo window.currentPatientIdForContext = ${params.patient_id}`);
-        window.currentPatientIdForContext = params.patient_id; 
-        console.log(`navigateToPage: window.currentPatientIdForContext ESTABLECIDO A: ${window.currentPatientIdForContext} (para vista ${viewName})`);
-    } else if (viewName.includes('editar_evolucion') && params && params.patient_id) {
-        // Si vas a editar, también guarda el patient_id para el "Cancelar/Volver"
-        console.log(`navigateToPage (para editar_evolucion): Estableciendo window.currentPatientIdForContext = ${params.patient_id}`);
+    // Establecer contexto global del paciente SIEMPRE que venga en params
+    // Esto es útil para el botón "Volver" de CUALQUIER vista hija.
+    if (params && typeof params.patient_id !== 'undefined') { // Comprobar que existe, incluso si es 0 (aunque no debería ser 0)
         window.currentPatientIdForContext = params.patient_id;
-    } else if (viewName.includes('ver_evolucion') && params && params.patient_id) {
-        // Si vas a ver, también guarda el patient_id para el "Volver"
-        console.log(`navigateToPage (para ver_evolucion): Estableciendo window.currentPatientIdForContext = ${params.patient_id}`);
-        window.currentPatientIdForContext = params.patient_id;
-    } else if ((viewName.includes('ordenes/ver_orden') || viewName.includes('ordenes/editar_orden')) && params && params.orden_id) {
-    if (window.backend && typeof window.backend.set_selected_orden === 'function') {
-        console.log(`navigateToPage (ver/editar orden): Seteando selected_orden en backend a ID: ${params.orden_id}`);
-        window.backend.set_selected_orden(params.orden_id);
-        // También mantener el patient_id para el botón de volver, si está disponible
-        if (params.patient_id) {
-            window.currentPatientIdForContext = params.patient_id;
-            if (typeof window.backend.set_selected_patient === 'function') { // Opcional, si la vista de orden necesita el paciente directamente
-                // window.backend.set_selected_patient(params.patient_id);
-            }
-        }
-    } else {
-        console.error("navigateToPage (ver/editar orden): backend.set_selected_orden no disponible.");
-        // Podrías mostrar un error aquí o dejar que la vista falle al no encontrar datos
-        return; // Importante: salir si no se puede setear la orden
+        console.log(`[navigateToPage] window.currentPatientIdForContext seteado a: ${params.patient_id}`);
     }
-    }
-
-    // Puedes añadir más 'else if' para otras vistas que necesiten este contexto.
-    // Si no es ninguna de estas vistas o no hay patient_id, no se toca window.currentPatientIdForContext,
-    // lo cual está bien, ya que solo nos importa para las vistas que lo usan al volver.
-    // ***** FIN DE LA MODIFICACIÓN IMPORTANTE *****
 
     const tryLoad = () => {
-        // Aquí es donde configuras el estado en el backend ANTES de cargar la vista
-        if (viewName.includes('agregar_evolucion') && params && params.patient_id) { // Añadido 'params &&' para seguridad
-            if (window.backend && typeof window.backend.set_selected_patient === 'function') {
-                console.log(`navigateToPage (agregar_evolucion): Seteando selected_patient en backend a ID: ${params.patient_id}`);
-                window.backend.set_selected_patient(params.patient_id);
-            } else {
-                console.warn("navigateToPage (agregar_evolucion): backend.set_selected_patient no disponible.");
-            }
-        } else if (viewName.includes('editar_evolucion') && params && params.evolucion_id) { // Añadido 'params &&'
-            if (window.backend && typeof window.backend.set_selected_evolucion === 'function') {
-                window.backend.set_selected_evolucion(params.evolucion_id);
-                if (params.patient_id && typeof window.backend.set_selected_patient === 'function') {
-                    window.backend.set_selected_patient(params.patient_id);
-                }
-            } else { console.error("set_selected_evolucion no disponible para editar"); return; }
-        } else if (viewName.includes('ver_evolucion') && params && params.evolucion_id) { // Añadido 'params &&'
-            if (window.backend && typeof window.backend.set_selected_evolucion === 'function') {
-                window.backend.set_selected_evolucion(params.evolucion_id);
-                if (params.patient_id && typeof window.backend.set_selected_patient === 'function') {
-                    window.backend.set_selected_patient(params.patient_id);
-                }
-            } else { console.error("set_selected_evolucion no disponible para ver"); return; }
-        }
-        // Añadir más casos para otras vistas...
+        let viewPathForLoadContent = viewName.replace(/\//g, '__');
+        let queryParamsForView = new URLSearchParams();
 
-        const viewPathForLoadContent = viewName.replace(/\//g, '__');
-        if (typeof loadContent === 'function') { // Asegurarse que loadContent esté disponible
-            loadContent(viewPathForLoadContent);
+        // --- Lógica para establecer estado en el backend ANTES de cargar la vista ---
+        // Y para construir queryParamsForView que irán al HASH de la URL
+
+        if (viewName.includes('agregar_evolucion')) {
+            if (params && params.patient_id && window.backend && typeof window.backend.set_selected_patient === 'function') {
+                window.backend.set_selected_patient(parseInt(params.patient_id, 10));
+            }
+            // No se necesitan query params para esta vista si el backend ya tiene el paciente seleccionado
+        }
+        else if (viewName.includes('editar_evolucion') || viewName.includes('ver_evolucion')) {
+            if (params && params.evolucion_id && window.backend && typeof window.backend.set_selected_evolucion === 'function') {
+                window.backend.set_selected_evolucion(parseInt(params.evolucion_id, 10));
+                // Si también se necesita setear el paciente para estas vistas (ej. para el subheader)
+                if (params.patient_id && typeof window.backend.set_selected_patient === 'function') {
+                     window.backend.set_selected_patient(parseInt(params.patient_id, 10));
+                }
+            } else { console.error(`set_selected_evolucion no disponible o evolucion_id faltante para ${viewName}`); return; }
+            // Los params para el hash los puede leer el script de la vista si los necesita
+            if (params.evolucion_id) queryParamsForView.set('evolucion_id', params.evolucion_id);
+            if (params.patient_id) queryParamsForView.set('patient_id', params.patient_id);
+        }
+        else if (viewName.includes('ordenes/ver_orden') || viewName.includes('ordenes/editar_orden')) {
+            if (params && params.orden_id && window.backend && typeof window.backend.set_selected_orden === 'function') {
+                window.backend.set_selected_orden(parseInt(params.orden_id, 10));
+            } else { console.error(`set_selected_orden no disponible o orden_id faltante para ${viewName}`); return; }
+            if (params.orden_id) queryParamsForView.set('orden_id', params.orden_id);
+            if (params.patient_id) queryParamsForView.set('patient_id', params.patient_id);
+        }
+        // ***** CASOS PARA COMPLEMENTARIOS *****
+        else if (viewName.includes('complementarios/agregar_complementario')) { // Simplificado para claridad
+            viewPathForLoadContent = 'pacientes__complementarios__agregar_complementario';
+            console.log("[navigateToPage] (agregar_complementario) Procesando. Params recibidos:", params);
+
+            if (params && typeof params.patient_id !== 'undefined') {
+                queryParamsForView.set('patient_id', params.patient_id.toString()); // Asegurar que sea string para URLSearchParams
+                console.log(`[navigateToPage] (agregar_complementario) queryParamsForView ahora tiene patient_id: ${params.patient_id}`);
+                if (window.backend && typeof window.backend.set_selected_patient === 'function') {
+                    window.backend.set_selected_patient(parseInt(params.patient_id, 10));
+                } else { console.warn("(agregar_complementario) backend.set_selected_patient no disponible."); }
+            } else {
+                console.error("[navigateToPage] (agregar_complementario) ¡ERROR CRÍTICO! params.patient_id NO FUE PROPORCIONADO a este bloque.");
+            }
+            if (params && params.tipo) {
+                queryParamsForView.set('tipo', params.tipo);
+            }
+        }
+        else if (viewName.includes('complementarios/editar_complementario')) {
+            viewPathForLoadContent = 'pacientes__complementarios__editar_complementario';
+            if (params && params.complemento_id && window.backend && typeof window.backend.set_selected_complemento === 'function') {
+                window.backend.set_selected_complemento(parseInt(params.complemento_id, 10));
+            } else { console.error(`set_selected_complemento no disponible o complemento_id faltante para ${viewName}`); return; }
+            if (params.complemento_id) queryParamsForView.set('complemento_id', params.complemento_id);
+            if (params.patient_id) queryParamsForView.set('patient_id', params.patient_id);
+            if (params.tipo) queryParamsForView.set('tipo', params.tipo);
+        }
+        else if (viewName.includes('complementarios/ver_complementario')) {
+            viewPathForLoadContent = 'pacientes__complementarios__ver_complementario';
+            if (params && params.complemento_id && window.backend && typeof window.backend.set_selected_complemento === 'function') {
+                window.backend.set_selected_complemento(parseInt(params.complemento_id, 10));
+            } else { console.error(`set_selected_complemento no disponible o complemento_id faltante para ${viewName}`); return; }
+            if (params.complemento_id) queryParamsForView.set('complemento_id', params.complemento_id);
+            if (params.patient_id) queryParamsForView.set('patient_id', params.patient_id);
+        }
+        // ... otros casos ...
+
+        const queryString = queryParamsForView.toString();
+        const finalViewTargetForHash = queryString ? `${viewPathForLoadContent}?${queryString}` : viewPathForLoadContent;
+        
+        console.log("[navigateToPage] Final view target para HASH URL:", finalViewTargetForHash);
+        console.log("[navigateToPage] Final view target para backend.request_view_content:", viewPathForLoadContent); // El backend solo necesita la base
+
+        if (typeof loadContent === 'function') {
+            loadContent(finalViewTargetForHash); // Pasar el string completo con query params a loadContent
         } else {
             console.error("navigateToPage: La función global 'loadContent' no está disponible.");
-            // Podrías mostrar un alert o un mensaje de error en la UI aquí.
         }
     };
 
@@ -1488,11 +1535,6 @@ window.navigateToPage = function(viewName, params = {}) {
     }
 };
 
-// EN pacientes__paciente_detalle.js
-
-// En el script de pacientes__paciente_detalle.html
-
-// En el script de pacientes__paciente_detalle.html
 
 function renderOrdenesMedicasPanel(ordenes, containerId, patientId) {
     const local_INIT_FUNCTION_NAME = typeof INIT_FUNCTION_NAME !== 'undefined' ? INIT_FUNCTION_NAME : "renderOrdenesMedicasPanel";
@@ -1705,40 +1747,241 @@ function renderOrdenesMedicasPanel(ordenes, containerId, patientId) {
     console.log(`${local_INIT_FUNCTION_NAME}: Órdenes Médicas Renderizado Completado.`);
 }
 
-function renderComplementariosPanel(complementarios, containerId) {
-             console.log(`${INIT_FUNCTION_NAME}: Renderizando Estudios Complementarios`);
-             const container = document.getElementById(containerId);
-             if (!container) { console.error(`Error renderComplementariosPanel: Contenedor #${containerId} no encontrado.`); return; }
-             if (!complementarios || complementarios.length === 0) { container.innerHTML = '<p class="italic text-gray-500">No hay estudios complementarios registrados.</p>'; return; }
-             const grupos = complementarios.reduce((acc, comp) => {
-                 const tipo = comp.tipo_complementario || 'Otro';
-                 if (!acc[tipo]) acc[tipo] = [];
-                 acc[tipo].push(comp);
-                 return acc;
-             }, {});
-             let html = '';
-             for (const tipo in grupos) {
-                 html += `<h4 class="text-md font-semibold text-gray-800 mt-4 mb-2">${tipo}</h4>`;
-                 html += grupos[tipo].map(comp => `
-                     <div class="border rounded p-3 mb-3 bg-gray-50 text-sm shadow-sm">
-                         <div class="flex justify-between items-center mb-1 pb-1 border-b">
-                             <p class="text-xs font-semibold text-gray-700">
-                                 ${formatDate(comp.fecha_registro)} 
-                                 ${comp.fecha_realizacion ? `(Realizado: ${formatDate(comp.fecha_realizacion)})` : ''}
-                             </p>
-                             <p class="text-xs text-gray-500">Reg: ${comp.usuario_registrador_nombre || 'N/D'}</p>
-                         </div>
-                         <p><strong>Estudio:</strong> ${comp.nombre_estudio || 'N/D'}</p>
-                         <p class="mt-1"><strong class="text-xs block text-gray-600">Resultado/Informe:</strong></p>
-                         <p class="whitespace-pre-wrap text-xs bg-white p-2 border rounded mt-1">${comp.resultado_informe || '(Sin resultado)'}</p>
-                          ${comp.archivo_adjunto_path ? `<p class="mt-1 text-xs"><a href="${comp.archivo_adjunto_path}" target="_blank" class="text-blue-600 hover:underline"><i class="fas fa-paperclip mr-1"></i> Ver Adjunto</a></p>` : ''}
-                      </div>
-                 `).join('');
-             }
-             container.innerHTML = html || '<p class="italic text-gray-500">No hay estudios complementarios registrados.</p>';
-             console.log(`${INIT_FUNCTION_NAME}: Estudios Complementarios Renderizado Completado.`);
-        }
+function renderComplementariosPanel(todosLosComplementarios, containerId, patientId) {
+    const local_INIT_FN_NAME = typeof INIT_FUNCTION_NAME !== 'undefined' ? INIT_FUNCTION_NAME : "paciente_detalle_script";
+    console.log(`${local_INIT_FN_NAME}: Renderizando Panel Complementarios (DINÁMICO) en #${containerId} para Paciente ID: ${patientId}`);
     
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error(`Error renderComplementariosPanel (DINÁMICO): Contenedor #${containerId} no encontrado.`);
+        return;
+    }
+    container.innerHTML = ''; // Limpiar el contenedor principal
+
+    // Filtrar complementarios por tipo principal para las pestañas
+    const laboratorios = todosLosComplementarios.filter(c => c.tipo_complementario === 'Laboratorio');
+    const imagenes = todosLosComplementarios.filter(c => c.tipo_complementario === 'Imagen');
+    // Podrías añadir más filtros para 'Patologia', 'Endoscopia', 'Otro' si quieres más pestañas
+
+    let panelHtml = '';
+
+    // --- Cabecera del Panel General ---
+    panelHtml += `
+        <div class="flex justify-between items-center pb-3 border-b border-gray-300 mb-4">
+            <h3 class="text-xl font-semibold text-teal-700">
+                Complementarios (${todosLosComplementarios ? todosLosComplementarios.length : 0})
+            </h3>
+        </div>`;
+
+    // --- Pestañas de Navegación (Laboratorios / Imágenes) ---
+    panelHtml += `
+        <div class="mb-4 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="ComplementosSubTabs">
+                <button id="subtab-btn-laboratorios" 
+                        onclick="switchComplementosSubPanelGlobal('laboratorios')"
+                        class="complementos-subtab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-teal-500 text-teal-600" 
+                        aria-current="page">
+                    Laboratorios (${laboratorios.length})
+                </button>
+                <button id="subtab-btn-imagenes" 
+                        onclick="switchComplementosSubPanelGlobal('imagenes')"
+                        class="complementos-subtab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Imágenes (${imagenes.length})
+                </button>
+                <!-- Puedes añadir más botones para otros tipos si es necesario -->
+            </nav>
+        </div>`;
+
+    // --- Contenedor para el Contenido de las Sub-Pestañas ---
+    panelHtml += `<div id="complementos-subtab-content-area" class="mt-4">`;
+
+    // --- Contenido para la Pestaña Laboratorios ---
+    panelHtml += `<div id="subcontent-laboratorios" class="complemento-subpanel-item space-y-4">`; // Visible por defecto
+        panelHtml += `
+            <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-200 mb-4">
+                <h4 class="text-lg font-medium text-gray-800">
+                    Resultados de Laboratorio
+                </h4>
+                <button onclick="console.log('Añadir Lab, PatientID:', ${patientId}); window.abrirFormularioNuevoComplementoDetalle('Laboratorio', ${patientId})" 
+                        class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150">
+                    <i class="fas fa-plus fa-fw mr-2"></i> Añadir Laboratorio
+                </button>
+            </div>`;
+        
+        if (laboratorios.length > 0) {
+            laboratorios.sort((a,b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).forEach(lab => {
+                panelHtml += `
+                    <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                        <div class="flex flex-wrap justify-between items-start mb-3 pb-2 border-b border-gray-100">
+                            <div>
+                                <h5 class="text-md font-semibold text-teal-600">${lab.nombre_estudio || 'Estudio sin nombre'}</h5>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    Registrado: ${formatDate(lab.fecha_registro, true)} 
+                                    ${lab.fecha_realizacion ? `(Realizado: ${formatDate(lab.fecha_realizacion)})` : ''}
+                                    | Por: <span class="font-medium text-gray-700">${lab.usuario_registrador_nombre || 'N/D'}</span>
+                                    <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getEstadoColor(lab.estado)}">${lab.estado || 'N/A'}</span>
+                                </p>
+                            </div>
+                            <div class="flex space-x-1.5 flex-shrink-0 ml-2 mt-2 sm:mt-0">
+                                <button onclick="window.verComplementoDetalle(${lab.id}, 'Laboratorio', ${patientId})" 
+                                        class="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-150" title="Ver Detalles">
+                                    <i class="fas fa-eye fa-fw"></i>
+                                </button>
+                                <button onclick="window.editarComplementoDetalle(${lab.id}, 'Laboratorio', ${patientId})" 
+                                        class="p-1.5 text-gray-500 hover:text-orange-500 rounded-md hover:bg-orange-50 transition-colors duration-150" title="Editar Estudio">
+                                    <i class="fas fa-pencil-alt fa-fw"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-sm space-y-2">
+                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe:</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-40 overflow-y-auto">${lab.resultado_informe || 'Sin resultado registrado.'}</pre></div>
+                            ${lab.archivo_adjunto_path ? `<div class="mt-2 text-right"><a href="${lab.archivo_adjunto_path}" target="_blank" class="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"><i class="fas fa-paperclip mr-1.5"></i>Ver Adjunto</a></div>` : ''}
+                        </div>
+                    </div>`;
+            });
+        } else {
+            panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500">
+                             <i class="fas fa-flask fa-3x text-gray-300 mb-3"></i>
+                             <p class="italic">No hay estudios de laboratorio registrados.</p>
+                         </div>`;
+        }
+    panelHtml += `</div>`; // Cierre de subcontent-laboratorios
+
+    // --- Contenido para la Pestaña Imágenes (oculto por defecto) ---
+    panelHtml += `<div id="subcontent-imagenes" class="complemento-subpanel-item space-y-4 hidden">`;
+        panelHtml += `
+            <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-200 mb-4">
+                <h4 class="text-lg font-medium text-gray-800">
+                    Resultados de Imágenes
+                </h4>
+                <button onclick="console.log('Añadir Imagen, PatientID:', ${patientId}); window.abrirFormularioNuevoComplementoDetalle('Imagen', ${patientId})"
+                        class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150">
+                    <i class="fas fa-plus fa-fw mr-2"></i> Añadir Imagen
+                </button>
+            </div>`;
+
+        if (imagenes.length > 0) {
+            imagenes.sort((a,b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).forEach(img => {
+                panelHtml += `
+                    <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                        <div class="flex flex-wrap justify-between items-start mb-3 pb-2 border-b border-gray-100">
+                            <div>
+                                <h5 class="text-md font-semibold text-teal-600">${img.nombre_estudio || 'Estudio sin nombre'}</h5>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    Registrado: ${formatDate(img.fecha_registro, true)} 
+                                    ${img.fecha_realizacion ? `(Realizado: ${formatDate(img.fecha_realizacion)})` : ''}
+                                    | Por: <span class="font-medium text-gray-700">${img.usuario_registrador_nombre || 'N/D'}</span>
+                                </p>
+                            </div>
+                            <div class="flex space-x-1.5 flex-shrink-0 ml-2 mt-2 sm:mt-0">
+                                <button onclick="window.verComplementoDetalle(${img.id}, 'Imagen', ${patientId})" 
+                                        class="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-150" title="Ver Detalles">
+                                    <i class="fas fa-eye fa-fw"></i>
+                                </button>
+                                <button onclick="window.editarComplementoDetalle(${img.id}, 'Imagen', ${patientId})" 
+                                        class="p-1.5 text-gray-500 hover:text-orange-500 rounded-md hover:bg-orange-50 transition-colors duration-150" title="Editar Estudio">
+                                    <i class="fas fa-pencil-alt fa-fw"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-sm space-y-2">
+                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe:</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-40 overflow-y-auto">${img.resultado_informe || 'Sin resultado registrado.'}</pre></div>
+                            ${img.archivo_adjunto_path ? `<div class="mt-2 text-right"><a href="${img.archivo_adjunto_path}" target="_blank" class="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"><i class="fas fa-file-image mr-1.5"></i>Ver Adjunto</a></div>` : ''}
+                        </div>
+                    </div>`;
+            });
+        } else {
+            panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500">
+                             <i class="fas fa-x-ray fa-3x text-gray-300 mb-3"></i>
+                             <p class="italic">No hay estudios de imagenología registrados.</p>
+                         </div>`;
+        }
+    panelHtml += `</div>`; // Cierre de subcontent-imagenes
+
+    panelHtml += `</div>`; // Cierre de complementos-subtab-content-area
+
+    container.innerHTML = panelHtml;
+    console.log(`${local_INIT_FN_NAME}: Panel de Complementarios (DINÁMICO) renderizado.`);
+
+    // Asegurar que la función para cambiar sub-pestañas esté disponible
+    // Si no está global, debes definirla aquí o asegurar su disponibilidad.
+    if (typeof window.switchComplementosSubPanelGlobal !== 'function') {
+        window.switchComplementosSubPanelGlobal = function(targetSubPanelId) {
+            console.log("Switching complementos sub-panel to:", targetSubPanelId);
+            document.querySelectorAll('.complemento-subpanel-item').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.querySelectorAll('.complementos-subtab-button').forEach(button => {
+                button.classList.remove('border-teal-500', 'text-teal-600');
+                button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                button.removeAttribute('aria-current');
+            });
+
+            const activePanel = document.getElementById(`subcontent-${targetSubPanelId}`);
+            const activeButton = document.getElementById(`subtab-btn-${targetSubPanelId}`);
+
+            if (activePanel) activePanel.classList.remove('hidden');
+            if (activeButton) {
+                activeButton.classList.add('border-teal-500', 'text-teal-600');
+                activeButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                activeButton.setAttribute('aria-current', 'page');
+            }
+        }
+    }
+    // Inicializar la primera sub-pestaña como activa (si no se hizo ya)
+    // Esto es opcional si quieres que Laboratorios siempre sea la primera visible.
+    // window.switchComplementosSubPanelGlobal('laboratorios'); 
+}
+
+// ----- Funciones Placeholder para Navegación (debes implementarlas o conectarlas) -----
+// Estas funciones serían llamadas por los botones "Añadir", "Ver", "Editar"
+// y deberían usar window.navigateToPage o una lógica similar para cargar las vistas correspondientes.
+
+window.abrirFormularioNuevoComplementoDetalle = function(tipoComplemento, patientId) {
+    console.log(`[abrirFormularioNuevoComplementoDetalle] Tipo: ${tipoComplemento}, Patient ID: ${patientId}`); // <-- LOG CLAVE
+    window.currentPatientIdForContext = patientId;
+    window.navigateToPage('pacientes/complementarios/agregar_complementario', { 
+        patient_id: patientId, // <--- PASANDO EL patientId
+        tipo: tipoComplemento 
+    });
+}
+
+if (typeof window.verComplementoDetalle !== 'function') {
+    window.verComplementoDetalle = function(complementoId, tipoComplemento, patientId) {
+        console.log(`Ver detalle complementario ID: ${complementoId}, Tipo: ${tipoComplemento}, Paciente ID: ${patientId}`);
+        window.currentPatientIdForContext = patientId; // Para el botón "Volver" de la vista de detalle
+        window.navigateToPage('pacientes/complementarios/ver_complementario', { 
+            complemento_id: complementoId, 
+            patient_id: patientId 
+            // tipo: tipoComplemento // Opcional, si la vista de ver lo necesita
+        });
+    }
+}
+
+if (typeof window.editarComplementoDetalle !== 'function') {
+    window.editarComplementoDetalle = function(complementoId, tipoComplemento, patientId) {
+        console.log(`Editar complementario ID: ${complementoId}, Tipo: ${tipoComplemento}, Paciente ID: ${patientId}`);
+        window.currentPatientIdForContext = patientId;
+        window.navigateToPage('pacientes/complementarios/editar_complementario', { 
+            complemento_id: complementoId, 
+            patient_id: patientId,
+            tipo: tipoComplemento // Útil para preseleccionar el tipo en el form de edición
+        });
+    }
+}
+    function getEstadoColor(estado) {
+    if (!estado) return 'bg-gray-100 text-gray-800';
+    switch (estado.toLowerCase()) {
+        case 'solicitado': return 'bg-blue-100 text-blue-800';
+        case 'muestra tomada': return 'bg-indigo-100 text-indigo-800';
+        case 'en proceso': return 'bg-yellow-100 text-yellow-800';
+        case 'realizado completo':
+        case 'informado': return 'bg-green-100 text-green-800';
+        case 'realizado parcial': return 'bg-orange-100 text-orange-800';
+        case 'cancelado': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
         function renderInterconsultasPanel(interconsultas, containerId) {
              console.log(`${INIT_FUNCTION_NAME}: Renderizando Interconsultas`);
              const container = document.getElementById(containerId);

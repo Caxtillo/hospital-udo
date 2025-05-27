@@ -251,7 +251,29 @@ CREATE TABLE IF NOT EXISTS OrdenesMedicas (
 """
 
 SQL_CREATE_COMPLEMENTARIOS = """
-CREATE TABLE IF NOT EXISTS Complementarios ( id INTEGER PRIMARY KEY AUTOINCREMENT, paciente_id INTEGER NOT NULL, consulta_id INTEGER, orden_medica_id INTEGER, usuario_registrador_id INTEGER NOT NULL, fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, tipo_complementario TEXT NOT NULL CHECK(tipo_complementario IN ('Laboratorio', 'Imagen', 'Patologia', 'Endoscopia', 'Otro')), nombre_estudio BLOB NOT NULL, fecha_realizacion DATETIME, resultado_informe BLOB NOT NULL, archivo_adjunto_path BLOB, FOREIGN KEY (paciente_id) REFERENCES Pacientes(id) ON DELETE CASCADE, FOREIGN KEY (consulta_id) REFERENCES Consultas(id) ON DELETE SET NULL, FOREIGN KEY (orden_medica_id) REFERENCES OrdenesMedicas(id) ON DELETE SET NULL, FOREIGN KEY (usuario_registrador_id) REFERENCES Usuarios(id) ON DELETE RESTRICT );
+CREATE TABLE IF NOT EXISTS Complementarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    paciente_id INTEGER NOT NULL,
+    consulta_id INTEGER,
+    orden_medica_id INTEGER,          -- Si fue generado por una orden
+    usuario_registrador_id INTEGER NOT NULL, -- Quién cargó el resultado/estudio
+    fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Cuando se cargó al sistema
+    tipo_complementario TEXT NOT NULL 
+        CHECK(tipo_complementario IN ('Laboratorio', 'Imagen', 'Patologia', 'Endoscopia', 'Otro')),
+    nombre_estudio BLOB NOT NULL,
+    fecha_realizacion DATETIME,       -- Cuando se tomó la muestra / se hizo el estudio
+    resultado_informe BLOB,           -- El informe puede ser NULL si solo está solicitado
+    archivo_adjunto_path BLOB,
+    estado TEXT DEFAULT 'Solicitado'  -- <<<< NUEVO CAMPO ESTADO >>>>
+        CHECK(estado IN ('Solicitado', 'Muestra Tomada', 'En Proceso', 'Realizado Parcial', 'Realizado Completo', 'Informado', 'Cancelado')),
+    fecha_ultima_mod DATETIME DEFAULT CURRENT_TIMESTAMP, -- Para rastrear cambios
+    usuario_ultima_mod_id INTEGER,    -- Quién hizo el último cambio
+    FOREIGN KEY (paciente_id) REFERENCES Pacientes(id) ON DELETE CASCADE,
+    FOREIGN KEY (consulta_id) REFERENCES Consultas(id) ON DELETE SET NULL,
+    FOREIGN KEY (orden_medica_id) REFERENCES OrdenesMedicas(id) ON DELETE SET NULL,
+    FOREIGN KEY (usuario_registrador_id) REFERENCES Usuarios(id) ON DELETE RESTRICT,
+    FOREIGN KEY (usuario_ultima_mod_id) REFERENCES Usuarios(id) ON DELETE SET NULL
+);
 """
 SQL_CREATE_INTERCONSULTAS = """
 CREATE TABLE IF NOT EXISTS Interconsultas ( id INTEGER PRIMARY KEY AUTOINCREMENT, paciente_id INTEGER NOT NULL, consulta_id INTEGER, orden_medica_id INTEGER, usuario_solicitante_id INTEGER NOT NULL, fecha_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, servicio_consultado BLOB NOT NULL, motivo_consulta BLOB NOT NULL, fecha_respuesta DATETIME, usuario_respuesta_id INTEGER, respuesta_texto BLOB, estado TEXT DEFAULT 'Pendiente' CHECK(estado IN ('Pendiente', 'Respondida', 'Cancelada')), FOREIGN KEY (paciente_id) REFERENCES Pacientes(id) ON DELETE CASCADE, FOREIGN KEY (consulta_id) REFERENCES Consultas(id) ON DELETE SET NULL, FOREIGN KEY (orden_medica_id) REFERENCES OrdenesMedicas(id) ON DELETE SET NULL, FOREIGN KEY (usuario_solicitante_id) REFERENCES Usuarios(id) ON DELETE RESTRICT, FOREIGN KEY (usuario_respuesta_id) REFERENCES Usuarios(id) ON DELETE SET NULL );

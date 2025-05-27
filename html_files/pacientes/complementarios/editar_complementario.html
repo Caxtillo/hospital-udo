@@ -1,0 +1,405 @@
+<!-- html_files/pacientes/complementarios/editar_complementario.html -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Editar Estudio Complementario
+             <span id="edit-complementario-subheader" class="block text-sm font-normal text-gray-500 mt-1">Cargando datos...</span>
+        </h2>
+        <div class="flex space-x-3 mt-3 md:mt-0">
+            <button type="button" id="cancel-edit-complementario-btn" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium h-[42px]">Cancelar</button>
+            <button type="submit" id="submit-edit-complementario-btn" form="edit-complementario-form" class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium h-[42px] disabled:opacity-60">
+                <span id="edit-complementario-submit-text">Guardar Cambios</span>
+                <svg id="edit-complementario-spinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+    
+    <div id="edit-complementario-loading" class="text-center py-10"><p class="text-gray-500 italic">Cargando datos del estudio...</p></div>
+    <div id="edit-complementario-feedback" class="my-4 text-center text-sm h-5"></div>
+
+    <form id="edit-complementario-form" class="space-y-6 hidden">
+        <input type="hidden" id="complemento-id-hidden-edit" name="complemento_id">
+        <input type="hidden" id="paciente-id-hidden-edit" name="paciente_id">
+        <input type="hidden" id="consulta-id-hidden-edit" name="consulta_id">
+        <input type="hidden" id="orden-medica-id-hidden-edit" name="orden_medica_id">
+
+        <!-- Detalles del Estudio -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Detalles del Estudio</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="tipo_complementario_edit" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Estudio <span class="text-red-500">*</span></label>
+                    <select id="tipo_complementario_edit" name="tipo_complementario" required 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                        <option value="">Seleccione...</option>
+                        <option value="Laboratorio">Laboratorio</option>
+                        <option value="Imagen">Imagen</option>
+                        <option value="Patologia">Patología</option>
+                        <option value="Endoscopia">Endoscopia</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="nombre_estudio_edit" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Estudio <span class="text-red-500">*</span></label>
+                    <input type="text" id="nombre_estudio_edit" name="nombre_estudio" required placeholder="Ej: Hemograma Completo, Rx Tórax"
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Fechas y Estado -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Fechas y Estado</legend>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="fecha_realizacion_edit" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Realización</label>
+                    <input type="datetime-local" id="fecha_realizacion_edit" name="fecha_realizacion" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="fecha_registro_edit" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Registro</label>
+                    <input type="datetime-local" id="fecha_registro_edit" name="fecha_registro" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="estado_complementario_edit" class="block text-sm font-medium text-gray-700 mb-1">Estado <span class="text-red-500">*</span></label>
+                    <select id="estado_complementario_edit" name="estado" required 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                        <option value="Solicitado">Solicitado</option>
+                        <option value="Muestra Tomada">Muestra Tomada</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Realizado Parcial">Realizado Parcial</option>
+                        <option value="Realizado Completo">Realizado Completo</option>
+                        <option value="Informado">Informado (Resultado Cargado)</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+        
+        <!-- Resultado o Informe -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Resultado o Informe</legend>
+            <div>
+                <label for="resultado_informe_edit" class="block text-sm font-medium text-gray-700 mb-1">Detalles del Resultado/Informe <span class="text-red-500">*</span></label>
+                <textarea id="resultado_informe_edit" name="resultado_informe" rows="6" required 
+                          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[120px]" 
+                          placeholder="Ingrese aquí el resultado o el informe detallado del estudio..."></textarea>
+            </div>
+        </fieldset>
+
+        <!-- Archivo Adjunto -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Archivo Adjunto</legend>
+            <div class="space-y-3">
+                <div id="current-attachment-info-edit" class="text-sm text-gray-600 hidden">
+                    <p>Archivo actual: <a id="current-attachment-link-edit" href="#" target="_blank" class="text-blue-600 hover:underline"></a></p>
+                    <label class="flex items-center mt-2">
+                        <input type="checkbox" id="remove_current_attachment_edit" name="remove_current_attachment" 
+                               class="form-checkbox h-4 w-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500 mr-2">
+                        Eliminar adjunto actual
+                    </label>
+                </div>
+                <div>
+                    <label for="archivo_adjunto_pc_edit" class="block text-sm font-medium text-gray-700 mb-1">Subir nuevo desde PC:</label>
+                    <input type="file" id="archivo_adjunto_pc_edit" name="archivo_adjunto_pc" 
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    <p class="mt-1 text-xs text-gray-500">Si selecciona un archivo, reemplazará el existente (si no marca "Eliminar adjunto actual" y el archivo anterior existe, se mantendrá el nuevo).</p>
+                </div>
+                 <div class="pt-2">
+                     <button type="button" id="upload-from-mobile-btn-edit" class="text-sm text-teal-600 hover:text-teal-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed" title="Funcionalidad pendiente"><i class="fas fa-mobile-alt mr-1"></i> Subir desde Móvil (QR) <span class="text-xs italic text-gray-400">(Pendiente)</span></button>
+                    <div id="qr-code-container-edit" class="mt-2 hidden"></div>
+                </div>
+            </div>
+        </fieldset>
+        <!-- Botones inferiores (idénticos en estructura y clases a agregar_complementario.html) -->
+    </form>
+</div>
+
+<!-- Contenido del tag <script> para html_files/pacientes/complementarios/editar_complementario.html -->
+<script>
+(function() {
+    const VIEW_ID_FOR_SHELL_INIT = 'pacientes_complementarios_editar_complementario';
+    const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__complementarios__editar_complementario';
+    const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+    
+    const HANDLER_DETAILS_RESULT_GLOBAL_NAME = `handleComplementoDetailsResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+    const HANDLER_UPDATE_RESULT_GLOBAL_NAME = `handleComplementoSaveResult_${VIEW_ID_FOR_SHELL_HANDLER}`; // Usando el mismo prefijo que agregar
+
+    console.log(`SCRIPT EDITAR COMPLEMENTARIO: Init: ${INIT_FUNCTION_NAME}, Handler Details: ${HANDLER_DETAILS_RESULT_GLOBAL_NAME}, Handler Update: ${HANDLER_UPDATE_RESULT_GLOBAL_NAME}`);
+
+    let form, subheaderElement, feedbackDiv, loadingDiv;
+    let cancelBtn, submitBtn, submitText, submitSpinner;
+    let complementoIdHiddenInput, pacienteIdHiddenInput, consultaIdHiddenInput, ordenMedicaIdHiddenInput;
+    let tipoSelectEdit, nombreEstudioInputEdit, fechaRealizacionInputEdit, 
+        fechaRegistroInputEdit, resultadoTextareaEdit, estadoSelectEdit; // <--- Variable correcta
+    let currentAttachmentInfoEdit, currentAttachmentLinkEdit, removeAttachmentCheckboxEdit, archivoPcInputEdit;
+    
+    let currentComplementoId = null;
+    let currentContextPatientId = null;
+    let currentContextPatientName = null;
+    let currentContextPatientHC = null;
+    let currentComplementoOriginalData = null; 
+    let isSubmittingForm = false;
+
+    function applyStylesToFormElements_edit() { // Renombrar para claridad o usar una global
+        document.querySelectorAll('#edit-complementario-form select, #edit-complementario-form input[type="text"], #edit-complementario-form input[type="datetime-local"], #edit-complementario-form textarea')
+            .forEach(el => {
+                el.className = "";
+                el.classList.add('block', 'w-full', 'rounded-md', 'border-gray-300', 'shadow-sm', 'focus:border-teal-500', 'focus:ring-teal-500', 'sm:text-sm', 'px-3', 'py-2', 'h-[42px]');
+                if(el.tagName === 'TEXTAREA') {
+                    el.style.height = 'auto';
+                    el.classList.remove('h-[42px]');
+                    el.classList.add('min-h-[100px]');
+                }
+            });
+        document.querySelectorAll('#edit-complementario-form input[type="file"]')
+            .forEach(el => {
+                el.className = "";
+                el.classList.add('block', 'w-full', 'text-sm', 'text-gray-500',
+                                 'file:mr-4', 'file:py-2', 'file:px-4',
+                                 'file:rounded-md', 'file:border-0', 'file:text-sm', 'file:font-semibold',
+                                 'file:bg-teal-50', 'file:text-teal-700', 'hover:file:bg-teal-100');
+            });
+         document.querySelectorAll('#edit-complementario-form .form-checkbox-sm').forEach(el => {
+            el.className = "";
+            el.classList.add('form-checkbox', 'h-4', 'w-4', 'text-teal-600', 'rounded', 'border-gray-300', 'focus:ring-teal-500');
+        });
+    }
+
+    function getDOMElements_edit() { // Renombrar para claridad o usar una global
+        loadingDiv = document.getElementById('edit-complementario-loading');
+        form = document.getElementById('edit-complementario-form');
+        subheaderElement = document.getElementById('edit-complementario-subheader');
+        feedbackDiv = document.getElementById('edit-complementario-feedback');
+        
+        cancelBtn = document.getElementById('cancel-edit-complementario-btn');
+        submitBtn = document.getElementById('submit-edit-complementario-btn');
+        submitText = document.getElementById('edit-complementario-submit-text');
+        submitSpinner = document.getElementById('edit-complementario-spinner');
+
+        complementoIdHiddenInput = document.getElementById('complemento-id-hidden-edit');
+        pacienteIdHiddenInput = document.getElementById('paciente-id-hidden-edit');
+        consultaIdHiddenInput = document.getElementById('consulta-id-hidden-edit');
+        ordenMedicaIdHiddenInput = document.getElementById('orden-medica-id-hidden-edit');
+
+        tipoSelectEdit = document.getElementById('tipo_complementario_edit');
+        nombreEstudioInputEdit = document.getElementById('nombre_estudio_edit');
+        fechaRealizacionInputEdit = document.getElementById('fecha_realizacion_edit');
+        fechaRegistroInputEdit = document.getElementById('fecha_registro_edit');
+        resultadoTextareaEdit = document.getElementById('resultado_informe_edit');
+        estadoSelectEdit = document.getElementById('estado_complementario_edit'); // <--- CORREGIDO EL ID AQUÍ
+        
+        currentAttachmentInfoEdit = document.getElementById('current-attachment-info-edit');
+        currentAttachmentLinkEdit = document.getElementById('current-attachment-link-edit');
+        removeAttachmentCheckboxEdit = document.getElementById('remove_current_attachment_edit');
+        archivoPcInputEdit = document.getElementById('archivo_adjunto_pc_edit');
+        
+        applyStylesToFormElements_edit(); // Asegúrate que el selector base sea #edit-complementario-form
+    }
+    
+    function updateSubheader() {
+        if (subheaderElement) {
+            let nombreEstudioDisplay = currentComplementoOriginalData ? (currentComplementoOriginalData.nombre_estudio_dec || currentComplementoOriginalData.nombre_estudio || "Estudio") : "Estudio";
+            if (currentContextPatientName && currentContextPatientHC) {
+                subheaderElement.textContent = `Editando: ${nombreEstudioDisplay} - Paciente: ${currentContextPatientName} - H.C: ${currentContextPatientHC}`;
+            } else {
+                 subheaderElement.textContent = 'Cargando datos del estudio...';
+            }
+        }
+    }
+
+    function populateForm(data) {
+        if (!data || !form) {
+            console.error("PopulateForm (Editar): No hay datos o formulario no encontrado.");
+            if(loadingDiv) loadingDiv.textContent = "Error: No se pudieron cargar los datos del formulario.";
+            return;
+        }
+        console.log("Populating EDIT form with data:", data);
+        
+        currentComplementoId = data.id_complemento;
+        currentContextPatientId = data.paciente_id_real;
+        currentComplementoOriginalData = data; 
+        currentContextPatientName = data.paciente_nombre_completo_dec || data.paciente_nombre_completo;
+        currentContextPatientHC = data.numero_historia_paciente;
+        updateSubheader();
+
+        if(complementoIdHiddenInput) complementoIdHiddenInput.value = currentComplementoId || '';
+        if(pacienteIdHiddenInput) pacienteIdHiddenInput.value = currentContextPatientId || '';
+        if(consultaIdHiddenInput) consultaIdHiddenInput.value = data.consulta_id || '';
+        if(ordenMedicaIdHiddenInput) ordenMedicaIdHiddenInput.value = data.orden_medica_id || '';
+
+        if(tipoSelectEdit) tipoSelectEdit.value = data.tipo_complementario || '';
+        if(nombreEstudioInputEdit) nombreEstudioInputEdit.value = data.nombre_estudio_dec || data.nombre_estudio || '';
+        
+        if(fechaRealizacionInputEdit && data.fecha_realizacion) try { fechaRealizacionInputEdit.value = new Date(data.fecha_realizacion).toISOString().slice(0,16); } catch(e){console.warn("Fecha realización inválida populateForm", data.fecha_realizacion);}
+        if(fechaRegistroInputEdit && data.fecha_registro) try { fechaRegistroInputEdit.value = new Date(data.fecha_registro).toISOString().slice(0,16); } catch(e){console.warn("Fecha registro inválida populateForm", data.fecha_registro);}
+        
+        if(estadoSelectEdit) estadoSelectEdit.value = data.estado || 'Solicitado';
+        if(resultadoTextareaEdit) resultadoTextareaEdit.value = data.resultado_informe_dec || data.resultado_informe || '';
+
+        const adjuntoPath = data.archivo_adjunto_path_dec || data.archivo_adjunto_path;
+        if (adjuntoPath && adjuntoPath !== "[Error de Desencriptación]") {
+            if(currentAttachmentInfoEdit) currentAttachmentInfoEdit.classList.remove('hidden');
+            if(currentAttachmentLinkEdit) { 
+                currentAttachmentLinkEdit.textContent = adjuntoPath.split(/[\\/]/).pop(); 
+                currentAttachmentLinkEdit.href = "#"; 
+                currentAttachmentLinkEdit.title = `Ruta: ${adjuntoPath}`;
+            }
+        } else {
+            if(currentAttachmentInfoEdit) currentAttachmentInfoEdit.classList.add('hidden');
+        }
+        if(removeAttachmentCheckboxEdit) removeAttachmentCheckboxEdit.checked = false;
+
+        if(form) form.classList.remove('hidden');
+        if(loadingDiv) loadingDiv.style.display = 'none';
+    }
+
+    async function collectFormDataAndFileForEdit() {
+        const formData = new FormData(form); // form es #edit-complementario-form
+        const dataObject = {};
+        formData.forEach((value, key) => { 
+            if (key !== 'archivo_adjunto_pc_edit' && key !== 'remove_current_attachment_edit') {
+                dataObject[key] = value; 
+            }
+        });
+        if(removeAttachmentCheckboxEdit) dataObject.remove_current_attachment = removeAttachmentCheckboxEdit.checked;
+        
+        const fileInput = archivoPcInputEdit; // Usar el input de editar
+        let filePromise = Promise.resolve(null);
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            filePromise = new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve({ name: file.name, type: file.type, size: file.size, base64: e.target.result.split(',')[1] });
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+        return filePromise.then(fileData => { 
+            if (fileData) { dataObject.archivo_adjunto_nuevo = fileData; }
+            return dataObject; 
+        });    
+    }
+    
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        if (isSubmittingForm) return; 
+        isSubmittingForm = true;
+        
+        if(submitBtn) submitBtn.disabled = true; 
+        if(submitSpinner) submitSpinner.classList.remove('hidden');
+        if(submitText) submitText.textContent = 'Guardando Cambios...'; 
+        if(feedbackDiv) feedbackDiv.textContent = '';
+
+        if (!currentComplementoId) { 
+            console.error("No hay ID de complemento para actualizar."); 
+            if(feedbackDiv) feedbackDiv.textContent = "Error: No se pudo identificar el estudio para actualizar.";
+            isSubmittingForm = false; 
+            if(submitBtn) submitBtn.disabled = false; 
+            if(submitSpinner) submitSpinner.classList.add('hidden');
+            if(submitText) submitText.textContent = 'Guardar Cambios';
+            return;
+        }
+
+        try {
+            const dataToSend = await collectFormDataAndFileForEdit();
+            console.log("Datos EDITAR COMPLEMENTARIO a enviar:", dataToSend);
+            if (window.backend && typeof window.backend.update_complemento_data === 'function') {
+                window.backend.update_complemento_data(currentComplementoId, dataToSend);
+            } else { throw new Error("Función de actualización no disponible en backend."); }
+        } catch (error) {
+            console.error("Error en handleFormSubmit (EDITAR):", error);
+            if(feedbackDiv) { 
+                feedbackDiv.textContent = `Error: ${error.message || "No se pudo procesar el formulario."}`; 
+                feedbackDiv.className = "my-4 text-center text-sm h-5 text-red-600 font-medium"; 
+            }
+            isSubmittingForm = false; 
+            if(submitBtn) submitBtn.disabled = false; 
+            if(submitSpinner) submitSpinner.classList.add('hidden');
+            if(submitText) submitText.textContent = 'Guardar Cambios';
+        }
+    }
+    
+    window[HANDLER_UPDATE_RESULT_GLOBAL_NAME] = function(success, message, updatedComplementoId) {
+        console.log(`[EDITAR COMPLEMENTARIO JS] Handler ${HANDLER_UPDATE_RESULT_GLOBAL_NAME} EJECUTADO. Success: ${success}, Msg: "${message}", ID: ${updatedComplementoId}`);
+        
+        isSubmittingForm = false;
+        if(submitBtn) submitBtn.disabled = false;
+        if(submitSpinner) submitSpinner.classList.add('hidden');
+        if(submitText) submitText.textContent = 'Guardar Cambios';
+
+        if (feedbackDiv) {
+            feedbackDiv.textContent = message;
+            feedbackDiv.className = `my-4 text-center text-sm h-5 font-medium ${success ? 'text-green-600' : 'text-red-600'}`;
+        }
+        if (success) {
+            setTimeout(() => { 
+                handleCancel(true); 
+            }, 1500);
+        }
+    };
+    console.log(`Handler ${HANDLER_UPDATE_RESULT_GLOBAL_NAME} registrado globalmente para EDITAR.`);
+
+    function handleCancel(fueGuardadoExitoso = false) { 
+        const patientIdToReturn = currentContextPatientId || window.currentPatientIdForContext;
+        if (patientIdToReturn && typeof loadContent === 'function') {
+            if (window.backend && typeof window.backend.set_selected_patient === 'function') { 
+                window.backend.set_selected_patient(parseInt(patientIdToReturn));
+            }
+            window.targetTabAfterLoad = 'panel-estudios'; 
+            loadContent('pacientes__paciente_detalle');
+        } else { 
+            if (typeof loadContent === 'function') loadContent('dashboard');
+        }
+    }
+
+    window[HANDLER_DETAILS_RESULT_GLOBAL_NAME] = function(jsonString) {
+        console.log(`[EDITAR COMPLEMENTARIO JS] Handler ${HANDLER_DETAILS_RESULT_GLOBAL_NAME} llamado con:`, jsonString.substring(0, 200) + "...");
+        let data; 
+        try { data = JSON.parse(jsonString); }
+        catch (e) { 
+            console.error("Error parseando JSON en handler de detalles (EDITAR):", e);
+            if(loadingDiv) loadingDiv.innerHTML = '<p class="text-red-600">Error al procesar datos del estudio.</p>'; 
+            if(form) form.classList.add('hidden');
+            return; 
+        }
+
+        if (data.error_fetch) { 
+            if(loadingDiv) loadingDiv.innerHTML = `<p class="text-red-600">${data.error_fetch}</p>`;
+            if(form) form.classList.add('hidden');
+        } else { 
+            populateForm(data); 
+        }
+    };
+    console.log(`Handler ${HANDLER_DETAILS_RESULT_GLOBAL_NAME} registrado globalmente para EDITAR (Details Result).`);
+
+    function initializeView() {
+        console.log(`*** Inicializador EDITAR COMPLEMENTARIO: ${INIT_FUNCTION_NAME} ***`);
+        getDOMElements_edit();
+        if (!form) { console.error("Formulario de edición no encontrado."); return; }
+
+        form.addEventListener('submit', handleFormSubmit);
+        if(cancelBtn) cancelBtn.addEventListener('click', handleCancel); // cancelBtn se obtiene en getDOMElements_edit
+        
+        const mobileBtnEdit = document.getElementById('upload-from-mobile-btn-edit');
+        if(mobileBtnEdit) mobileBtnEdit.disabled = true;
+
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        if (form) form.classList.add('hidden');
+        if (feedbackDiv) feedbackDiv.textContent = '';
+
+        if (window.backend && typeof window.backend.request_complemento_details === 'function') {
+            console.log("EDITAR COMPLEMENTARIO: Solicitando detalles del complemento...");
+            window.backend.request_complemento_details();
+        } else {
+            console.error("Error: window.backend.request_complemento_details no está disponible.");
+            if(loadingDiv) loadingDiv.innerHTML = '<p class="text-red-600">Error de comunicación al cargar la orden.</p>';
+        }
+    }
+    
+    if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+    window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+})();
+</script>

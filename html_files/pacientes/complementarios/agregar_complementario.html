@@ -1,0 +1,615 @@
+<!-- html_files/pacientes/complementarios/agregar_complementario.html -->
+<div class="p-6 md:p-8">
+    <!-- Cabecera -->
+    <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200">
+        <h2 class="text-2xl font-semibold text-teal-700">
+            Registrar Nuevo Estudio Complementario
+            <span id="add-complementario-subheader" class="block text-sm font-normal text-gray-500 mt-1">Paciente: [Nombre Paciente] - H.C: [HC]</span>
+        </h2>
+        <div class="flex space-x-3 mt-3 md:mt-0">
+            <button type="button" id="cancel-add-complementario-btn" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow text-sm font-medium h-[42px]">Cancelar</button>
+            <button type="submit" id="submit-add-complementario-btn" form="add-complementario-form" class="inline-flex items-center justify-center px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md shadow text-sm font-medium h-[42px] disabled:opacity-60">
+                <span id="add-complementario-submit-text">Guardar Estudio</span>
+                <svg id="add-complementario-spinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="add-complementario-feedback" class="my-4 text-center text-sm h-5"></div>
+
+    <form id="add-complementario-form" class="space-y-6">
+        <input type="hidden" id="paciente-id-hidden-add" name="paciente_id">
+        <input type="hidden" id="consulta-id-hidden-add" name="consulta_id">
+        <input type="hidden" id="orden-medica-id-hidden-add" name="orden_medica_id">
+
+        <!-- Campo Tipo de Estudio -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Detalles del Estudio</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="tipo_complementario_add" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Estudio <span class="text-red-500">*</span></label>
+                    <select id="tipo_complementario_add" name="tipo_complementario" required 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                        <option value="">Seleccione...</option>
+                        <option value="Laboratorio">Laboratorio</option>
+                        <option value="Imagen">Imagen</option>
+                        <option value="Patologia">Patología</option>
+                        <option value="Endoscopia">Endoscopia</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="nombre_estudio_add" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Estudio <span class="text-red-500">*</span></label>
+                    <input type="text" id="nombre_estudio_add" name="nombre_estudio" required placeholder="Ej: Hemograma Completo, Rx Tórax" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Campos de Fecha y Estado -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Fechas y Estado</legend>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="fecha_realizacion_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Realización</label>
+                    <input type="datetime-local" id="fecha_realizacion_add" name="fecha_realizacion" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="fecha_registro_add" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Registro</label>
+                    <input type="datetime-local" id="fecha_registro_add" name="fecha_registro" 
+                           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                </div>
+                <div>
+                    <label for="estado_complementario_add" class="block text-sm font-medium text-gray-700 mb-1">Estado <span class="text-red-500">*</span></label>
+                    <select id="estado_complementario_add" name="estado" required 
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 h-[42px]">
+                        <option value="Solicitado">Solicitado</option>
+                        <option value="Muestra Tomada">Muestra Tomada</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Realizado Parcial">Realizado Parcial</option>
+                        <option value="Realizado Completo">Realizado Completo</option>
+                        <option value="Informado">Informado (Resultado Cargado)</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+        
+        <!-- Campo Resultado/Informe -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Resultado o Informe</legend>
+            <div>
+                <label for="resultado_informe_add" class="block text-sm font-medium text-gray-700 mb-1">Detalles del Resultado/Informe <span class="text-red-500">*</span></label>
+                <textarea id="resultado_informe_add" name="resultado_informe" rows="6" required 
+                          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-3 py-2 min-h-[120px]" 
+                          placeholder="Ingrese aquí el resultado o el informe detallado del estudio..."></textarea>
+            </div>
+        </fieldset>
+
+        <!-- Campo Archivo Adjunto -->
+        <fieldset class="border border-gray-300 p-4 rounded-md shadow-sm">
+            <legend class="text-lg font-semibold text-gray-800 px-2 mb-3">Archivo Adjunto</legend>
+            <div class="space-y-3">
+                <div>
+                    <label for="archivo_adjunto_pc_add" class="block text-xs font-medium text-gray-700 mb-1">Subir desde PC:</label>
+                    <input type="file" id="archivo_adjunto_pc_add" name="archivo_adjunto_pc"
+                        class="form-input-file ..."
+                        accept=".jpg, .jpeg, .png, .gif, .bmp, .webp, .svg, .pdf, .doc, .docx, .txt">
+                    <p class="mt-1 text-xs text-gray-500">Imágenes, PDF, DOC, TXT (Max 10MB).</p>
+                    <!-- Para mostrar el nombre del archivo seleccionado desde el móvil -->
+                    <div id="mobile-file-indicator-add" class="mt-1 text-sm text-green-600 hidden">
+                        <i class="fas fa-check-circle mr-1"></i> Archivo desde móvil: <span id="mobile-file-name-add"></span>
+                        <button type="button" id="remove-mobile-file-btn-add" class="ml-2 text-red-500 hover:text-red-700 text-xs">× Quitar</button>
+                    </div>
+                </div>
+                 <div class="pt-2">
+                     <button type="button" id="upload-from-mobile-btn-add" class="text-sm text-teal-600 hover:text-teal-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-mobile-alt mr-1"></i> Subir desde Móvil (QR)
+                     </button>
+                    <div id="qr-code-container-add" class="mt-3 p-3 border border-dashed border-gray-300 rounded-md inline-block hidden bg-white">
+                        <!-- El QR se generará aquí -->
+                        <p id="qr-message-add" class="text-xs text-gray-600 mb-2 text-center">Escanee con su móvil.</p>
+                    </div>
+                    <p id="mobile-upload-status-add" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+            </div>
+        </fieldset>
+        <!-- Botones inferiores ... -->
+    </form>
+</div>
+
+
+
+<script>
+(function() {
+    const VIEW_ID_FOR_SHELL_INIT = 'pacientes_complementarios_agregar_complementario';
+    const VIEW_ID_FOR_SHELL_HANDLER = 'pacientes__complementarios__agregar_complementario';
+    const INIT_FUNCTION_NAME = `initialize_${VIEW_ID_FOR_SHELL_INIT}`;
+    
+    const HANDLER_SAVE_RESULT_GLOBAL_NAME = `handleComplementoSaveResult_${VIEW_ID_FOR_SHELL_HANDLER}`;
+    const HANDLER_PATIENT_INFO_SUBHEADER_GLOBAL_NAME = `handlePatientInfoForAddComplementoSubheader_${VIEW_ID_FOR_SHELL_HANDLER}`;
+    const HANDLER_MOBILE_UPLOAD_URL_READY = `handleMobileUploadUrlReady_${VIEW_ID_FOR_SHELL_HANDLER}`;
+    const HANDLER_MOBILE_UPLOAD_STATUS = `handleMobileUploadStatus_${VIEW_ID_FOR_SHELL_HANDLER}`;
+
+    // Variables 'let' (globales al IIFE)
+    let form, subheaderElement, feedbackDiv;
+    let cancelBtn, submitBtn, submitText, submitSpinner;
+    let pacienteIdHiddenInput, tipoSelectAdd, fechaRegistroInputAdd, estadoSelectAdd;
+    let currentContextPatientId = null;
+    let currentContextPatientName = null;
+    let currentContextPatientHC = null;
+    let patientInfoSignalConnectedForAdd = false;
+    let isSubmittingForm = false;
+
+    let uploadFromMobileBtn, qrCodeContainer, qrMessageElement, mobileUploadStatusElement;
+    let mobileFileIndicator, mobileFileNameSpan, removeMobileFileBtn;
+    let currentMobileUploadToken = null;
+    let mobileFileUploadedPath = null;
+    let qrPollingInterval = null;
+
+    // =============== FUNCIONES HELPER (DEFINIDAS PRIMERO) ===============
+    function applyStylesToFormElements() {
+        document.querySelectorAll('#add-complementario-form select, #add-complementario-form input[type="text"], #add-complementario-form input[type="datetime-local"], #add-complementario-form textarea')
+            .forEach(el => {
+                el.className = "";
+                el.classList.add('block', 'w-full', 'rounded-md', 'border-gray-300', 'shadow-sm', 'focus:border-teal-500', 'focus:ring-teal-500', 'sm:text-sm', 'px-3', 'py-2', 'h-[42px]');
+                if(el.tagName === 'TEXTAREA') {
+                    el.style.height = 'auto';
+                    el.classList.remove('h-[42px]');
+                    el.classList.add('min-h-[100px]');
+                }
+            });
+        document.querySelectorAll('#add-complementario-form input[type="file"]')
+            .forEach(el => {
+                el.className = "";
+                el.classList.add('block', 'w-full', 'text-sm', 'text-gray-500',
+                                 'file:mr-4', 'file:py-2', 'file:px-4',
+                                 'file:rounded-md', 'file:border-0', 'file:text-sm', 'file:font-semibold',
+                                 'file:bg-teal-50', 'file:text-teal-700', 'hover:file:bg-teal-100');
+            });
+         document.querySelectorAll('#add-complementario-form .form-checkbox-sm').forEach(el => {
+            el.className = "";
+            el.classList.add('form-checkbox', 'h-4', 'w-4', 'text-teal-600', 'rounded', 'border-gray-300', 'focus:ring-teal-500');
+        });
+    }
+
+    function getDOMElements() {
+        form = document.getElementById('add-complementario-form');
+        subheaderElement = document.getElementById('add-complementario-subheader');
+        feedbackDiv = document.getElementById('add-complementario-feedback');
+        cancelBtn = document.getElementById('cancel-add-complementario-btn');
+        submitBtn = document.getElementById('submit-add-complementario-btn');
+        submitText = document.getElementById('add-complementario-submit-text');
+        submitSpinner = document.getElementById('add-complementario-spinner');
+        pacienteIdHiddenInput = document.getElementById('paciente-id-hidden-add');
+        tipoSelectAdd = document.getElementById('tipo_complementario_add');
+        estadoSelectAdd = document.getElementById('estado_complementario_add');
+        fechaRegistroInputAdd = document.getElementById('fecha_registro_add');
+
+        uploadFromMobileBtn = document.getElementById('upload-from-mobile-btn-add');
+        qrCodeContainer = document.getElementById('qr-code-container-add');
+        qrMessageElement = document.getElementById('qr-message-add');
+        mobileUploadStatusElement = document.getElementById('mobile-upload-status-add');
+
+        mobileFileIndicator = document.getElementById('mobile-file-indicator-add');
+        mobileFileNameSpan = document.getElementById('mobile-file-name-add');
+        removeMobileFileBtn = document.getElementById('remove-mobile-file-btn-add');
+
+        applyStylesToFormElements();
+    }
+    
+    function updateSubheader() { 
+        if (subheaderElement) {
+            if (currentContextPatientName && currentContextPatientHC) {
+                subheaderElement.textContent = `Paciente: ${currentContextPatientName} - H.C: ${currentContextPatientHC}`;
+                subheaderElement.classList.remove('italic', 'text-gray-400', 'text-red-600');
+            } else if (currentContextPatientId) {
+                 subheaderElement.textContent = `Cargando datos del paciente (ID: ${currentContextPatientId})...`;
+                 subheaderElement.classList.add('italic', 'text-gray-400');
+            } else {
+                 subheaderElement.textContent = 'Paciente no especificado.';
+                 subheaderElement.classList.add('italic', 'text-red-600');
+            }
+        }
+    }
+
+    function resetForm() {
+        if (form) form.reset();
+        if (feedbackDiv) {
+            feedbackDiv.textContent = '';
+            feedbackDiv.className = "my-4 text-center text-sm h-5";
+        }
+        if (fechaRegistroInputAdd) { // Poner fecha y hora actual por defecto
+             const now = new Date();
+             now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajustar a la zona horaria local para el input
+             fechaRegistroInputAdd.value = now.toISOString().slice(0,16);
+        }
+        if (tipoSelectAdd) tipoSelectAdd.value = '';
+        if (estadoSelectAdd) estadoSelectAdd.value = 'Solicitado';
+        
+        const fileInputPC = document.getElementById('archivo_adjunto_pc_add');
+        if (fileInputPC) fileInputPC.value = '';
+        // updateSubheader(); // Se llama cuando llega la info del paciente o en init si hay error de ID
+    }
+
+    function stopQrPolling() {
+        if (qrPollingInterval) {
+            clearInterval(qrPollingInterval);
+            qrPollingInterval = null;
+            console.log("QR Polling detenido.");
+        }
+    }
+
+    function resetMobileUploadUI() {
+        currentMobileUploadToken = null;
+        mobileFileUploadedPath = null;
+        if (qrCodeContainer) {
+            qrCodeContainer.classList.add('hidden');
+            qrCodeContainer.innerHTML = ''; // Limpiar completamente
+            // Volver a añadir el párrafo de mensaje por defecto
+            const pDefault = document.createElement('p');
+            pDefault.id = 'qr-message-add'; // Asegurar que el ID se mantenga para getDOMElements
+            pDefault.className = 'text-xs text-gray-600 mb-2 text-center';
+            pDefault.textContent = 'Escanee con su móvil.';
+            qrCodeContainer.appendChild(pDefault);
+            // Asignar el nuevo elemento a la variable global qrMessageElement
+            qrMessageElement = pDefault; 
+        }
+        if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = '';
+        if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false;
+        if (mobileFileIndicator) mobileFileIndicator.classList.add('hidden');
+        if (mobileFileNameSpan) mobileFileNameSpan.textContent = '';
+        
+        const fileInputPC = document.getElementById('archivo_adjunto_pc_add');
+        if (fileInputPC) fileInputPC.disabled = false;
+        stopQrPolling();
+    }
+
+    async function collectFormDataAndFile() {
+        const formData = new FormData(form);
+        const dataObject = {};
+        formData.forEach((value, key) => {
+            if (key !== 'archivo_adjunto_pc') { dataObject[key] = value; }
+        });
+
+        if (mobileFileUploadedPath) {
+            dataObject.archivo_adjunto_movil_ref = mobileFileUploadedPath;
+            dataObject.archivo_adjunto_original_filename = mobileFileNameSpan.textContent || "archivo_movil.dat";
+            delete dataObject.archivo_adjunto_nuevo;
+            console.log("Incluyendo referencia de archivo móvil:", mobileFileUploadedPath);
+        } else {
+            const fileInput = document.getElementById('archivo_adjunto_pc_add');
+            let filePromise = Promise.resolve(null);
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; 
+                if (file.size > MAX_FILE_SIZE) {
+                    throw new Error(`El archivo "${file.name}" es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)}MB). El máximo permitido es 10MB.`);
+                }
+                filePromise = new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve({ name: file.name, type: file.type, size: file.size, base64: e.target.result.split(',')[1] });
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+            const fileDataPC = await filePromise;
+            if (fileDataPC) {
+                dataObject.archivo_adjunto_nuevo = fileDataPC;
+                console.log("Incluyendo archivo de PC (base64).");
+            }
+        }
+        return dataObject;
+    }
+
+    // =============== HANDLERS DE EVENTOS Y LÓGICA PRINCIPAL ===============
+    window[HANDLER_MOBILE_UPLOAD_URL_READY] = function(dataStr) {
+        if (!document.body.contains(uploadFromMobileBtn)) return;
+        try {
+            const data = JSON.parse(dataStr);
+            if (data.error) {
+                console.error("Error del backend al iniciar sesión de subida móvil:", data.error);
+                if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = `Error: ${data.error}`;
+                if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false;
+                return;
+            }
+
+            currentMobileUploadToken = data.token;
+            const uploadUrl = data.url; 
+            
+            if (qrCodeContainer && typeof QRCode !== 'undefined') {
+                qrCodeContainer.innerHTML = ''; // Limpiar antes de añadir QR y mensaje
+                new QRCode(qrCodeContainer, {
+                    text: uploadUrl, width: 128, height: 128,
+                    colorDark : "#0d9488", colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                const p = document.createElement('p');
+                // NO reasignar qrMessageElement aquí, ya está asignado en getDOMElements o resetMobileUploadUI
+                // y es el <p> que está fuera del div que QRCode.js maneja.
+                // El texto que va DENTRO del div del QR lo podemos añadir directamente.
+                p.className = 'text-xs text-gray-600 mt-2 text-center';
+                p.textContent = 'Escanee para subir archivo.';
+                qrCodeContainer.appendChild(p); // Añadir texto debajo del QR, dentro del mismo contenedor.
+
+                qrCodeContainer.classList.remove('hidden');
+                if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = 'Esperando archivo desde el móvil...';
+
+                stopQrPolling(); 
+                qrPollingInterval = setInterval(() => {
+                    if (window.backend && currentMobileUploadToken && document.body.contains(uploadFromMobileBtn)) {
+                        console.log("Sondeando estado de subida para token:", currentMobileUploadToken);
+                        window.backend.check_mobile_upload_status(currentMobileUploadToken);
+                    } else {
+                        stopQrPolling(); 
+                    }
+                }, 3000); 
+
+            } else { 
+                if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = 'Error: Librería QRCode no cargada o contenedor no encontrado.';
+                console.error("Contenedor QR o librería QRCode no disponible.");
+                if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false;
+            }
+        } catch (e) { 
+            console.error("Error procesando URL para QR:", e, dataStr);
+            if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = 'Error al generar QR.';
+            if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false;
+        }
+    };
+
+    window[HANDLER_MOBILE_UPLOAD_STATUS] = function(statusStr) {
+        if (!document.body.contains(uploadFromMobileBtn)) return;
+        try {
+            const status = JSON.parse(statusStr);
+            if (status.token !== currentMobileUploadToken) return; 
+
+            if (status.error) {
+                console.error("Error en estado de subida móvil:", status.error);
+                if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = `Error: ${status.error}`;
+                stopQrPolling();
+                if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false;
+
+            } else if (status.uploaded && status.filePath && status.fileName) {
+                console.log("Archivo subido desde móvil:", status.fileName, "en ruta:", status.filePath);
+                mobileFileUploadedPath = status.filePath; 
+                
+                if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = `¡Archivo "${status.fileName}" recibido!`;
+                if (qrCodeContainer) qrCodeContainer.classList.add('hidden');
+                stopQrPolling();
+                
+                if (mobileFileIndicator) mobileFileIndicator.classList.remove('hidden');
+                if (mobileFileNameSpan) mobileFileNameSpan.textContent = status.fileName;
+
+                const fileInputPC = document.getElementById('archivo_adjunto_pc_add');
+                if (fileInputPC) {
+                    fileInputPC.value = ''; 
+                    fileInputPC.disabled = true;
+                }
+                if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false; 
+
+            } else if (status.message && mobileUploadStatusElement && mobileUploadStatusElement.textContent && mobileUploadStatusElement.textContent.startsWith('Esperando')) {
+                 // No hacer nada si solo es "Esperando..." para no sobreescribir el "Esperando archivo..."
+            }
+        } catch (e) { console.error("Error procesando estado de subida móvil:", e, statusStr); }
+    };
+
+    window[HANDLER_SAVE_RESULT_GLOBAL_NAME] = function(success, message, newComplementoId) {
+        if (!document.body.contains(submitBtn)) return; // Si la vista ya no está
+        console.log(`[AGREGAR COMPLEMENTARIO JS] Handler ${HANDLER_SAVE_RESULT_GLOBAL_NAME} EJECUTADO. Success: ${success}, Msg: "${message}", NewID: ${newComplementoId}`);
+        
+        isSubmittingForm = false; 
+        
+        if(submitBtn) submitBtn.disabled = false;
+        if(submitSpinner) submitSpinner.classList.add('hidden');
+        if(submitText) submitText.textContent = 'Guardar Estudio';
+
+        if (feedbackDiv) {
+            feedbackDiv.textContent = message;
+            feedbackDiv.className = `my-4 text-center text-sm h-5 font-medium ${success ? 'text-green-600' : 'text-red-600'}`;
+        }
+
+        if (success) {
+            resetForm(); // Limpia el formulario
+            resetMobileUploadUI(); // Limpia la UI de QR
+            
+            const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+            const defaultTipoParam = params.get('tipo');
+            if (tipoSelectAdd && defaultTipoParam) { // Restaurar tipo por defecto si vino por URL
+                tipoSelectAdd.value = defaultTipoParam;
+            }
+            updateSubheader(); // Actualizar info del paciente en subheader
+            
+            // No llamar a handleCancel aquí, dejar que el timeout lo haga
+            setTimeout(() => { 
+                if(feedbackDiv) feedbackDiv.textContent = ''; // Limpiar mensaje
+                // Ahora sí, redirigir después de mostrar el mensaje
+                const patientIdToReturn = currentContextPatientId || window.currentPatientIdForContext;
+                if (patientIdToReturn && typeof loadContent === 'function') {
+                    if (window.backend && typeof window.backend.set_selected_patient === 'function') { 
+                        window.backend.set_selected_patient(parseInt(patientIdToReturn));
+                    }
+                    window.targetTabAfterLoad = 'panel-estudios'; 
+                    loadContent('pacientes__paciente_detalle');
+                } else { 
+                    if (typeof loadContent === 'function') loadContent('dashboard');
+                }
+            }, 1800); 
+        }
+    };
+    
+    window[HANDLER_PATIENT_INFO_SUBHEADER_GLOBAL_NAME] = function(jsonPatientInfo) {
+        if (!document.body.contains(subheaderElement)) return;
+        try {
+            const pInfo = JSON.parse(jsonPatientInfo);
+            if (pInfo && !pInfo.error) {
+                currentContextPatientName = pInfo.nombre_completo;
+                currentContextPatientHC = pInfo.numero_historia;
+            } else {
+                currentContextPatientName = "Paciente N/A";
+                currentContextPatientHC = pInfo && pInfo.error ? `Error (${pInfo.error})` : "Error";
+            }
+        } catch(e) {
+            currentContextPatientName = "Error Paciente"; currentContextPatientHC = "Error JSON";
+        }
+        updateSubheader();
+    };
+
+    function handleUploadFromMobile() {
+        if (!window.backend || typeof window.backend.start_mobile_upload_session !== 'function') {
+            alert("La funcionalidad de subida desde móvil no está disponible (backend).");
+            return;
+        }
+        // No llamar a resetMobileUploadUI aquí, start_mobile_upload_session en backend ya cierra sesiones previas
+        // y resetMobileUploadUI se llamará si es necesario desde el handler de URL_READY o si se cancela/quita.
+        if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = true;
+        if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = 'Iniciando sesión de subida móvil...';
+        if (qrCodeContainer) qrCodeContainer.classList.add('hidden'); // Ocultar QR viejo si existía
+        window.backend.start_mobile_upload_session();
+    }
+    
+    function handleRemoveMobileFile() {
+        // Limpia la UI y la referencia al archivo móvil, permitiendo subir desde PC o nuevo QR.
+        mobileFileUploadedPath = null;
+        if (mobileFileIndicator) mobileFileIndicator.classList.add('hidden');
+        if (mobileFileNameSpan) mobileFileNameSpan.textContent = '';
+        
+        const fileInputPC = document.getElementById('archivo_adjunto_pc_add');
+        if (fileInputPC) fileInputPC.disabled = false; 
+
+        if (uploadFromMobileBtn) uploadFromMobileBtn.disabled = false;
+        if (mobileUploadStatusElement) mobileUploadStatusElement.textContent = ''; 
+        // No es necesario llamar a resetMobileUploadUI aquí, ya que eso limpiaría el QR si estuviera visible.
+        // Solo queremos quitar el archivo seleccionado, no necesariamente cancelar la sesión QR si está activa.
+        console.log("Archivo móvil quitado de la selección del formulario.");
+    }
+
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        if (isSubmittingForm) return; 
+        isSubmittingForm = true;
+
+        if(submitBtn) submitBtn.disabled = true; 
+        if(submitSpinner) submitSpinner.classList.remove('hidden');
+        if(submitText) submitText.textContent = 'Guardando Estudio...'; 
+        if(feedbackDiv) feedbackDiv.textContent = '';
+
+        try {
+            const dataToSend = await collectFormDataAndFile();
+            if (!dataToSend.paciente_id) {
+                throw new Error("ID de paciente no proporcionado en el formulario.");
+            }
+            if (!dataToSend.resultado_informe && !dataToSend.archivo_adjunto_nuevo && !dataToSend.archivo_adjunto_movil_ref) {
+                 throw new Error("Debe ingresar un resultado en el informe o adjuntar un archivo.");
+            }
+
+            console.log("Datos AGREGAR COMPLEMENTARIO a enviar:", dataToSend);
+            if (window.backend && typeof window.backend.save_new_complemento === 'function') {
+                window.backend.save_new_complemento(dataToSend);
+            } else { throw new Error("Función de guardado no disponible en backend."); }
+        } catch (error) {
+            console.error("Error en handleFormSubmit (AGREGAR):", error);
+            if(feedbackDiv) { 
+                feedbackDiv.textContent = `Error: ${error.message || "No se pudo procesar el formulario."}`; 
+                feedbackDiv.className = "my-4 text-center text-sm h-5 text-red-600 font-medium"; 
+            }
+            isSubmittingForm = false; 
+            if(submitBtn) submitBtn.disabled = false; 
+            if(submitSpinner) submitSpinner.classList.add('hidden');
+            if(submitText) submitText.textContent = 'Guardar Estudio';
+        }
+    }
+    
+    function handleCancel() { // Ya no necesita el parámetro 'stayOnPageAfterSuccess'
+        stopQrPolling(); 
+        resetMobileUploadUI(); // Siempre limpiar UI de QR al cancelar
+
+        const patientIdToReturn = currentContextPatientId || window.currentPatientIdForContext;
+        if (patientIdToReturn && typeof loadContent === 'function') {
+            if (window.backend && typeof window.backend.set_selected_patient === 'function') { 
+                window.backend.set_selected_patient(parseInt(patientIdToReturn));
+            }
+            window.targetTabAfterLoad = 'panel-estudios'; 
+            loadContent('pacientes__paciente_detalle');
+        } else { 
+            if (typeof loadContent === 'function') loadContent('dashboard');
+        }
+    }
+    
+    function initializeView() {
+        console.log(`*** Inicializador AGREGAR COMPLEMENTARIO: ${INIT_FUNCTION_NAME} ***`);
+        // ... (console.log de handlers como antes) ...
+
+        getDOMElements(); // Define los elementos globales del script (form, subheaderElement, etc.)
+        if (!form) { console.error("Formulario 'add-complementario-form' no encontrado."); return; }
+        
+        form.addEventListener('submit', handleFormSubmit);
+        if (cancelBtn) cancelBtn.addEventListener('click', handleCancel);
+        
+        if (uploadFromMobileBtn) {
+            uploadFromMobileBtn.addEventListener('click', handleUploadFromMobile);
+        }
+        if (removeMobileFileBtn) {
+            removeMobileFileBtn.addEventListener('click', handleRemoveMobileFile);
+        }
+
+        // Estado inicial limpio
+        resetForm(); 
+        resetMobileUploadUI(); 
+
+        // Conexión de señales
+        if (window.backend) {
+            // Es mejor conectar las señales una sola vez a nivel de la aplicación
+            // o asegurarse de desconectarlas si la vista se destruye.
+            // Por ahora, las conectamos aquí.
+            if (window.backend.mobileUploadUrlReady && typeof window.backend.mobileUploadUrlReady.connect === 'function') {
+                try { window.backend.mobileUploadUrlReady.connect(window[HANDLER_MOBILE_UPLOAD_URL_READY]); }
+                catch(e) { console.error("Error conectando mobileUploadUrlReady:", e); }
+            }
+            if (window.backend.mobileUploadStatus && typeof window.backend.mobileUploadStatus.connect === 'function') {
+                try { window.backend.mobileUploadStatus.connect(window[HANDLER_MOBILE_UPLOAD_STATUS]); }
+                catch(e) { console.error("Error conectando mobileUploadStatus:", e); }
+            }
+            if (window.backend.sendPatientInfoForAddEvolucion && typeof window.backend.sendPatientInfoForAddEvolucion.connect === 'function') {
+                if (!patientInfoSignalConnectedForAdd) {
+                    try {
+                        window.backend.sendPatientInfoForAddEvolucion.connect(window[HANDLER_PATIENT_INFO_SUBHEADER_GLOBAL_NAME]);
+                        patientInfoSignalConnectedForAdd = true;
+                    } catch(e){ console.error("Error conectando señal para subheader AGREGAR COMPL", e); }
+                }
+            }
+        }
+
+        const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        const pacienteIdParam = params.get('patient_id');
+        const defaultTipoParam = params.get('tipo');
+
+        if (pacienteIdParam) {
+            currentContextPatientId = pacienteIdParam; // Establecer ID del paciente primero
+            if (pacienteIdHiddenInput) pacienteIdHiddenInput.value = pacienteIdParam;
+            
+            // Solicitar info del paciente para el subheader
+            if (window.backend && typeof window.backend.request_patient_info_for_add_evolucion === 'function') {
+                if(window.backend.set_selected_patient) window.backend.set_selected_patient(parseInt(pacienteIdParam));
+                window.backend.request_patient_info_for_add_evolucion();
+            } else {
+                updateSubheader(); // Actualizará mostrando "Error de comunicación" o similar
+            }
+        } else {
+            console.error("AGREGAR COMPLEMENTARIO: ID de paciente NO PROPORCIONADO en los parámetros de la URL.");
+            currentContextPatientId = null; // Asegurar que esté nulo
+            updateSubheader(); // Mostrará "Paciente no especificado"
+            if(feedbackDiv) feedbackDiv.textContent = "Error: ID de paciente no proporcionado. No se puede registrar el estudio.";
+            if(submitBtn) submitBtn.disabled = true;
+            if(uploadFromMobileBtn) uploadFromMobileBtn.disabled = true;
+            return; 
+        }
+        if (tipoSelectAdd && defaultTipoParam) {
+            tipoSelectAdd.value = defaultTipoParam;
+        }
+    }
+    
+    if (!window.viewInitializationFunctions) { window.viewInitializationFunctions = {}; }
+    window.viewInitializationFunctions[INIT_FUNCTION_NAME] = initializeView;
+})();
+</script>
