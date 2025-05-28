@@ -700,7 +700,14 @@ class BackendBridge(QObject):
                     # y luego encriptar esta nueva ruta relativa final.
                     
                     # Validar extensión (basado en el nombre original que debería venir del móvil)
-                    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt']
+                    allowed_extensions = [
+                                            # Imágenes
+                                            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', 
+                                            # Documentos
+                                            '.pdf', '.doc', '.docx', '.txt',
+                                            # Videos
+                                            '.mp4', '.mov', '.wmv', '.avi', '.mkv', '.webm', '.flv', '.mpeg', '.mpg' 
+                                        ]
                     file_name_lower = original_filename.lower()
                     if not any(file_name_lower.endswith(ext) for ext in allowed_extensions):
                         # Si el tipo no es permitido, no lo procesamos. Informamos error.
@@ -764,7 +771,14 @@ class BackendBridge(QObject):
                 try:
                     # ... (validación de extensión, decodificación, guardado) ...
                     # Esto es lo que ya tenías
-                    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt']
+                    allowed_extensions = [
+                                            # Imágenes
+                                            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', 
+                                            # Documentos
+                                            '.pdf', '.doc', '.docx', '.txt',
+                                            # Videos
+                                            '.mp4', '.mov', '.wmv', '.avi', '.mkv', '.webm', '.flv', '.mpeg', '.mpg' 
+                                        ]
                     file_name_lower = file_data['name'].lower()
                     if not any(file_name_lower.endswith(ext) for ext in allowed_extensions):
                         self.complementoSaveResult.emit(False, "Error: Tipo de archivo (PC) no permitido.", 0)
@@ -881,7 +895,14 @@ class BackendBridge(QObject):
                 
                 file_data = datos_comp['archivo_adjunto_nuevo']
                 try:
-                    allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.pdf', '.doc', '.docx', '.txt']
+                    allowed_extensions = [
+                                            # Imágenes
+                                            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', 
+                                            # Documentos
+                                            '.pdf', '.doc', '.docx', '.txt',
+                                            # Videos
+                                            '.mp4', '.mov', '.wmv', '.avi', '.mkv', '.webm', '.flv', '.mpeg', '.mpg' 
+                                        ]
                     file_name_lower = file_data['name'].lower()
                     if not any(file_name_lower.endswith(ext) for ext in allowed_extensions):
                         self.complementoSaveResult.emit(False, "Error: Tipo de archivo no permitido. Solo imágenes o documentos.", 0 if is_new else complemento_id)

@@ -1535,6 +1535,26 @@ window.navigateToPage = function(viewName, params = {}) {
     }
 };
 
+function getEstadoColorComplemento(estado) { // Nombre global
+    if (!estado) return 'bg-gray-100 text-gray-800 border border-gray-300';
+    switch (String(estado).toLowerCase()) {
+        case 'pendiente':
+            return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+        case 'realizado':
+        case 'completo':
+        case 'completado':
+        case 'finalizado':
+            return 'bg-green-100 text-green-800 border border-green-300';
+        case 'cancelado':
+        case 'anulado':
+            return 'bg-red-100 text-red-800 border border-red-300';
+        case 'en proceso':
+        case 'procesando':
+            return 'bg-blue-100 text-blue-800 border border-blue-300';
+        default:
+            return 'bg-gray-200 text-gray-700 border border-gray-400';
+    }
+}
 
 function renderOrdenesMedicasPanel(ordenes, containerId, patientId) {
     const local_INIT_FUNCTION_NAME = typeof INIT_FUNCTION_NAME !== 'undefined' ? INIT_FUNCTION_NAME : "renderOrdenesMedicasPanel";
@@ -1756,16 +1776,15 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
         console.error(`Error renderComplementariosPanel (DINÁMICO): Contenedor #${containerId} no encontrado.`);
         return;
     }
-    container.innerHTML = ''; // Limpiar el contenedor principal
+    container.innerHTML = ''; 
 
-    // Filtrar complementarios por tipo principal para las pestañas
     const laboratorios = todosLosComplementarios.filter(c => c.tipo_complementario === 'Laboratorio');
     const imagenes = todosLosComplementarios.filter(c => c.tipo_complementario === 'Imagen');
-    // Podrías añadir más filtros para 'Patologia', 'Endoscopia', 'Otro' si quieres más pestañas
+    const otrosComplementos = todosLosComplementarios.filter(c => !['Laboratorio', 'Imagen'].includes(c.tipo_complementario));
+
 
     let panelHtml = '';
 
-    // --- Cabecera del Panel General ---
     panelHtml += `
         <div class="flex justify-between items-center pb-3 border-b border-gray-300 mb-4">
             <h3 class="text-xl font-semibold text-teal-700">
@@ -1773,7 +1792,6 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
             </h3>
         </div>`;
 
-    // --- Pestañas de Navegación (Laboratorios / Imágenes) ---
     panelHtml += `
         <div class="mb-4 border-b border-gray-200">
             <nav class="-mb-px flex space-x-8" aria-label="ComplementosSubTabs">
@@ -1788,20 +1806,21 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
                         class="complementos-subtab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
                     Imágenes (${imagenes.length})
                 </button>
-                <!-- Puedes añadir más botones para otros tipos si es necesario -->
+                <button id="subtab-btn-otros-complementos" 
+                        onclick="switchComplementosSubPanelGlobal('otros-complementos')"
+                        class="complementos-subtab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Otros (${otrosComplementos.length})
+                </button>
             </nav>
         </div>`;
 
-    // --- Contenedor para el Contenido de las Sub-Pestañas ---
     panelHtml += `<div id="complementos-subtab-content-area" class="mt-4">`;
 
     // --- Contenido para la Pestaña Laboratorios ---
-    panelHtml += `<div id="subcontent-laboratorios" class="complemento-subpanel-item space-y-4">`; // Visible por defecto
+    panelHtml += `<div id="subcontent-laboratorios" class="complemento-subpanel-item space-y-4">`;
         panelHtml += `
             <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-200 mb-4">
-                <h4 class="text-lg font-medium text-gray-800">
-                    Resultados de Laboratorio
-                </h4>
+                <h4 class="text-lg font-medium text-gray-800">Resultados de Laboratorio</h4>
                 <button onclick="console.log('Añadir Lab, PatientID:', ${patientId}); window.abrirFormularioNuevoComplementoDetalle('Laboratorio', ${patientId})" 
                         class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150">
                     <i class="fas fa-plus fa-fw mr-2"></i> Añadir Laboratorio
@@ -1809,6 +1828,7 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
             </div>`;
         
         if (laboratorios.length > 0) {
+            // ***** CAMBIO: Ordenar por fecha_registro descendente *****
             laboratorios.sort((a,b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).forEach(lab => {
                 panelHtml += `
                     <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
@@ -1819,7 +1839,7 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
                                     Registrado: ${formatDate(lab.fecha_registro, true)} 
                                     ${lab.fecha_realizacion ? `(Realizado: ${formatDate(lab.fecha_realizacion)})` : ''}
                                     | Por: <span class="font-medium text-gray-700">${lab.usuario_registrador_nombre || 'N/D'}</span>
-                                    <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getEstadoColor(lab.estado)}">${lab.estado || 'N/A'}</span>
+                                    ${lab.estado ? `<span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getEstadoColorComplemento(lab.estado)}">${lab.estado}</span>` : ''}
                                 </p>
                             </div>
                             <div class="flex space-x-1.5 flex-shrink-0 ml-2 mt-2 sm:mt-0">
@@ -1834,26 +1854,21 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
                             </div>
                         </div>
                         <div class="text-sm space-y-2">
-                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe:</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-40 overflow-y-auto">${lab.resultado_informe || 'Sin resultado registrado.'}</pre></div>
-                            ${lab.archivo_adjunto_path ? `<div class="mt-2 text-right"><a href="${lab.archivo_adjunto_path}" target="_blank" class="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"><i class="fas fa-paperclip mr-1.5"></i>Ver Adjunto</a></div>` : ''}
+                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe (resumen):</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-20 overflow-y-auto">${(lab.resultado_informe || 'Sin resultado registrado.').substring(0, 150)}${lab.resultado_informe && lab.resultado_informe.length > 150 ? '...' : ''}</pre></div>
+                            ${lab.archivo_adjunto_path ? `<div class="mt-2 text-xs text-gray-500 italic"><i class="fas fa-paperclip mr-1 text-gray-400"></i><span>Incluye archivo adjunto (ver en detalle)</span></div>` : ''}
                         </div>
                     </div>`;
             });
-        } else {
-            panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500">
-                             <i class="fas fa-flask fa-3x text-gray-300 mb-3"></i>
-                             <p class="italic">No hay estudios de laboratorio registrados.</p>
-                         </div>`;
+        } else { /* ... (mensaje de no hay laboratorios) ... */ 
+            panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500"><i class="fas fa-flask fa-3x text-gray-300 mb-3"></i><p class="italic">No hay estudios de laboratorio registrados.</p></div>`;
         }
-    panelHtml += `</div>`; // Cierre de subcontent-laboratorios
+    panelHtml += `</div>`; 
 
-    // --- Contenido para la Pestaña Imágenes (oculto por defecto) ---
+    // --- Contenido para la Pestaña Imágenes ---
     panelHtml += `<div id="subcontent-imagenes" class="complemento-subpanel-item space-y-4 hidden">`;
         panelHtml += `
             <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-200 mb-4">
-                <h4 class="text-lg font-medium text-gray-800">
-                    Resultados de Imágenes
-                </h4>
+                <h4 class="text-lg font-medium text-gray-800">Resultados de Imágenes</h4>
                 <button onclick="console.log('Añadir Imagen, PatientID:', ${patientId}); window.abrirFormularioNuevoComplementoDetalle('Imagen', ${patientId})"
                         class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150">
                     <i class="fas fa-plus fa-fw mr-2"></i> Añadir Imagen
@@ -1861,6 +1876,7 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
             </div>`;
 
         if (imagenes.length > 0) {
+            // ***** CAMBIO: Ordenar por fecha_registro descendente *****
             imagenes.sort((a,b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).forEach(img => {
                 panelHtml += `
                     <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
@@ -1871,6 +1887,7 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
                                     Registrado: ${formatDate(img.fecha_registro, true)} 
                                     ${img.fecha_realizacion ? `(Realizado: ${formatDate(img.fecha_realizacion)})` : ''}
                                     | Por: <span class="font-medium text-gray-700">${img.usuario_registrador_nombre || 'N/D'}</span>
+                                    ${img.estado ? `<span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getEstadoColorComplemento(img.estado)}">${img.estado}</span>` : ''}
                                 </p>
                             </div>
                             <div class="flex space-x-1.5 flex-shrink-0 ml-2 mt-2 sm:mt-0">
@@ -1885,52 +1902,104 @@ function renderComplementariosPanel(todosLosComplementarios, containerId, patien
                             </div>
                         </div>
                         <div class="text-sm space-y-2">
-                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe:</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-40 overflow-y-auto">${img.resultado_informe || 'Sin resultado registrado.'}</pre></div>
-                            ${img.archivo_adjunto_path ? `<div class="mt-2 text-right"><a href="${img.archivo_adjunto_path}" target="_blank" class="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium"><i class="fas fa-file-image mr-1.5"></i>Ver Adjunto</a></div>` : ''}
+                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe (resumen):</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-20 overflow-y-auto">${(img.resultado_informe || 'Sin resultado registrado.').substring(0,150)}${img.resultado_informe && img.resultado_informe.length > 150 ? '...' : ''}</pre></div>
+                            {/* ***** CAMBIO: Indicador de adjunto (no clickeable aquí) ***** */}
+                            ${img.archivo_adjunto_path ? `<div class="mt-2 text-xs text-gray-500 italic"><i class="fas fa-paperclip mr-1 text-gray-400"></i><span>Incluye archivo adjunto (ver en detalle)</span></div>` : ''}
+                        </div>
+                    </div>`;
+            });
+        } else { /* ... (mensaje de no hay imágenes) ... */ 
+             panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500"><i class="fas fa-x-ray fa-3x text-gray-300 mb-3"></i><p class="italic">No hay estudios de imagenología registrados.</p></div>`;
+        }
+    panelHtml += `</div>`;
+
+    // --- Contenido para la Pestaña Otros Complementos ---
+    panelHtml += `<div id="subcontent-otros-complementos" class="complemento-subpanel-item space-y-4 hidden">`;
+        panelHtml += `
+            <div class="flex flex-wrap justify-between items-center pb-3 border-b border-gray-200 mb-4">
+                <h4 class="text-lg font-medium text-gray-800">Otros Estudios Complementarios</h4>
+                 <button onclick="console.log('Añadir Otro Comp., PatientID:', ${patientId}); window.abrirFormularioNuevoComplementoDetalle('Otro', ${patientId})"
+                        class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-sm transition duration-150">
+                    <i class="fas fa-plus fa-fw mr-2"></i> Añadir Otro Estudio
+                </button>
+            </div>`;
+        if (otrosComplementos.length > 0) {
+            otrosComplementos.sort((a,b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)).forEach(otro => {
+                panelHtml += `
+                    <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                        <div class="flex flex-wrap justify-between items-start mb-3 pb-2 border-b border-gray-100">
+                            <div>
+                                <h5 class="text-md font-semibold text-teal-600">${otro.nombre_estudio || 'Estudio sin nombre'} <span class="text-sm text-gray-500 font-normal">(${otro.tipo_complementario || 'N/A'})</span></h5>
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    Registrado: ${formatDate(otro.fecha_registro, true)} 
+                                    ${otro.fecha_realizacion ? `(Realizado: ${formatDate(otro.fecha_realizacion)})` : ''}
+                                    | Por: <span class="font-medium text-gray-700">${otro.usuario_registrador_nombre || 'N/D'}</span>
+                                    ${otro.estado ? `<span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full ${getEstadoColorComplemento(otro.estado)}">${otro.estado}</span>` : ''}
+                                </p>
+                            </div>
+                             <div class="flex space-x-1.5 flex-shrink-0 ml-2 mt-2 sm:mt-0">
+                                <button onclick="window.verComplementoDetalle(${otro.id}, '${otro.tipo_complementario}', ${patientId})" 
+                                        class="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-150" title="Ver Detalles">
+                                    <i class="fas fa-eye fa-fw"></i>
+                                </button>
+                                <button onclick="window.editarComplementoDetalle(${otro.id}, '${otro.tipo_complementario}', ${patientId})" 
+                                        class="p-1.5 text-gray-500 hover:text-orange-500 rounded-md hover:bg-orange-50 transition-colors duration-150" title="Editar Estudio">
+                                    <i class="fas fa-pencil-alt fa-fw"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-sm space-y-2">
+                            <div><strong class="text-gray-700 font-medium text-xs block mb-0.5">Resultado/Informe (resumen):</strong><pre class="font-sans text-sm text-gray-800 whitespace-pre-wrap bg-gray-50 p-2 border rounded max-h-20 overflow-y-auto">${(otro.resultado_informe || 'Sin resultado registrado.').substring(0,150)}${otro.resultado_informe && otro.resultado_informe.length > 150 ? '...' : ''}</pre></div>
+                            ${otro.archivo_adjunto_path ? `<div class="mt-2 text-xs text-gray-500 italic"><i class="fas fa-paperclip mr-1 text-gray-400"></i><span>Incluye archivo adjunto (ver en detalle)</span></div>` : ''}
                         </div>
                     </div>`;
             });
         } else {
-            panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500">
-                             <i class="fas fa-x-ray fa-3x text-gray-300 mb-3"></i>
-                             <p class="italic">No hay estudios de imagenología registrados.</p>
-                         </div>`;
+             panelHtml += `<div class="bg-white p-6 rounded-lg shadow-sm border text-center text-gray-500"><i class="fas fa-file-medical-alt fa-3x text-gray-300 mb-3"></i><p class="italic">No hay otros estudios complementarios registrados.</p></div>`;
         }
-    panelHtml += `</div>`; // Cierre de subcontent-imagenes
+    panelHtml += `</div>`; // Cierre subcontent-otros-complementos
 
-    panelHtml += `</div>`; // Cierre de complementos-subtab-content-area
+
+    panelHtml += `</div>`; 
 
     container.innerHTML = panelHtml;
     console.log(`${local_INIT_FN_NAME}: Panel de Complementarios (DINÁMICO) renderizado.`);
 
-    // Asegurar que la función para cambiar sub-pestañas esté disponible
-    // Si no está global, debes definirla aquí o asegurar su disponibilidad.
+    // Función para obtener el color del estado (necesitarás definirla o adaptarla)
+    if (typeof window.getEstadoColorComplemento !== 'function') {
+        window.getEstadoColorComplemento = function(estado) {
+            if (!estado) return 'bg-gray-100 text-gray-800';
+            switch (estado.toLowerCase()) {
+                case 'pendiente': return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+                case 'realizado':
+                case 'completo':
+                case 'completado': return 'bg-green-100 text-green-800 border border-green-300';
+                case 'cancelado': return 'bg-red-100 text-red-800 border border-red-300';
+                default: return 'bg-gray-100 text-gray-800 border border-gray-300';
+            }
+        }
+    }
+    
     if (typeof window.switchComplementosSubPanelGlobal !== 'function') {
         window.switchComplementosSubPanelGlobal = function(targetSubPanelId) {
-            console.log("Switching complementos sub-panel to:", targetSubPanelId);
-            document.querySelectorAll('.complemento-subpanel-item').forEach(panel => {
-                panel.classList.add('hidden');
-            });
+            document.querySelectorAll('.complemento-subpanel-item').forEach(panel => panel.classList.add('hidden'));
             document.querySelectorAll('.complementos-subtab-button').forEach(button => {
-                button.classList.remove('border-teal-500', 'text-teal-600');
+                button.classList.remove('border-teal-500', 'text-teal-600', 'font-semibold'); // Quitar font-semibold también
                 button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                 button.removeAttribute('aria-current');
             });
-
             const activePanel = document.getElementById(`subcontent-${targetSubPanelId}`);
             const activeButton = document.getElementById(`subtab-btn-${targetSubPanelId}`);
-
             if (activePanel) activePanel.classList.remove('hidden');
             if (activeButton) {
-                activeButton.classList.add('border-teal-500', 'text-teal-600');
-                activeButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                activeButton.classList.add('border-teal-500', 'text-teal-600', 'font-semibold'); // Añadir font-semibold
+                activeButton.classList.remove('border-transparent', 'text-gray-500');
                 activeButton.setAttribute('aria-current', 'page');
             }
         }
     }
-    // Inicializar la primera sub-pestaña como activa (si no se hizo ya)
-    // Esto es opcional si quieres que Laboratorios siempre sea la primera visible.
-    // window.switchComplementosSubPanelGlobal('laboratorios'); 
+    // Activar la primera sub-pestaña por defecto
+    // window.switchComplementosSubPanelGlobal('laboratorios');
 }
 
 // ----- Funciones Placeholder para Navegación (debes implementarlas o conectarlas) -----
